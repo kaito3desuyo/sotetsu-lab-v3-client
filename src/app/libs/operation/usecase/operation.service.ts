@@ -13,7 +13,7 @@ export class OperationService {
     readonly #operationQuery = inject(OperationQuery);
 
     findManyByCalendarId(params: {
-        calendarId: string;
+        calendarId: string | undefined;
         forceReload?: boolean;
     }): Observable<OperationDetailsDto[]> {
         return this.#operationQuery.findManyByCalendarId(params);
@@ -31,7 +31,7 @@ export class OperationService {
         operationId: string;
         searchTime?: string;
         forceReload?: boolean;
-    }): Observable<OperationCurrentPositionDto> {
+    }): Observable<OperationCurrentPositionDto | null> {
         return this.#operationQuery.findOneWithCurrentPosition(params);
     }
 

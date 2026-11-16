@@ -1,3 +1,4 @@
+import { ServiceRoutesModel } from '../models/service-routes.model';
 import { ServiceRoutesDtoBuilder } from './service-routes.dto.builder';
 
 describe('ServiceRoutesDtoBuilder', () => {
@@ -19,7 +20,7 @@ describe('ServiceRoutesDtoBuilder', () => {
                     endRouteStationListId: 'rsl-b',
                 },
             ],
-        });
+        } as ServiceRoutesModel);
 
         expect(dto.service.serviceId).toBe('s-1');
         expect(dto.routes[0]).toMatchObject({

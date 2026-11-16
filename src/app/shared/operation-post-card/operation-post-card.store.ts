@@ -11,7 +11,7 @@ import { withSettingsStorage } from 'src/app/core/store-features/with-settings-s
 import { ServiceAgenciesDto } from 'src/app/libs/service/usecase/dtos/service-agencies.dto';
 
 type StoreProps = {
-    serviceAgencies: ServiceAgenciesDto;
+    serviceAgencies: ServiceAgenciesDto | null;
 };
 
 const initialState: StoreProps = {
@@ -37,8 +37,8 @@ export const OperationPostCardStore = signalStore(
                 西武: 9,
             };
 
-            const getOrder = (agencyName: string): number =>
-                index[agencyName] ?? Number.MAX_SAFE_INTEGER;
+            const getOrder = (agencyName: string | null): number =>
+                index[agencyName ?? ''] ?? Number.MAX_SAFE_INTEGER;
 
             return [...agencies].sort((a, b) => {
                 const orderDiff =
@@ -48,12 +48,15 @@ export const OperationPostCardStore = signalStore(
                     return orderDiff;
                 }
 
-                return a.agencyName.localeCompare(b.agencyName, 'ja');
+                return (a.agencyName ?? '').localeCompare(
+                    b.agencyName ?? '',
+                    'ja',
+                );
             });
         }),
     })),
     withMethods((store) => ({
-        setServiceAgencies(serviceAgencies: ServiceAgenciesDto): void {
+        setServiceAgencies(serviceAgencies: ServiceAgenciesDto | null): void {
             patchState(store, { serviceAgencies });
         },
     })),

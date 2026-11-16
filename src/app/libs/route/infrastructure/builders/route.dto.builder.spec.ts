@@ -1,3 +1,5 @@
+import { RouteModel } from '../models/route.model';
+import { RouteStationListModel } from '../models/route-station-list.model';
 import { RouteDtoBuilder } from './route.dto.builder';
 
 describe('RouteDtoBuilder', () => {
@@ -5,12 +7,12 @@ describe('RouteDtoBuilder', () => {
         const dto = RouteDtoBuilder.buildFromModel({
             id: 'r-1',
             routeName: '本線',
-            routeStationLists: [{ id: 'rsl-1' }],
-        });
+            routeStationLists: [{ id: 'rsl-1' } as RouteStationListModel],
+        } as RouteModel);
 
         expect(dto.routeId).toBe('r-1');
         expect(dto.routeName).toBe('本線');
         expect(dto).not.toHaveProperty('id');
-        expect(dto.routeStationLists[0].routeStationListId).toBe('rsl-1');
+        expect(dto.routeStationLists?.[0].routeStationListId).toBe('rsl-1');
     });
 });

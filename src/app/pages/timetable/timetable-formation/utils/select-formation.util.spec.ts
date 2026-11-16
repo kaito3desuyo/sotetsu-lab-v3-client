@@ -1,7 +1,7 @@
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { selectFormationOnDate } from './select-formation.util';
 
-const formations: FormationDetailsDto[] = [
+const formations = [
     {
         formationId: 'old',
         formationNumber: '8713',
@@ -20,7 +20,7 @@ const formations: FormationDetailsDto[] = [
         startDate: '1999-09-01',
         endDate: null,
     },
-];
+] as FormationDetailsDto[];
 
 describe('selectFormationOnDate', () => {
     it('その日に有効な行を選ぶ（前の行の最終日）', () => {

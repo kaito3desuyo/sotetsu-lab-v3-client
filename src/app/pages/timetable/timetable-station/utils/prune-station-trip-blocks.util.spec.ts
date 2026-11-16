@@ -1,6 +1,6 @@
 import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
-import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
-import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
+import { TripBlockWithTripsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
+import { TripWithTimesDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { TimetableStationFindLastStopStationPipe } from '../pipes/timetable-station-find-last-stop-station.pipe';
 import { pruneStationTripBlocks } from './prune-station-trip-blocks.util';
 import { stationTrips } from './station-trips.util';
@@ -13,7 +13,7 @@ function makeTrip(
     startMinutes: number,
     stops: string[],
     tripDirection = 0,
-): TripDetailsDto {
+): TripWithTimesDto {
     const times: TimeDetailsDto[] = STATIONS.map((stationId, i) => {
         const total = startMinutes + i * 5;
         const days = Math.floor(total / 1440) + 1;
@@ -29,10 +29,10 @@ function makeTrip(
             pickupType: stop ? 0 : 1,
             dropoffType: stop ? 0 : 1,
             // 通過駅は時刻を持たない（持つと運転停車として停まる扱いになる）
-            arrivalDays: stop ? days : undefined,
-            arrivalTime: stop ? `${hh}:${mm}:00` : undefined,
-            departureDays: stop ? days : undefined,
-            departureTime: stop ? `${hh}:${mm}:00` : undefined,
+            arrivalDays: stop ? days : null,
+            arrivalTime: stop ? `${hh}:${mm}:00` : null,
+            departureDays: stop ? days : null,
+            departureTime: stop ? `${hh}:${mm}:00` : null,
         };
     });
     // 順序が崩れても stopSequence で選べることを見るため、逆順に並べる
@@ -41,16 +41,19 @@ function makeTrip(
         tripDirection,
         tripBlockId: `b-${tripId}`,
         times: times.reverse(),
-    };
+    } as unknown as TripWithTimesDto;
 }
 
-function block(id: string, ...trips: TripDetailsDto[]): TripBlockDetailsDto {
-    return { tripBlockId: id, trips };
+function block(
+    id: string,
+    ...trips: TripWithTimesDto[]
+): TripBlockWithTripsDto {
+    return { tripBlockId: id, trips } as unknown as TripBlockWithTripsDto;
 }
 
 describe('pruneStationTripBlocks', () => {
     // 0 時台（日をまたぎ departureDays 2）の列車と、折り返しで 2 本つながる運行を含める
-    const blocks = (): TripBlockDetailsDto[] => [
+    const blocks = (): TripBlockWithTripsDto[] => [
         block('x1', makeTrip('t1', 300, ['A', 'C', 'E'])),
         block('x2', makeTrip('t2', 310, ['A', 'B', 'E'])), // C を通過
         block(
@@ -90,7 +93,7 @@ describe('pruneStationTripBlocks', () => {
         const before = blocks();
         const after = pruneStationTripBlocks(before, 'C', 0);
 
-        const ids = (b: TripBlockDetailsDto[]) =>
+        const ids = (b: TripBlockWithTripsDto[]) =>
             stationTrips(b, 'C', 0).map((t) => t.tripId);
         expect(ids(after)).toEqual(ids(before));
         expect(ids(after)).toEqual(['t1', 't3', 't3b']);
@@ -98,7 +101,7 @@ describe('pruneStationTripBlocks', () => {
 
     it('脚注（最後の停車駅）の行き先が削る前と同じになる', () => {
         const pipe = new TimetableStationFindLastStopStationPipe();
-        const destinations = (b: TripBlockDetailsDto[]) =>
+        const destinations = (b: TripBlockWithTripsDto[]) =>
             stationTrips(b, 'C', 0).map((trip) =>
                 pipe.transform({
                     ...trip,

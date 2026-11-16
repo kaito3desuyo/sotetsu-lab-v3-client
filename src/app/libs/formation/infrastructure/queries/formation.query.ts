@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { QueryCache } from 'src/app/core/query-cache/query-cache';
+import { requireBody } from 'src/app/core/utils/require-body';
 import { toFieldsParams } from 'src/app/core/utils/to-fields-params';
 import { environment } from 'src/environments/environment';
 import { FormationDetailsDto } from '../../usecase/dtos/formation-details.dto';
@@ -43,7 +44,11 @@ export class FormationQuery {
                     ),
                 forceReload,
             })
-            .pipe(map((res) => FormationDtoBuilder.buildFromModels(res.body)));
+            .pipe(
+                map((res) =>
+                    FormationDtoBuilder.buildFromModels(requireBody(res)),
+                ),
+            );
     }
 
     findManyBySpecificPeriod(params: {
@@ -64,6 +69,10 @@ export class FormationQuery {
                     ),
                 forceReload,
             })
-            .pipe(map((res) => FormationDtoBuilder.buildFromModels(res.body)));
+            .pipe(
+                map((res) =>
+                    FormationDtoBuilder.buildFromModels(requireBody(res)),
+                ),
+            );
     }
 }

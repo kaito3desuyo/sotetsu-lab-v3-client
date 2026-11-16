@@ -90,7 +90,7 @@ describe('OperationPostFormComponent（テンプレート）', () => {
         const openButton = Array.from(form.querySelectorAll('button')).find(
             (b) => b.textContent?.includes('列車から選ぶ'),
         );
-        openButton.click();
+        openButton?.click();
         fixture.detectChanges();
 
         expect(form.querySelector('form')).toBeNull();
@@ -110,7 +110,7 @@ describe('OperationPostFormComponent（テンプレート）', () => {
         expect(
             form.querySelector<HTMLInputElement>(
                 'input[formcontrolname="operationNumber"]',
-            ).value,
+            )?.value,
         ).toBe('31');
     });
 

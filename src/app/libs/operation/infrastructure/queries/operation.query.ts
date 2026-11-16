@@ -5,9 +5,11 @@ import { omitBy } from 'es-toolkit';
 import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { QueryCache } from 'src/app/core/query-cache/query-cache';
+import { requireBody } from 'src/app/core/utils/require-body';
 import { QueryInvalidator } from 'src/app/core/query-cache/query-invalidator';
 import { TripOperationListDtoBuilder } from 'src/app/libs/trip/infrastructure/builders/trip-operation-list.dto.builder';
 import { toFieldsParams } from 'src/app/core/utils/to-fields-params';
+import { TripOperationListWithTimesDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
 import { environment } from 'src/environments/environment';
 import {
     OPERATION_TABLE_FIELDS,
@@ -59,7 +61,7 @@ export class OperationQuery {
     }
 
     findManyByCalendarId(params: {
-        calendarId: string;
+        calendarId: string | undefined;
         forceReload?: boolean;
     }): Observable<OperationDetailsDto[]> {
         const { calendarId, forceReload } = params;
@@ -83,7 +85,11 @@ export class OperationQuery {
                     ),
                 forceReload,
             })
-            .pipe(map((res) => OperationDtoBuilder.buildFromModels(res.body)));
+            .pipe(
+                map((res) =>
+                    OperationDtoBuilder.buildFromModels(requireBody(res)),
+                ),
+            );
     }
 
     findManyBySpecificPeriod(params: {
@@ -107,14 +113,18 @@ export class OperationQuery {
                     ),
                 forceReload,
             })
-            .pipe(map((res) => OperationDtoBuilder.buildFromModels(res.body)));
+            .pipe(
+                map((res) =>
+                    OperationDtoBuilder.buildFromModels(requireBody(res)),
+                ),
+            );
     }
 
     findOneWithCurrentPosition(params: {
         operationId: string;
         searchTime?: string;
         forceReload?: boolean;
-    }): Observable<OperationCurrentPositionDto> {
+    }): Observable<OperationCurrentPositionDto | null> {
         const { operationId, searchTime, forceReload } = params;
 
         return this.#cache
@@ -218,12 +228,16 @@ export class OperationQuery {
             })
             .pipe(
                 map((res) =>
-                    res.body.map((operationTrips) => ({
+                    requireBody(res).map((operationTrips) => ({
                         operation: OperationDtoBuilder.buildFromModel(
                             operationTrips.operation,
                         ),
-                        trips: operationTrips.trips.map((o) =>
-                            TripOperationListDtoBuilder.buildFromModel(o),
+                        // include で trip・startTime・endTime を付けて取るので必ず入っている
+                        trips: operationTrips.trips.map(
+                            (o) =>
+                                TripOperationListDtoBuilder.buildFromModel(
+                                    o,
+                                ) as TripOperationListWithTimesDto,
                         ),
                     })),
                 ),
@@ -258,8 +272,12 @@ export class OperationQuery {
                               operation: OperationDtoBuilder.buildFromModel(
                                   res.body.operation,
                               ),
-                              trips: res.body.trips.map((o) =>
-                                  TripOperationListDtoBuilder.buildFromModel(o),
+                              // 取得の仕方は一覧と同じで、trip・startTime・endTime が必ず入っている
+                              trips: res.body.trips.map(
+                                  (o) =>
+                                      TripOperationListDtoBuilder.buildFromModel(
+                                          o,
+                                      ) as TripOperationListWithTimesDto,
                               ),
                           }
                         : null,

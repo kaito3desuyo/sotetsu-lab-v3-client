@@ -90,7 +90,7 @@ export class TimetableEditFormService {
 
         return this.#serviceService.findOneWithRoutes({ serviceId }).pipe(
             tap((data) => {
-                const routes = data.routes as RouteDetailsDto[];
+                const routes = (data?.routes ?? []) as RouteDetailsDto[];
                 this.#store.setRoutes(routes);
                 this.#store.setSelectedRouteIds(
                     ownAgencyRouteIds(routes, this.#agencyListState.agencies()),
@@ -103,26 +103,34 @@ export class TimetableEditFormService {
     fetchOperations(): Observable<void> {
         const calendarId = this.#store.calendarId();
 
-        return this.#operationService.findManyByCalendarId({ calendarId }).pipe(
-            map((operations) =>
-                operations
-                    .filter((o) => o.operationNumber !== '100')
-                    // リアルタイム運用情報と同じ順（数字 → G → K）
-                    .sort(
-                        (a, b) =>
-                            Number(
-                                generateOperationSortNumber(a.operationNumber),
-                            ) -
-                            Number(
-                                generateOperationSortNumber(b.operationNumber),
-                            ),
-                    ),
-            ),
-            tap((operations: OperationDetailsDto[]) => {
-                this.#store.setOperations(operations);
-            }),
-            map(() => undefined),
-        );
+        return this.#operationService
+            .findManyByCalendarId({
+                calendarId: calendarId ?? undefined,
+            })
+            .pipe(
+                map((operations) =>
+                    operations
+                        .filter((o) => o.operationNumber !== '100')
+                        // リアルタイム運用情報と同じ順（数字 → G → K）
+                        .sort(
+                            (a, b) =>
+                                Number(
+                                    generateOperationSortNumber(
+                                        a.operationNumber,
+                                    ),
+                                ) -
+                                Number(
+                                    generateOperationSortNumber(
+                                        b.operationNumber,
+                                    ),
+                                ),
+                        ),
+                ),
+                tap((operations: OperationDetailsDto[]) => {
+                    this.#store.setOperations(operations);
+                }),
+                map(() => undefined),
+            );
     }
 
     fetchTripClasses(): Observable<void> {
@@ -209,7 +217,10 @@ export class TimetableEditFormService {
         }
 
         return this.#tripBlockService.findOneById({ id: tripBlockId }).pipe(
-            tap((tripBlock: TripBlockDetailsDto) => {
+            tap((tripBlock: TripBlockDetailsDto | null) => {
+                if (!tripBlock) {
+                    return;
+                }
                 this.#store.setTargetTripBlock(tripBlock);
                 this.#selectRoutesOf(tripBlock);
             }),

@@ -117,8 +117,8 @@ describe('TripBlockQuery', () => {
         downReq.flush([{ tripBlockId: 'down-1', trips: [] }]);
 
         expect(result).toBeDefined();
-        expect(Array.isArray(result[0])).toBe(true);
-        expect(Array.isArray(result[1])).toBe(true);
+        expect(Array.isArray(result?.[0])).toBe(true);
+        expect(Array.isArray(result?.[1])).toBe(true);
 
         // 2回目の呼び出し（上下とも既にキャッシュ済みのはず）
         query.findManyByCalendarId({ calendarId: 'cal-1' }).subscribe();

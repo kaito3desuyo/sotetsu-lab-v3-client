@@ -4,17 +4,17 @@ import { OperationModel } from 'src/app/libs/operation/infrastructure/models/ope
 export interface OperationSightingInvalidationModel {
     operationSightingInvalidationId: string;
     operationSightingId: string;
-    createdAt?: string;
-    updatedAt?: string;
+    createdAt: string;
+    updatedAt: string;
 }
 
 export interface OperationSightingModel {
     id: string;
-    formationId?: string;
-    operationId?: string;
-    sightingTime?: string;
-    createdAt?: string;
-    updatedAt?: string;
+    formationId: string;
+    operationId: string;
+    sightingTime: string;
+    createdAt: string;
+    updatedAt: string;
     operation?: OperationModel;
     formation?: FormationModel;
     invalidation?: OperationSightingInvalidationModel | null;

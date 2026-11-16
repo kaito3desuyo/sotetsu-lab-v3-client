@@ -23,7 +23,7 @@ import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { tripDirectionLabel } from 'src/app/libs/trip/usecase/constants/trip.constant';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
-import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
+import { TripWithTimesDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
 import { TripClassShortNamePipe } from 'src/app/core/pipes/trip-class-short-name.pipe';
@@ -67,7 +67,7 @@ export class TimetableAllLineTableComponent {
     readonly calendar = input<CalendarDetailsDto>();
     readonly tripDirection = input.required<ETripDirection>();
     readonly stations = input.required<StationDetailsDto[]>();
-    readonly trips = input.required<TripDetailsDto[]>();
+    readonly trips = input.required<TripWithTimesDto[]>();
     readonly pageSettings = input.required<PageEvent>();
     readonly viewModes =
         input.required<ReadonlyMap<string, ETimetableAllLineStationViewMode>>();
@@ -75,26 +75,26 @@ export class TimetableAllLineTableComponent {
     /** 列車ごとの始発駅・終着駅とその時刻（表の上端・下端の行）。 */
     readonly endpoints = input<ReadonlyMap<string, TripEndpoints>>(new Map());
     /** 列車ごとの、列の並びで 1 つ前の列車（ページ分けの前の並びから引いたもの）。 */
-    readonly previousTrips = input<ReadonlyMap<string, TripDetailsDto>>(
+    readonly previousTrips = input<ReadonlyMap<string, TripWithTimesDto>>(
         new Map(),
     );
 
     readonly page = output<PageEvent>();
-    readonly clickEditButton = output<TripDetailsDto>();
-    readonly clickCopyButton = output<TripDetailsDto>();
-    readonly clickDeleteButton = output<TripDetailsDto>();
+    readonly clickEditButton = output<TripWithTimesDto>();
+    readonly clickCopyButton = output<TripWithTimesDto>();
+    readonly clickDeleteButton = output<TripWithTimesDto>();
     readonly clickAddTripInGroup = output<{
-        base: TripDetailsDto;
-        target: TripDetailsDto;
+        base: TripWithTimesDto;
+        target: TripWithTimesDto;
     }>();
     readonly clickDeleteTripInGroup = output<{
-        base: TripDetailsDto;
-        target: TripDetailsDto;
+        base: TripWithTimesDto;
+        target: TripWithTimesDto;
     }>();
     /** G12: 0件時の空状態から、反対方向への切り替えを親（ページ）へ委譲する。 */
     readonly toggleDirection = output<void>();
 
-    readonly groupingBaseTrip = signal<TripDetailsDto | undefined>(undefined);
+    readonly groupingBaseTrip = signal<TripWithTimesDto | undefined>(undefined);
 
     // signal query は ES private（#）にできない Angular 制約があるため protected
     protected readonly originNameRow =

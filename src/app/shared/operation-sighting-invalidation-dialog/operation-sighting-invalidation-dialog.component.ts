@@ -51,7 +51,7 @@ export class OperationSightingInvalidationDialogComponent {
         const result = await tryCatchAsync(
             this.#operationSightingService.invalidate({
                 operationSightingId: this.#data.operationSightingId,
-                reason,
+                reason: reason ?? '',
             }),
             (e) => e as FetchError,
         );

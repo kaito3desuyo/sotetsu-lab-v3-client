@@ -99,10 +99,10 @@ export const OperationTableStore = signalStore(
             isLatestFetch(seq: number): boolean {
                 return seq === fetchSeq;
             },
-            setCalendarId(calendarId: string): void {
+            setCalendarId(calendarId: string | null): void {
                 patchState(store, { calendarId });
             },
-            setCalendar(calendar: CalendarDetailsDto): void {
+            setCalendar(calendar: CalendarDetailsDto | null): void {
                 patchState(store, { calendar });
             },
             /** 全量を入れる。削った配列で描いていた状態も終わる */

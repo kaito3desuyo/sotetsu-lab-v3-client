@@ -4,13 +4,13 @@ import { RouteDetailsDto } from './route-details.dto';
 export interface RouteStationListDetailsDto {
     routeStationListId: string;
 
-    routeId?: string;
+    routeId: string;
 
-    stationId?: string;
+    stationId: string;
 
-    stationSequence?: number;
+    stationSequence: number;
 
-    stationNumbering?: string;
+    stationNumbering: string | null;
 
     route?: RouteDetailsDto;
 

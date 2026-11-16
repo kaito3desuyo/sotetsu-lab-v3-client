@@ -1,5 +1,5 @@
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
-import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
+import { TripBlockWithTripsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 
 /**
  * 運行が走る路線の routeId を返す。路線の駅のうち 2 駅以上に時刻（停車・通過）がある路線を
@@ -13,7 +13,7 @@ import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-b
  */
 export function traversedRouteIds(
     stations: readonly StationDetailsDto[],
-    tripBlocks: readonly TripBlockDetailsDto[],
+    tripBlocks: readonly TripBlockWithTripsDto[],
 ): string[] {
     const stationIds = new Set(
         tripBlocks.flatMap((block) =>

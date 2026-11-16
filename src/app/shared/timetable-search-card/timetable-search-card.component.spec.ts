@@ -48,7 +48,7 @@ describe('TimetableSearchCardComponent', () => {
             searchByStation: false,
             stationId: '',
         });
-        expect(component.form.get('stationId').disabled).toBe(true);
+        expect(component.form.controls.stationId.disabled).toBe(true);
     });
 
     it('ページから渡したダイヤ・方向・駅をフォームに入れ、駅があれば駅指定にする', () => {
@@ -63,7 +63,7 @@ describe('TimetableSearchCardComponent', () => {
             searchByStation: true,
             stationId: 'st-1',
         });
-        expect(component.form.get('stationId').enabled).toBe(true);
+        expect(component.form.controls.stationId.enabled).toBe(true);
     });
 
     it('ページの値が変われば（同じページ内の遷移）フォームを入れ直す', () => {
@@ -72,7 +72,7 @@ describe('TimetableSearchCardComponent', () => {
         fixture.componentRef.setInput('calendarId', 'cal-2');
         fixture.detectChanges();
 
-        expect(component.form.get('calendarId').value).toBe('cal-2');
+        expect(component.form.controls.calendarId.value).toBe('cal-2');
     });
 
     it('駅を指定しなければ全線時刻表へ移る', () => {

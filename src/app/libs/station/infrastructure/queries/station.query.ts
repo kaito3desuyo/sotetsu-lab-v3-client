@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { QueryCache } from 'src/app/core/query-cache/query-cache';
+import { requireBody } from 'src/app/core/utils/require-body';
 import { environment } from 'src/environments/environment';
 import { StationDetailsDto } from '../../usecase/dtos/station-details.dto';
 import { StationDtoBuilder } from '../builders/station.dto.builder';
@@ -32,7 +33,9 @@ export class StationQuery {
             })
             .pipe(
                 map((res) =>
-                    res.body.map((o) => StationDtoBuilder.buildFromModel(o)),
+                    requireBody(res).map((o) =>
+                        StationDtoBuilder.buildFromModel(o),
+                    ),
                 ),
             );
     }

@@ -5,16 +5,16 @@ import { TripModel } from './trip.model';
 
 export interface TimeModel {
     id: string;
-    tripId?: string;
-    stationId?: string;
+    tripId: string;
+    stationId: string;
     stopId?: string;
-    stopSequence?: number;
-    pickupType?: number;
-    dropoffType?: number;
-    arrivalDays?: number;
-    arrivalTime?: string;
-    departureDays?: number;
-    departureTime?: string;
+    stopSequence: number;
+    pickupType: number;
+    dropoffType: number;
+    arrivalDays: number | null;
+    arrivalTime: string | null;
+    departureDays: number | null;
+    departureTime: string | null;
     createdAt?: string;
     updatedAt?: string;
     trip?: TripModel;

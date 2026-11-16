@@ -101,9 +101,12 @@ describe('selectSightingCallOperations', () => {
 
     it('運用番号の無い要素は返さない', () => {
         const operations: OperationDetailsDto[] = [
-            { operationId: 'o1' },
-            { operationId: 'o2', operationNumber: '' },
-            { operationId: 'o3', operationNumber: '12K' },
+            { operationId: 'o1' } as OperationDetailsDto,
+            { operationId: 'o2', operationNumber: '' } as OperationDetailsDto,
+            {
+                operationId: 'o3',
+                operationNumber: '12K',
+            } as OperationDetailsDto,
         ];
         expect(
             selectSightingCallOperations({
@@ -116,8 +119,14 @@ describe('selectSightingCallOperations', () => {
 
     it('実際の OperationDetailsDto[] をキャストなしで受けられる', () => {
         const operations: OperationDetailsDto[] = [
-            { operationId: 'o1', operationNumber: '12K' },
-            { operationId: 'o2', operationNumber: '58S' },
+            {
+                operationId: 'o1',
+                operationNumber: '12K',
+            } as OperationDetailsDto,
+            {
+                operationId: 'o2',
+                operationNumber: '58S',
+            } as OperationDetailsDto,
         ];
         const selected: OperationDetailsDto[] = selectSightingCallOperations({
             operations,

@@ -41,7 +41,7 @@ export class OperationPastTimeFilterComponent {
         agenciesInThroughServiceOrder(this.agencies(), this.routes()).map(
             (agency) => ({
                 value: agency.agencyId,
-                label: agency.agencyName,
+                label: agency.agencyName ?? '',
             }),
         ),
     );

@@ -176,7 +176,7 @@ export class TimetableEditFormGridComponent {
         tripForm: ITimetableEditFormTrip,
         timeIndex: number,
     ): void {
-        const control = this.#timeForm(tripForm, timeIndex).get('stopType');
+        const control = this.#timeForm(tripForm, timeIndex).controls.stopType;
         control.markAsDirty();
         control.setValue(nextStopType(control.value));
     }
@@ -212,7 +212,7 @@ export class TimetableEditFormGridComponent {
         this.onRowBlur();
         const el = event.target as HTMLInputElement;
         const timeForm = this.#timeForm(tripForm, timeIndex);
-        const control = timeForm.get(field);
+        const control = timeForm.controls[field];
         const next = normalizeTimeDigits(el.value);
 
         if (next === undefined) {
@@ -225,7 +225,7 @@ export class TimetableEditFormGridComponent {
 
         // ‖ の駅に時刻を打つと停にする。‖ の control には保存で捨てられる古い値が
         // 残っていることがあるので、値の比較より先に判定する
-        const stopType = timeForm.get('stopType');
+        const stopType = timeForm.controls.stopType;
         if (
             next !== null &&
             stopType.value === ETimetableEditFormStopType.NOT_GOING_THROUGH
@@ -283,7 +283,7 @@ export class TimetableEditFormGridComponent {
         ) as FormArray<ITimetableEditFormTripTime>;
         const times = timesForm.getRawValue();
         const tripNumber =
-            tripForm.get('tripNumber').value || `${tripIndex + 1}本目`;
+            tripForm.controls.tripNumber.value || `${tripIndex + 1}本目`;
         const { first, last } = findEndpointIndexes(times);
         const disablesEndpoints = first !== last;
         const errors = findTimeOrderErrors(times);
@@ -300,13 +300,15 @@ export class TimetableEditFormGridComponent {
         const cells = this.visibleStations()
             .map((station) => {
                 const timeIndex = stationIndexes.get(station.stationId);
+                if (timeIndex === undefined) return null;
                 const time = times[timeIndex];
                 if (!time) return null;
 
                 const notGoing =
                     time.stopType ===
                     ETimetableEditFormStopType.NOT_GOING_THROUGH;
-                const mark = timetableEditFormStopTypeMark.get(time.stopType);
+                const mark =
+                    timetableEditFormStopTypeMark.get(time.stopType) ?? '';
                 const timeCell = (
                     field: TimetableEditFormTimeField,
                     endpointIndex: number | null,
@@ -342,7 +344,7 @@ export class TimetableEditFormGridComponent {
                 `${tripNumber}: ${stations[e.index]?.stationName}の${timetableEditFormTimeFieldLabel.get(e.field)}（${e.time}）が${stations[e.prevIndex]?.stationName}（${e.prevTime}）より早い`,
         );
         const direction = tripDirectionLabel.get(
-            tripForm.get('tripDirection').value,
+            tripForm.controls.tripDirection.value,
         );
         messages.push(
             ...routeErrors.map(
@@ -372,7 +374,7 @@ export class TimetableEditFormGridComponent {
                     ? null
                     : times[last]?.arrivalTime || null,
             tripClass: this.#tripClassMap().get(
-                tripForm.get('tripClassId').value,
+                tripForm.controls.tripClassId.value,
             ),
             cells,
             messages,

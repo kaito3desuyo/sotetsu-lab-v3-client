@@ -6,25 +6,25 @@ import { StopDetailsDto } from 'src/app/libs/station/usecase/dtos/stop-details.d
 export interface TimeDetailsDto {
     timeId: string;
 
-    tripId?: string;
+    tripId: string;
 
-    stationId?: string;
+    stationId: string;
 
     stopId?: string;
 
-    stopSequence?: number;
+    stopSequence: number;
 
-    pickupType?: number;
+    pickupType: number;
 
-    dropoffType?: number;
+    dropoffType: number;
 
-    arrivalDays?: number;
+    arrivalDays: number | null;
 
-    arrivalTime?: string;
+    arrivalTime: string | null;
 
-    departureDays?: number;
+    departureDays: number | null;
 
-    departureTime?: string;
+    departureTime: string | null;
 
     createdAt?: string;
 

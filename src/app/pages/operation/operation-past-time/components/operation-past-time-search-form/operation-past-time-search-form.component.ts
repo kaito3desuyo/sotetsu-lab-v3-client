@@ -86,26 +86,26 @@ export class OperationPastTimeSearchFormComponent {
         effect(() => {
             const referenceDate = this.referenceDate();
             if (referenceDate) {
-                this.form
-                    .get('referenceDate')
-                    .setValue(parse(referenceDate, 'yyyy-MM-dd', new Date()));
+                this.form.controls.referenceDate.setValue(
+                    parse(referenceDate, 'yyyy-MM-dd', new Date()),
+                );
             } else {
-                this.form.get('referenceDate').reset();
+                this.form.controls.referenceDate.reset();
             }
         });
 
         effect(() => {
             const days = this.days();
             if (days) {
-                this.form.get('days').setValue(days);
+                this.form.controls.days.setValue(days);
             } else {
-                this.form.get('days').reset();
+                this.form.controls.days.reset();
             }
         });
 
         effect(() => {
             const includeInvalidated = this.includeInvalidated();
-            this.form.get('includeInvalidated').setValue(includeInvalidated);
+            this.form.controls.includeInvalidated.setValue(includeInvalidated);
         });
     }
 
@@ -114,9 +114,9 @@ export class OperationPastTimeSearchFormComponent {
             return;
         }
 
-        const referenceDate = this.form.get('referenceDate').value;
-        const days = this.form.get('days').value;
-        const includeInvalidated = this.form.get('includeInvalidated').value;
+        const referenceDate = this.form.controls.referenceDate.value;
+        const days = this.form.controls.days.value;
+        const includeInvalidated = this.form.controls.includeInvalidated.value;
 
         if (!referenceDate || !days) {
             return;

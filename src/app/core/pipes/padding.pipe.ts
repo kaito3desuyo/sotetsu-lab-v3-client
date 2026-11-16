@@ -1,6 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
-const padding = (str: string, num: number, pad: string) => {
+const padding = (str: string, num: number, pad?: string) => {
     if (!pad) {
         pad = '　';
     }

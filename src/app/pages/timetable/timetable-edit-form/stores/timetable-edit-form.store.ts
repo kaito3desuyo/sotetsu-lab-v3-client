@@ -144,10 +144,10 @@ export const TimetableEditFormStore = signalStore(
                 });
             },
 
-            setMode(mode: ETimetableEditFormMode): void {
+            setMode(mode: ETimetableEditFormMode | null): void {
                 patchState(store, { mode });
             },
-            setCalendarId(calendarId: string): void {
+            setCalendarId(calendarId: string | null): void {
                 patchState(store, { calendarId });
             },
             setTripDirection(tripDirection: ETripDirection): void {

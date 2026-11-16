@@ -5,7 +5,7 @@ import { QueryInvalidator } from 'src/app/core/query-cache/query-invalidator';
 import { SKIP_TRANSFER_CACHE } from 'src/app/core/ssr/skip-transfer-cache';
 import { ServiceListState } from 'src/app/global-states/service-list.state';
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
-import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
+import { TripBlockWithTripsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { TimetableAllLineStore } from '../stores/timetable-all-line.store';
 import { TimetableAllLineService } from './timetable-all-line.service';
@@ -47,7 +47,7 @@ describe('Service: TimetableAllLine の fetchTripBlocks', () => {
     it('trip_block_id の運行が無い（api が null を返す）ときは、空の配列を入れる', async () => {
         const store = TestBed.inject(TimetableAllLineStore);
         store.setTripBlockId('00000000-0000-4000-8000-0000000000b1');
-        const previous: TripBlockDetailsDto = { tripBlockId: 'old' };
+        const previous = { tripBlockId: 'old' } as TripBlockWithTripsDto;
         store.setTripBlocks([previous]);
         tripBlockService.findOneById.mockReturnValue(of(null));
 
@@ -64,7 +64,7 @@ describe('Service: TimetableAllLine 1 ページ目だけの受け渡し', () => 
     const ORDER_KEY = makeStateKey<unknown>('timetable-all-line-order');
 
     /** 1 つの駅に 1 本だけ停まる運行。n 番目は 00:n 分発で、入力順がそのまま並びになる */
-    const block = (n: number): TripBlockDetailsDto =>
+    const block = (n: number): TripBlockWithTripsDto =>
         ({
             tripBlockId: `b${n}`,
             trips: [
@@ -84,7 +84,7 @@ describe('Service: TimetableAllLine 1 ページ目だけの受け渡し', () => 
                     ],
                 },
             ],
-        }) as unknown as TripBlockDetailsDto;
+        }) as unknown as TripBlockWithTripsDto;
     const makeBlocks = (count: number) =>
         Array.from({ length: count }, (_, i) => block(i));
 
@@ -303,7 +303,7 @@ describe('Service: TimetableAllLine 1 ページ目だけの受け渡し', () => 
     });
 
     it('取り直しの間に条件が替わったら、古い条件の中身でストアを上書きしない', async () => {
-        const response$ = new Subject<TripBlockDetailsDto[]>();
+        const response$ = new Subject<TripBlockWithTripsDto[]>();
         const { service, store } = setup({
             platform: 'browser',
             findManyByFilter: jest.fn(() => response$),

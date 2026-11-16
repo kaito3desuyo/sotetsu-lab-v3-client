@@ -5,8 +5,8 @@ import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { ETimetableEditFormMode } from '../enums/timetable-edit-form.enum';
 
 export type TimetableEditFormDraftContext = {
-    mode: ETimetableEditFormMode;
-    calendarId: string;
+    mode: ETimetableEditFormMode | null;
+    calendarId: string | null;
     tripDirection: ETripDirection | null;
     tripBlockId: string | null;
 };

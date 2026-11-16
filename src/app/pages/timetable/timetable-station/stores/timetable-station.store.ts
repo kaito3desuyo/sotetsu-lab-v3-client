@@ -19,16 +19,16 @@ import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operati
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
-import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
-import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
+import { TripBlockWithTripsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
+import { TripWithTimesDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 
 type StoreProps = {
     calendarId: CalendarDetailsDto['calendarId'] | null;
     stationId: StationDetailsDto['stationId'] | null;
     tripDirection: ETripDirection | null;
     calendar: CalendarDetailsDto | null;
-    trips: TripDetailsDto[];
-    tripBlocks: TripBlockDetailsDto[];
+    trips: TripWithTimesDto[];
+    tripBlocks: TripBlockWithTripsDto[];
     tripClasses: TripClassDetailsDto[];
     stations: StationDetailsDto[];
     operations: OperationDetailsDto[];
@@ -82,10 +82,10 @@ const initialState: StoreProps = {
 };
 
 function sortTrips(
-    trips: TripDetailsDto[],
-    tripBlocks: TripBlockDetailsDto[],
-    stationId: StationDetailsDto['stationId'],
-): TripDetailsDto[] {
+    trips: TripWithTimesDto[],
+    tripBlocks: TripBlockWithTripsDto[],
+    stationId: StationDetailsDto['stationId'] | null,
+): TripWithTimesDto[] {
     return trips
         .map((o) => ({
             ...o,
@@ -96,7 +96,7 @@ function sortTrips(
         .map((o) => ({
             ...o,
             tripBlock: {
-                ...o.tripBlock,
+                ...(o.tripBlock ?? { tripBlockId: o.tripBlockId }),
                 trips: (o.tripBlock?.trips ?? []).sort((a, b) => {
                     const aTime = minBy(a.times, (o2) => o2.stopSequence);
                     const bTime = minBy(b.times, (o2) => o2.stopSequence);
@@ -140,28 +140,32 @@ function sortTrips(
         });
 }
 
-function extractOperationIds(trips: TripDetailsDto[]): string[] {
+function extractOperationIds(trips: TripWithTimesDto[]): string[] {
     return Array.from(
         new Set(
             trips
                 .filter((trip) => trip.tripOperationLists?.length)
-                .map((trip) => trip.tripOperationLists?.[0]?.operationId),
+                .flatMap((trip) => {
+                    const operationId =
+                        trip.tripOperationLists?.[0]?.operationId;
+                    return operationId === undefined ? [] : [operationId];
+                }),
         ),
     );
 }
 
 function generateTableData(
-    trips: TripDetailsDto[],
-    stationId: StationDetailsDto['stationId'],
+    trips: TripWithTimesDto[],
+    stationId: StationDetailsDto['stationId'] | null,
 ): {
-    day: number;
-    hour: string;
-    trips: TripDetailsDto[];
+    day: number | null;
+    hour: string | null;
+    trips: TripWithTimesDto[];
 }[] {
     const data: {
-        day: number;
-        hour: string;
-        trips: TripDetailsDto[];
+        day: number | null;
+        hour: string | null;
+        trips: TripWithTimesDto[];
     }[] = [];
 
     for (const trip of trips) {
@@ -225,22 +229,26 @@ export const TimetableStationStore = signalStore(
             isLatestFetch(seq: number): boolean {
                 return seq === fetchSeq;
             },
-            setCalendarId(calendarId: CalendarDetailsDto['calendarId']): void {
+            setCalendarId(
+                calendarId: CalendarDetailsDto['calendarId'] | null,
+            ): void {
                 patchState(store, { calendarId });
             },
-            setStationId(stationId: StationDetailsDto['stationId']): void {
+            setStationId(
+                stationId: StationDetailsDto['stationId'] | null,
+            ): void {
                 patchState(store, { stationId });
             },
-            setTripDirection(tripDirection: ETripDirection): void {
+            setTripDirection(tripDirection: ETripDirection | null): void {
                 patchState(store, { tripDirection });
             },
-            setCalendar(calendar: CalendarDetailsDto): void {
+            setCalendar(calendar: CalendarDetailsDto | null): void {
                 patchState(store, { calendar });
             },
-            setTrips(trips: TripDetailsDto[]): void {
+            setTrips(trips: TripWithTimesDto[]): void {
                 patchState(store, { trips });
             },
-            setTripBlocks(tripBlocks: TripBlockDetailsDto[]): void {
+            setTripBlocks(tripBlocks: TripBlockWithTripsDto[]): void {
                 patchState(store, { tripBlocks });
             },
             setTripClasses(tripClasses: TripClassDetailsDto[]): void {

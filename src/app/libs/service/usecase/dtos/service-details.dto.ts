@@ -3,7 +3,7 @@ export interface ServiceDetailsDto {
 
     serviceName: string;
 
-    serviceDescription: string;
+    serviceDescription: string | null;
 
     createdAt: string;
 

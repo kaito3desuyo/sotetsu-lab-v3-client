@@ -14,7 +14,7 @@ import { visibleStations } from 'src/app/core/utils/visible-stations.util';
 import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
-import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
+import { TripOperationListWithTimesDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
 import {
     FilterChipOption,
     FilterChipValue,
@@ -63,7 +63,7 @@ const initialState: StoreProps = {
  */
 function tripsOf(
     state: Pick<StoreProps, 'operationTrips' | 'stationAliases'>,
-): TripOperationListDetailsDto[] {
+): TripOperationListWithTimesDto[] {
     return applyRouteDiagramStationAliases(
         state.operationTrips?.trips ?? [],
         state.stationAliases,
@@ -175,7 +175,7 @@ export const OperationRouteDiagramStore = signalStore(
             isLatestCalendarChange(seq: number): boolean {
                 return seq === calendarChangeSeq;
             },
-            setOperationId(operationId: string): void {
+            setOperationId(operationId: string | null): void {
                 patchState(store, { operationId });
             },
             setOperationTrips(operationTrips: OperationTripsDto | null): void {

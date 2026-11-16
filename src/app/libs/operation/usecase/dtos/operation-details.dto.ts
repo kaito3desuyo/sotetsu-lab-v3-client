@@ -3,13 +3,13 @@ import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-
 export interface OperationDetailsDto {
     operationId: string;
 
-    calendarId?: string;
+    calendarId: string;
 
-    operationNumber?: string;
+    operationNumber: string;
 
-    createdAt?: string;
+    createdAt: string;
 
-    updatedAt?: string;
+    updatedAt: string;
 
     calendar?: CalendarDetailsDto;
 }

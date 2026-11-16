@@ -48,8 +48,8 @@ export interface OperationRouteDiagramBandRow {
     centerY: number;
     leftX: number;
     rightX: number;
-    leftTime?: string;
-    rightTime?: string;
+    leftTime?: string | null;
+    rightTime?: string | null;
     /** 左端の外側に書く字（時刻。図の外の端は駅名＋時刻） */
     leftLabel?: string;
     /** 右端の外側に書く字 */

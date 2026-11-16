@@ -5,7 +5,10 @@ import { maxBy } from 'es-toolkit/compat';
     name: 'maxBy',
 })
 export class MaxByPipe implements PipeTransform {
-    transform<T>(array: T[], options: { propertyName: keyof T }): T {
+    transform<T>(
+        array: T[],
+        options: { propertyName: keyof T },
+    ): T | undefined {
         return maxBy(array, (o) => o[options.propertyName]);
     }
 }

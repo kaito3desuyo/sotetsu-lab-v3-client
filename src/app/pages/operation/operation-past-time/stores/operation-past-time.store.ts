@@ -33,8 +33,8 @@ type OperationSightingsGroupedByDate = {
 };
 
 type StoreProps = {
-    referenceDate: string;
-    days: number;
+    referenceDate: string | null;
+    days: number | null;
     includeInvalidated: boolean;
     calendars: { date: string; calendar: CalendarDetailsDto }[];
     operations: OperationDetailsDto[];
@@ -68,7 +68,10 @@ const initialState: StoreProps = {
 };
 
 /** 基準日**から**先へ N 日間を返す（v2 以来の仕様。ユーザー確認 2026-09-24）。 */
-export function generateDates(referenceDate: string, days: number): string[] {
+export function generateDates(
+    referenceDate: string | null,
+    days: number | null,
+): string[] {
     if (!referenceDate || !days) return [];
 
     const initializeTime = flow(
@@ -137,11 +140,11 @@ export const OperationPastTimeStore = signalStore(
             isLatestFetch(seq: number): boolean {
                 return seq === fetchSeq;
             },
-            setReferenceDate(referenceDate: string): void {
-                patchState(store, { referenceDate });
+            setReferenceDate(referenceDate: string | undefined): void {
+                patchState(store, { referenceDate: referenceDate ?? null });
             },
-            setDays(days: number): void {
-                patchState(store, { days });
+            setDays(days: number | undefined): void {
+                patchState(store, { days: days ?? null });
             },
             setIncludeInvalidated(includeInvalidated: boolean): void {
                 patchState(store, { includeInvalidated });

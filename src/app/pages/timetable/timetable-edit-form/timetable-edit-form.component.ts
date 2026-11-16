@@ -12,7 +12,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 import { MatSnackBar, MatSnackBarRef } from '@angular/material/snack-bar';
 import { ActivatedRoute } from '@angular/router';
-import { forkJoin, lastValueFrom, Observable } from 'rxjs';
+import { forkJoin, lastValueFrom, Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { PageNotFound } from 'src/app/core/page-not-found/page-not-found';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
@@ -287,6 +287,7 @@ export class TimetableEditFormComponent {
             } else if (isReplaceTripDto(trips)) {
                 return this.#timetableEditFormService.replaceTripBlock(trips);
             }
+            return of(undefined);
         };
 
         this.#loading.open();
@@ -314,7 +315,7 @@ export class TimetableEditFormComponent {
         };
 
         this.#draftRestoreRef?.dismiss();
-        this.#notification.open(message(), 'OK');
+        this.#notification.open(message() ?? '', 'OK');
         this.#timetableEditFormService.clearDraft();
         this.#timetableEditFormService.emitSubmittedEvent();
     }

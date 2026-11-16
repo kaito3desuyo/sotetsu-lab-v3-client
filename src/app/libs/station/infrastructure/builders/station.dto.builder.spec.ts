@@ -1,3 +1,6 @@
+import { RouteStationListModel } from 'src/app/libs/route/infrastructure/models/route-station-list.model';
+import { RouteModel } from 'src/app/libs/route/infrastructure/models/route.model';
+import { TimeModel } from 'src/app/libs/trip/infrastructure/models/time.model';
 import { StationModel } from '../models/station.model';
 import { StationDtoBuilder } from './station.dto.builder';
 
@@ -23,8 +26,8 @@ describe('StationDtoBuilder', () => {
                     {
                         id: 'rsl-1',
                         routeId: 'r-1',
-                        route: { id: 'r-1', routeName: '本線' },
-                    },
+                        route: { id: 'r-1', routeName: '本線' } as RouteModel,
+                    } as RouteStationListModel,
                 ],
                 stops: [
                     {
@@ -38,7 +41,7 @@ describe('StationDtoBuilder', () => {
                         updatedAt: '',
                     },
                 ],
-                times: [{ id: 'time-1', stationId: 'st-1' }],
+                times: [{ id: 'time-1', stationId: 'st-1' } as TimeModel],
             }),
         );
 
@@ -50,8 +53,8 @@ describe('StationDtoBuilder', () => {
                 route: { routeId: 'r-1', routeName: '本線' },
             },
         ]);
-        expect(dto.stops[0].stopId).toBe('stop-1');
-        expect(dto.times[0].timeId).toBe('time-1');
+        expect(dto.stops?.[0].stopId).toBe('stop-1');
+        expect(dto.times?.[0].timeId).toBe('time-1');
     });
 
     it('入れ子が無いときは undefined のまま', () => {

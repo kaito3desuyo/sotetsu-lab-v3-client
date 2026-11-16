@@ -4,8 +4,12 @@ import { OperationSightingTimeCrossSectionDto } from '../../usecase/dtos/operati
 import { OperationSightingTimeCrossSectionModel } from '../models/operation-sighting-time-cross-section.model';
 import { OperationSightingDtoBuilder } from './operation-sighting.dto.builder';
 
-type ExpectedModel = OperationSightingTimeCrossSectionModel['expectedSighting'];
-type ExpectedDto = OperationSightingTimeCrossSectionDto['expectedSighting'];
+type ExpectedModel = NonNullable<
+    OperationSightingTimeCrossSectionModel['expectedSighting']
+>;
+type ExpectedDto = NonNullable<
+    OperationSightingTimeCrossSectionDto['expectedSighting']
+>;
 
 /** 推定の目撃は id も入れ子も欠けうる（部分的な目撃）。あるものだけ付け替える */
 const buildExpectedSighting = ({

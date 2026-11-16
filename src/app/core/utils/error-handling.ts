@@ -6,7 +6,7 @@ export type PromiseResult<T, E extends Error> = Promise<Result<T, E>>;
 export class Success<T> {
     readonly value: T;
 
-    constructor(value?: T) {
+    constructor(value: T) {
         this.value = value;
     }
 
@@ -42,7 +42,7 @@ export async function tryCatchAsync<T, E extends Error>(
     try {
         if (isObservable(fn)) {
             const result = await fn.toPromise();
-            return new Success(result);
+            return new Success(result as T);
         } else {
             const result = await fn;
             return new Success(result);

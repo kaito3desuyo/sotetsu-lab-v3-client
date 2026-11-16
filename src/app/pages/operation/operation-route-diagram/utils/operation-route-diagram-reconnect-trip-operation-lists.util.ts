@@ -1,5 +1,5 @@
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
-import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
+import { TripOperationListWithTimesDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
 
 /** 表示中の先頭の駅より前にある、隠した駅をまとめる列（図の左端の「図外」） */
 export const ROUTE_DIAGRAM_OUTSIDE_LEFT_ID = '__route-diagram-outside-left__';
@@ -33,7 +33,7 @@ export function isRouteDiagramOutsideStationId(
  * （図には時刻の前に駅名を書き、○・△ は付けない）。
  */
 export type OperationRouteDiagramTripOperationList =
-    TripOperationListDetailsDto & {
+    TripOperationListWithTimesDto & {
         startHiddenStationName?: string;
         endHiddenStationName?: string;
     };
@@ -54,7 +54,7 @@ export type OperationRouteDiagramTripOperationList =
  * 時刻・列車番号・種別等の他フィールドは一切変更しない。
  */
 export function reconnectTripOperationLists(
-    tripOperationLists: readonly TripOperationListDetailsDto[],
+    tripOperationLists: readonly TripOperationListWithTimesDto[],
     allStations: readonly StationDetailsDto[],
     visibleStations: readonly StationDetailsDto[],
 ): OperationRouteDiagramTripOperationList[] {
@@ -68,8 +68,8 @@ export function reconnectTripOperationLists(
     const firstVisibleIndex = visibleAllIndexes[0];
     const lastVisibleIndex = visibleAllIndexes[visibleAllIndexes.length - 1];
 
-    function reconnect(stationId: string | undefined): {
-        stationId: string | undefined;
+    function reconnect(stationId: string): {
+        stationId: string;
         hiddenStationName?: string;
     } {
         if (!stationId || visibleIds.has(stationId)) return { stationId };
@@ -111,17 +111,16 @@ export function reconnectTripOperationLists(
     }
 
     return tripOperationLists.map((tripOperationList) => {
-        const start = reconnect(tripOperationList.startTime?.stationId);
-        const end = reconnect(tripOperationList.endTime?.stationId);
+        const start = reconnect(tripOperationList.startTime.stationId);
+        const end = reconnect(tripOperationList.endTime.stationId);
 
         return {
             ...tripOperationList,
-            startTime: tripOperationList.startTime
-                ? { ...tripOperationList.startTime, stationId: start.stationId }
-                : tripOperationList.startTime,
-            endTime: tripOperationList.endTime
-                ? { ...tripOperationList.endTime, stationId: end.stationId }
-                : tripOperationList.endTime,
+            startTime: {
+                ...tripOperationList.startTime,
+                stationId: start.stationId,
+            },
+            endTime: { ...tripOperationList.endTime, stationId: end.stationId },
             startHiddenStationName: start.hiddenStationName,
             endHiddenStationName: end.hiddenStationName,
         };

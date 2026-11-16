@@ -1,4 +1,4 @@
-import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
+import { TripBlockWithTripsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { stationTrips } from './station-trips.util';
 
 function trip(
@@ -15,7 +15,7 @@ function trip(
     };
 }
 
-function blocks(...trips: any[]): TripBlockDetailsDto[] {
+function blocks(...trips: any[]): TripBlockWithTripsDto[] {
     return trips.map((t, i) => ({ tripBlockId: `b${i}`, trips: [t] })) as never;
 }
 

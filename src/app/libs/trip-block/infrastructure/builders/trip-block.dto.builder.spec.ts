@@ -35,15 +35,15 @@ describe('TripBlockDtoBuilder', () => {
 
         expect(dto.tripBlockId).toBe('block-1');
         expect(dto.createdAt).toBe('2026-03-14T00:00:00.000Z');
-        const [trip] = dto.trips;
+        const [trip] = dto.trips ?? [];
         expect(trip.tripId).toBe('trip-1');
         expect(trip.tripBlockId).toBe('block-1');
-        expect(trip.times[0]).toEqual({
+        expect(trip.times?.[0]).toEqual({
             timeId: 'time-1',
             stationId: 'st-1',
             departureTime: '05:00:00',
         });
-        expect(trip.tripOperationLists[0]).toEqual({
+        expect(trip.tripOperationLists?.[0]).toEqual({
             tripOperationListId: 'tol-1',
             operationId: 'op-1',
             operation: { operationId: 'op-1', operationNumber: '58K' },
@@ -66,11 +66,11 @@ describe('TripBlockDtoBuilder', () => {
             ],
         } as TripBlockModel);
 
-        expect(dto.trips[0].times[0]).toEqual({
+        expect(dto.trips?.[0].times?.[0]).toEqual({
             timeId: undefined,
             stationId: 'st-1',
             departureTime: '05:00',
         });
-        expect(dto.trips[0].tripOperationLists).toBeUndefined();
+        expect(dto.trips?.[0].tripOperationLists).toBeUndefined();
     });
 });

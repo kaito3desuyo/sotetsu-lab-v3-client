@@ -130,8 +130,8 @@ export class SidenavComponent {
     });
 
     #generateTimetableLink(params: {
-        todaysCalendarId: CalendarDetailsDto['calendarId'];
-        selectedStationId: StationDetailsDto['stationId'];
+        todaysCalendarId: CalendarDetailsDto['calendarId'] | undefined;
+        selectedStationId: StationDetailsDto['stationId'] | null | undefined;
         tripDirection: ETripDirection;
     }): [string, string, {}] {
         const { todaysCalendarId, selectedStationId, tripDirection } = params;

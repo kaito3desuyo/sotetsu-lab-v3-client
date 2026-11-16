@@ -291,9 +291,9 @@ export class OperationRouteDiagramDrawingComponent {
             ? 'rgb(217, 83, 79)'
             : 'rgb(66, 139, 202)';
 
-        const getSvgUrl = (svgElementRef: ElementRef) => {
+        const getSvgUrl = (svgElementRef: ElementRef | undefined) => {
             const svgText = new XMLSerializer().serializeToString(
-                svgElementRef.nativeElement,
+                svgElementRef?.nativeElement,
             );
             const svgBlob = new Blob([svgText], { type: 'image/svg+xml' });
             const svgUrl = URL.createObjectURL(svgBlob);
@@ -318,6 +318,9 @@ export class OperationRouteDiagramDrawingComponent {
             canvas.width = image.width;
             canvas.height = image.height + HEADER_CANVAS_HEIGHT + 16;
             const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                throw new TypeError('2d context is not available.');
+            }
 
             // header
             ctx.fillStyle = color;

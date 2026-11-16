@@ -218,8 +218,8 @@ export class OperationPostFormComponent {
     }
 
     readonly timeSetting = toSignal(
-        this.sightingForm.get('timeSetting').valueChanges,
-        { initialValue: this.sightingForm.get('timeSetting').value },
+        this.sightingForm.controls.timeSetting.valueChanges,
+        { initialValue: this.sightingForm.controls.timeSetting.value },
     );
     readonly timeSettingOptions: readonly [
         SegmentToggleOption,
@@ -249,7 +249,7 @@ export class OperationPostFormComponent {
     }
 
     onTimeSettingChange(value: 'currentTime' | 'specifiedTime'): void {
-        this.sightingForm.get('timeSetting').setValue(value);
+        this.sightingForm.controls.timeSetting.setValue(value);
     }
 
     /** 編成の候補を押したとき、所属が空ならその編成の会社を入れる（押した候補の会社を入れるだけで推測はしない） */
@@ -262,9 +262,9 @@ export class OperationPostFormComponent {
 
     /** 送る前の確認で止めた理由の文言。止めていなければ空 */
     precheckMessage(controlName: 'operationNumber' | 'sightingTime'): string {
-        const reason = this.sightingForm
-            .get(controlName)
-            .getError('precheck') as SightingBlockReason | null;
+        const reason = this.sightingForm.controls[controlName].getError(
+            'precheck',
+        ) as SightingBlockReason | null;
         return reason ? this.blockMessages[reason] : '';
     }
 
@@ -301,25 +301,23 @@ export class OperationPostFormComponent {
             });
 
         // 選んだ番号と違う値に打ち直したら、列車から選んだとは数えない
-        this.sightingForm
-            .get('operationNumber')
-            .valueChanges.pipe(takeUntilDestroyed(this.#destroyRef))
+        this.sightingForm.controls.operationNumber.valueChanges
+            .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe((value) => {
                 if (value !== this.#pickedOperationNumber) {
                     this.#operationFromTrain = false;
                 }
             });
 
-        this.sightingForm
-            .get('timeSetting')
-            .valueChanges.pipe(takeUntilDestroyed(this.#destroyRef))
+        this.sightingForm.controls.timeSetting.valueChanges
+            .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe((value) => {
                 switch (value) {
                     case 'currentTime':
-                        this.sightingForm.get('sightingTime').disable();
+                        this.sightingForm.controls.sightingTime.disable();
                         break;
                     case 'specifiedTime':
-                        this.sightingForm.get('sightingTime').enable();
+                        this.sightingForm.controls.sightingTime.enable();
                         break;
                 }
             });
@@ -355,11 +353,14 @@ export class OperationPostFormComponent {
         } finally {
             this.refreshingLists.set(false);
         }
-        const { agencyId, timeSetting, sightingTime } = this.sightingForm.value;
+        // 無効にするのは目撃時刻だけなので、ほかの欄は value にも必ず入っている
+        const { agencyId, timeSetting } = this.sightingForm.getRawValue();
+        const { sightingTime } = this.sightingForm.value;
         // 前後の空白は候補・注意・確認・api で食い違うので、ここで落としてから使う
+        const rawValue = this.sightingForm.getRawValue();
         const formationOrVehicleNumber =
-            this.sightingForm.value.formationOrVehicleNumber.trim();
-        const operationNumber = this.sightingForm.value.operationNumber.trim();
+            rawValue.formationOrVehicleNumber.trim();
+        const operationNumber = rawValue.operationNumber.trim();
 
         const now = new Date();
 
@@ -441,9 +442,12 @@ export class OperationPostFormComponent {
     /** どの欄に出すか: 未来の時刻は目撃時刻、運用番号は運用番号の欄 */
     #block(reasons: SightingBlockReason[]): void {
         for (const reason of reasons) {
-            const control = this.sightingForm.get(
-                reason === 'future_time' ? 'sightingTime' : 'operationNumber',
-            );
+            const control =
+                this.sightingForm.controls[
+                    reason === 'future_time'
+                        ? 'sightingTime'
+                        : 'operationNumber'
+                ];
             control.setErrors({ precheck: reason });
             control.markAsTouched();
         }

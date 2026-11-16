@@ -293,7 +293,7 @@ describe('OperationPastTimeComponent の URL の値', () => {
         { days: '7', reference_date: 'abc' },
         { days: '7', reference_date: '2026-10-01', include_invalidated: '1' },
     ])('%j は見つからない表示にして、取得しない', async (params) => {
-        const fixture = await create(params);
+        const fixture = await create(params as Record<string, string>);
 
         expect(mark).toHaveBeenCalledTimes(1);
         expect(fetchCalendarByDate).not.toHaveBeenCalled();

@@ -1,9 +1,9 @@
 import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
-import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
+import { TripWithTimesDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { formatDiaTime } from './format-dia-time.util';
 
 /** 列車の停車を停車順（stopSequence）に並べる。 */
-function stopsInOrder(trip: TripDetailsDto): TimeDetailsDto[] {
+function stopsInOrder(trip: TripWithTimesDto): TimeDetailsDto[] {
     return [...trip.times].sort(
         (a, b) => (a.stopSequence ?? 0) - (b.stopSequence ?? 0),
     );
@@ -15,7 +15,7 @@ function stopsInOrder(trip: TripDetailsDto): TimeDetailsDto[] {
  * 表示駅に 1 つも停まらない列車は、どちらも false（上下とも「‥」のまま）。
  */
 export function hiddenStopsAround(
-    trip: TripDetailsDto,
+    trip: TripWithTimesDto,
     visible: { has(stationId: string): boolean },
 ): { before: boolean; after: boolean } {
     const stops = stopsInOrder(trip);
@@ -28,7 +28,7 @@ export function hiddenStopsAround(
 
 /** 表示駅に 1 つでも停まるか（路線の絞り込み中、停まらない列車は列から外す）。 */
 export function hasVisibleStop(
-    trip: TripDetailsDto,
+    trip: TripWithTimesDto,
     visible: { has(stationId: string): boolean },
 ): boolean {
     return trip.times.some((time) => visible.has(time.stationId));
@@ -48,7 +48,7 @@ export type TripEndpoints = {
  * 下端「終着時刻」「終着駅」の行に出す（ユーザー指示 2026-09-24。絞り込みの有無によらず全列車）。
  */
 export function tripEndpoints(
-    trip: TripDetailsDto,
+    trip: TripWithTimesDto,
     stationNames: ReadonlyMap<string, string>,
 ): TripEndpoints {
     const stops = stopsInOrder(trip);

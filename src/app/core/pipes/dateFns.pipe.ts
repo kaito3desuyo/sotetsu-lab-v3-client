@@ -16,8 +16,9 @@ export class DateFnsPipe implements PipeTransform {
         args: { format: string; parseFormat?: string; parseISO?: boolean },
     ): string;
     transform(value: number, args: { format: string }): string;
+    transform(value: null | undefined, args: { format: string }): string;
     transform(
-        value: string | number,
+        value: string | number | null | undefined,
         args: { format: string; parseFormat?: string; parseISO?: boolean },
     ): string {
         const formatFn = (date: Date) => {
@@ -33,7 +34,7 @@ export class DateFnsPipe implements PipeTransform {
                     : formatFn(parseISO(value));
             }
 
-            return formatFn(parse(value, args.parseFormat, new Date()));
+            return formatFn(parse(value, args.parseFormat ?? '', new Date()));
         }
 
         if (isNumber(value)) {

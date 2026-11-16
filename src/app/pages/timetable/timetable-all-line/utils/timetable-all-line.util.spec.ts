@@ -54,7 +54,7 @@ function viewModesOf(
             station.stationId,
             TimetableAllLineUtil.getViewMode(station, tripDirection),
         ]),
-    );
+    ) as Map<string, ETimetableAllLineStationViewMode>;
 }
 
 describe('TimetableAllLineUtil.getViewMode', () => {

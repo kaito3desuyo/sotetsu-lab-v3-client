@@ -390,7 +390,7 @@ describe('OperationPastTimeTableComponent', () => {
                 setRole('editor');
                 setupCell();
 
-                expect(authorMenu(1).disabled).toBe(true);
+                expect(authorMenu(1)?.disabled).toBe(true);
             });
 
             it('reporter・viewer のメニューには出さない', () => {
@@ -411,7 +411,7 @@ describe('OperationPastTimeTableComponent', () => {
                     .spyOn(TestBed.inject(Router), 'navigate')
                     .mockResolvedValue(true);
 
-                authorMenu(0).onClick();
+                authorMenu(0)?.onClick();
 
                 expect(findAuthor).toHaveBeenCalledWith('s-1');
                 expect(navigate).toHaveBeenCalledWith([
@@ -428,7 +428,7 @@ describe('OperationPastTimeTableComponent', () => {
                     .spyOn(TestBed.inject(Router), 'navigate')
                     .mockResolvedValue(true);
 
-                authorMenu(0).onClick();
+                authorMenu(0)?.onClick();
 
                 expect(notify).toHaveBeenCalledWith('ゲストの投稿です', 'OK');
                 expect(navigate).not.toHaveBeenCalled();
@@ -442,7 +442,7 @@ describe('OperationPastTimeTableComponent', () => {
                     .spyOn(TestBed.inject(Router), 'navigate')
                     .mockResolvedValue(true);
 
-                authorMenu(0).onClick();
+                authorMenu(0)?.onClick();
 
                 expect(notify).toHaveBeenCalledWith(
                     '投稿者を取得できませんでした',

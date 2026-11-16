@@ -81,8 +81,8 @@ function endSeconds(t: TripOperationListDetailsDto): number {
 }
 
 /** 目撃が決める運用。引き継ぎの目撃でも `operationId` を使う（`sightedAsOperation` は引き継ぎの印） */
-function effectiveOperationId(s: OperationSightingDetailsDto): string | null {
-    return s.operationId ?? null;
+function effectiveOperationId(s: OperationSightingDetailsDto): string {
+    return s.operationId;
 }
 
 /**
@@ -117,7 +117,9 @@ function build(
     const sortedCache = new Map<string, Sorted | null>();
     /** 運用の列車を時刻順にしたもの。まだ取得していなければ null（missing に記録する） */
     const tripsOf = (operationId: string): Sorted | null => {
-        if (sortedCache.has(operationId)) return sortedCache.get(operationId);
+        if (sortedCache.has(operationId)) {
+            return sortedCache.get(operationId) ?? null;
+        }
         const dto = input.tripsByOperationId[operationId];
         if (!dto) {
             missing.add(operationId);
@@ -177,6 +179,7 @@ function build(
         if (j < 0) return { startIdx: 0, prefix: [] };
         const entryTol = list[j].tripOperationListId;
         const prev = previousByTol.get(entryTol);
+        if (!prev) return { startIdx: 0, prefix: [] };
         if (seen.has(entryTol)) return { startIdx: j, prefix: [] };
         seen.add(entryTol);
         const prevList = tripsOf(prev.operationId);

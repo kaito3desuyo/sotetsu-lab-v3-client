@@ -41,7 +41,9 @@ export function buildStationGroups(
             routeId: route.routeId,
             label: [agencyName, route.routeName].filter(Boolean).join(' '),
             routeName: route.routeName,
-            stations: (route.routeStationLists ?? []).map((rsl) => rsl.station),
+            stations: (route.routeStationLists ?? []).flatMap((rsl) =>
+                rsl.station ? [rsl.station] : [],
+            ),
         };
     });
 }

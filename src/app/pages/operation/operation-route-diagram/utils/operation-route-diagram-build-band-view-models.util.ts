@@ -22,9 +22,9 @@ export interface OperationRouteDiagramBandViewModel {
     /** 帯の右端の駅 index */
     rightIndex: number;
     /** 左端に表示する時刻（`HH:mm:ss`生値。整形はテンプレート側の pipe に委ねる） */
-    leftTime?: string;
+    leftTime?: string | null;
     /** 右端に表示する時刻 */
-    rightTime?: string;
+    rightTime?: string | null;
     /** 左端を隠した駅から付け替えたときの本当の駅名（時刻の前に書く） */
     leftStationName?: string;
     /** 右端を隠した駅から付け替えたときの本当の駅名 */
@@ -52,9 +52,9 @@ export interface OperationRouteDiagramBandViewModel {
     /** 入庫ノードの駅 index（endTime 側） */
     depotInIndex: number;
     /** 出庫時刻（`HH:mm:ss`生値。常にトリップの startTime.departureTime） */
-    depotOutTime?: string;
+    depotOutTime?: string | null;
     /** 入庫時刻（`HH:mm:ss`生値。常にトリップの endTime.arrivalTime） */
-    depotInTime?: string;
+    depotInTime?: string | null;
 }
 
 const FALLBACK_COLOR = '#666666';

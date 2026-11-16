@@ -12,7 +12,8 @@ import { withAppDevtools } from '../core/store-features/with-app-devtools';
 import { UserDetailsDto } from '../libs/user/usecase/dtos/user-details.dto';
 import { UserService } from '../libs/user/usecase/user.service';
 
-type State = UserDetailsDto;
+/** 未ログインは全部 null */
+type State = { [K in keyof UserDetailsDto]: UserDetailsDto[K] | null };
 
 const initialState: State = {
     userId: null,

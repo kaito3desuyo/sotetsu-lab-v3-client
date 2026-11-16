@@ -1,5 +1,5 @@
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
-import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
+import { TripBlockWithTripsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 
 /** 共通の駅で決まった前後の逆転に掛ける重み（1 分あたり）。共通駅の無い組の逆転は 1。 */
 const HARD_WEIGHT = 1000;
@@ -40,8 +40,8 @@ function toMinutes(
  */
 export function sortTrips(
     stations: readonly StationDetailsDto[],
-    tripBlocks: readonly TripBlockDetailsDto[],
-): TripBlockDetailsDto[] {
+    tripBlocks: readonly TripBlockWithTripsDto[],
+): TripBlockWithTripsDto[] {
     const n = tripBlocks.length;
     if (n <= 1) return [...tripBlocks];
 

@@ -1,11 +1,15 @@
 import { TripOperationListDtoBuilder } from 'src/app/libs/trip/infrastructure/builders/trip-operation-list.dto.builder';
 import { TripOperationListModel } from 'src/app/libs/trip/infrastructure/models/trip-operation-list.model';
+import { TripOperationListWithTimesDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
 import { OperationCurrentPositionDto } from '../../usecase/dtos/operation-current-position.dto';
 import { OperationCurrentPositionModel } from '../models/operation-current-position.model';
 import { OperationDtoBuilder } from './operation.dto.builder';
 
+// 現在位置の取得は trip・startTime・endTime を必ず付けて返す
 const buildSegment = (model: TripOperationListModel) =>
-    TripOperationListDtoBuilder.buildFromModel(model);
+    TripOperationListDtoBuilder.buildFromModel(
+        model,
+    ) as TripOperationListWithTimesDto;
 
 export const OperationCurrentPositionDtoBuilder = {
     buildFromModel: ({

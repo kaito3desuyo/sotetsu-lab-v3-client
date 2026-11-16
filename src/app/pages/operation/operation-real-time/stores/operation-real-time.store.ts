@@ -34,7 +34,7 @@ type StoreProps = {
     agencyOrder: string[];
     stations: StationDetailsDto[];
     tripClasses: TripClassDetailsDto[];
-    calendar: CalendarDetailsDto;
+    calendar: CalendarDetailsDto | null;
     operations: OperationDetailsDto[];
     /** 運用のつながり（乗り移りの端の判定用）。永続化しない */
     itineraryLinks: OperationItineraryLinkDto[];
@@ -182,7 +182,7 @@ export const OperationRealTimeStore = signalStore(
         setTripClasses(tripClasses: TripClassDetailsDto[]): void {
             patchState(store, { tripClasses });
         },
-        setCalendar(calendar: CalendarDetailsDto): void {
+        setCalendar(calendar: CalendarDetailsDto | null): void {
             patchState(store, { calendar });
         },
         setOperations(operations: OperationDetailsDto[]): void {
@@ -352,8 +352,12 @@ export const OperationRealTimeStore = signalStore(
             const currentPositions = store.currentPositions();
             const now = new Date();
             const base = railwayDayStart(now);
-            const target = (days: number, time: string) =>
-                toAbsoluteTime(base, days - 1, time);
+            const target = (days: number | null, time: string | null) => {
+                if (days === null || time === null) {
+                    throw new TypeError('days and time are required.');
+                }
+                return toAbsoluteTime(base, days - 1, time);
+            };
 
             return Object.values(currentPositions)
                 .filter((position) => !!position)

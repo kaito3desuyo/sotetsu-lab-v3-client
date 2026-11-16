@@ -80,18 +80,18 @@ describe('ServiceQuery', () => {
                     ],
                 });
 
-            expect(result.service).toBeNull();
-            expect(result.stations).toHaveLength(1);
-            expect(result.stations[0].stationId).toBe('st1');
-            expect(result.stations[0].stationName).toBe('横浜');
+            expect(result?.service).toBeNull();
+            expect(result?.stations).toHaveLength(1);
+            expect(result?.stations[0].stationId).toBe('st1');
+            expect(result?.stations[0].stationName).toBe('横浜');
             expect(
-                result.stations[0].routeStationLists[0].stationNumbering,
+                result?.stations[0].routeStationLists?.[0].stationNumbering,
             ).toBe('SO01');
-            expect(result.stations[0].routeStationLists[0].route.routeId).toBe(
-                'r1',
-            );
             expect(
-                result.stations[0].routeStationLists[0].route.routeName,
+                result?.stations[0].routeStationLists?.[0].route?.routeId,
+            ).toBe('r1');
+            expect(
+                result?.stations[0].routeStationLists?.[0].route?.routeName,
             ).toBe('相鉄本線');
         });
 

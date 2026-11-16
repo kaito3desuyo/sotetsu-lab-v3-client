@@ -1,10 +1,15 @@
-import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
+import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
+import {
+    OperationSightingDetailsDto,
+    OperationSightingInvalidationDetailsDto,
+} from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import {
     ItineraryLinkEndDto,
     OperationItineraryLinkDto,
 } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
+import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
-import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
+import { TripOperationListWithTimesDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
 import {
     basisAt,
     buildFormationDay,
@@ -34,7 +39,7 @@ function tol(
     start: string,
     end: string,
     trip: { depotIn?: boolean; depotOut?: boolean } = {},
-): TripOperationListDetailsDto {
+): TripOperationListWithTimesDto {
     return {
         tripOperationListId: id,
         tripId: `trip-${id}`,
@@ -44,15 +49,18 @@ function tol(
         startTime: t(start),
         endTime: t(end),
         trip: { tripId: `trip-${id}`, ...trip },
-    };
+    } as TripOperationListWithTimesDto;
 }
 
 function op(
     operationId: string,
     operationNumber: string,
-    trips: TripOperationListDetailsDto[],
+    trips: TripOperationListWithTimesDto[],
 ): OperationTripsDto {
-    return { operation: { operationId, operationNumber }, trips };
+    return {
+        operation: { operationId, operationNumber } as OperationDetailsDto,
+        trips,
+    };
 }
 
 function jst(hm: string): string {
@@ -72,13 +80,13 @@ function sighting(
         operationId,
         sightingTime: jst(hm),
         ...extra,
-    };
+    } as OperationSightingDetailsDto;
 }
 
 /** 前=prevTol の運用の最後の列車、次=nextTol（別の運用の最初の列車）の乗り移り */
 function link(
-    from: TripOperationListDetailsDto,
-    to: TripOperationListDetailsDto,
+    from: TripOperationListWithTimesDto,
+    to: TripOperationListWithTimesDto,
     fromNumber: string,
     toNumber: string,
 ): OperationItineraryLinkDto[] {
@@ -301,7 +309,7 @@ describe('buildFormationDay', () => {
                         formation: {
                             formationId: 'f2',
                             formationNumber: '8711',
-                        },
+                        } as FormationDetailsDto,
                     }),
                 ],
                 tripsByOperationId: { op55 },
@@ -361,7 +369,7 @@ describe('buildFormationDay', () => {
                         formation: {
                             formationId: 'f2',
                             formationNumber: '8711',
-                        },
+                        } as FormationDetailsDto,
                     }),
                 ],
                 tripsByOperationId: trips,
@@ -381,7 +389,7 @@ describe('buildFormationDay', () => {
         const x1 = tol('x1', 'opA', '08:00', '09:00');
         const y1 = tol('y1', 'opB', '09:30', '10:30');
         const end = (
-            t: TripOperationListDetailsDto,
+            t: TripOperationListWithTimesDto,
             operationNumber: string,
         ): ItineraryLinkEndDto => ({
             tripOperationListId: t.tripOperationListId,
@@ -432,13 +440,13 @@ describe('buildFormationDay', () => {
                         invalidation: {
                             operationSightingInvalidationId: 'inv',
                             operationSightingId: 's1',
-                        },
+                        } as OperationSightingInvalidationDetailsDto,
                     }),
                     sighting('s2', 'f2', 'op16', '12:00', {
                         invalidation: {
                             operationSightingInvalidationId: 'inv2',
                             operationSightingId: 's2',
-                        },
+                        } as OperationSightingInvalidationDetailsDto,
                     }),
                 ],
                 tripsByOperationId: trips,
@@ -549,7 +557,7 @@ describe('buildFormationDay', () => {
             ...original,
             operationSightingId: `${original.operationSightingId}#${operationNumber}`,
             operationId,
-            operation: { operationId, operationNumber },
+            operation: { operationId, operationNumber } as OperationDetailsDto,
             sightedAsOperation: from,
         });
 

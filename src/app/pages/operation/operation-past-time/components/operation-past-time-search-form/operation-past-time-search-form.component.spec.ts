@@ -36,8 +36,8 @@ describe('OperationPastTimeSearchFormComponent', () => {
             includeInvalidated: false,
         });
 
-        TestBed.inject(OperationPastTimeStore).setReferenceDate(null);
-        TestBed.inject(OperationPastTimeStore).setDays(null);
+        TestBed.inject(OperationPastTimeStore).setReferenceDate(undefined);
+        TestBed.inject(OperationPastTimeStore).setDays(undefined);
         TestBed.inject(OperationPastTimeStore).setIncludeInvalidated(true);
         fixture.detectChanges();
 
@@ -85,7 +85,7 @@ describe('OperationPastTimeSearchFormComponent', () => {
     it('日数が 0 なら min のエラーになり移らない', () => {
         component.form.patchValue({ days: 0 });
 
-        expect(component.form.get('days').hasError('min')).toBe(true);
+        expect(component.form.controls.days.hasError('min')).toBe(true);
 
         component.onClickSearch();
 

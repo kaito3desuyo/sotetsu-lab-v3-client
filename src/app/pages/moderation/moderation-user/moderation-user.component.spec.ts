@@ -166,10 +166,11 @@ describe('ModerationUserComponent', () => {
     }
 
     function checkbox(id: string): HTMLInputElement {
-        return byId(id).querySelector('input');
+        return byId(id)?.querySelector('input') as HTMLInputElement;
     }
 
-    async function click(target: HTMLElement) {
+    async function click(target: HTMLElement | null | undefined) {
+        if (!target) throw new Error('click target is missing');
         target.click();
         await settle();
     }
@@ -178,7 +179,7 @@ describe('ModerationUserComponent', () => {
         await render();
 
         expect(userApi.findSummary).toHaveBeenCalledWith(U1);
-        const text = byId('moderation-user-summary').textContent;
+        const text = byId('moderation-user-summary')?.textContent;
         expect(text).toContain('tetsu_x');
         expect(text).toContain('てつ');
         expect(text).toContain('reporter');
@@ -249,12 +250,12 @@ describe('ModerationUserComponent', () => {
             ],
         });
 
-        const section = byId('moderation-traces-section');
+        const section = byId('moderation-traces-section') as HTMLElement;
         const banned = section.querySelector('a[href="/moderation/users/u8"]');
         const normal = section.querySelector('a[href="/moderation/users/u9"]');
         expect(banned).toHaveTextContent('tetsu_y');
-        expect(banned.parentElement).toHaveTextContent('BAN 中');
-        expect(normal.parentElement).not.toHaveTextContent('BAN 中');
+        expect(banned?.parentElement).toHaveTextContent('BAN 中');
+        expect(normal?.parentElement).not.toHaveTextContent('BAN 中');
     });
 
     it('shared の行は弱めて「共用」と添える', async () => {
@@ -263,9 +264,9 @@ describe('ModerationUserComponent', () => {
             traces: [trace({ shared: true }), trace({ ip: '198.51.100.7' })],
         });
 
-        const rows = byId('moderation-traces-section').querySelectorAll(
-            'tbody tr',
-        );
+        const rows =
+            byId('moderation-traces-section')?.querySelectorAll('tbody tr') ??
+            [];
         expect(rows[0]).toHaveClass('tw-opacity-50');
         expect(rows[0]).toHaveTextContent('共用');
         expect(rows[1]).not.toHaveClass('tw-opacity-50');

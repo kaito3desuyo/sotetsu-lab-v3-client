@@ -54,8 +54,10 @@ export class OperationNumberTagComponent {
     readonly operationNumber = input.required<string>();
     readonly link = input<readonly unknown[] | undefined>(undefined);
     readonly borderEnabled = input<boolean>(false);
-    readonly borderColor = input<string>(undefined);
-    readonly contextMenus = input<OperationNumberTagContextMenu[]>(undefined);
+    readonly borderColor = input<string | undefined>(undefined);
+    readonly contextMenus = input<OperationNumberTagContextMenu[] | undefined>(
+        undefined,
+    );
     readonly longPressMs = input<number>(500);
     /**
      * 字の太さと下線。既定は普通の字。鮮度を示す所だけ bold（本日中に目撃）・underline（前日）を渡す

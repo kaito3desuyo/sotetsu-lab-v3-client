@@ -221,10 +221,11 @@ export class ModerationUserComponent {
             if (this.#store.userId() !== userId) {
                 return;
             }
-            const failed = result.failed
+            const failedResult = result.failed;
+            const failed = failedResult
                 ? this.#store
                       .sightings()
-                      .find((r) => r.operationSightingId === result.failed.id)
+                      .find((r) => r.operationSightingId === failedResult.id)
                 : undefined;
             this.#notification.open(
                 buildInvalidateResultMessage(result, failed?.operationNumber),

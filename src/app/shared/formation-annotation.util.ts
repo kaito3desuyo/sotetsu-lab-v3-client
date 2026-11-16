@@ -10,7 +10,7 @@ import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formati
  */
 export function formatFormationAnnotation(
     formation:
-        | Pick<FormationDetailsDto, 'agencyId' | 'vehicleType'>
+        | Partial<Pick<FormationDetailsDto, 'agencyId' | 'vehicleType'>>
         | undefined,
     agencies: readonly AgencyDetailsDto[],
 ): string {

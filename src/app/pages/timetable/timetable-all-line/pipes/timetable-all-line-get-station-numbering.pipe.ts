@@ -13,8 +13,9 @@ export class TimetableAllLineGetStationNumberingPipe implements PipeTransform {
 
         return (
             station.routeStationLists
-                ?.filter((o) => !!o.stationNumbering)
-                .map((o) => o.stationNumbering)
+                ?.flatMap((o) =>
+                    o.stationNumbering ? [o.stationNumbering] : [],
+                )
                 .filter((value) => {
                     if (valueSet.has(value)) {
                         return false;

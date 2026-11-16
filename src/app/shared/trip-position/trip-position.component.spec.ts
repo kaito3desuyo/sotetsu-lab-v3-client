@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
-import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
+import { TripOperationListWithTimesDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
 import { TripPosition, TripPositionComponent } from './trip-position.component';
 
 const stations = [
@@ -26,7 +26,7 @@ function tol(params: {
     depotIn?: boolean;
     depotOut?: boolean;
     id?: string;
-}): TripOperationListDetailsDto {
+}): TripOperationListWithTimesDto {
     return {
         tripOperationListId: params.id ?? 'tol',
         trip: {
@@ -39,7 +39,7 @@ function tol(params: {
         },
         startTime: { stationId: params.from, departureTime: params.fromTime },
         endTime: { stationId: params.to, arrivalTime: params.toTime },
-    } as TripOperationListDetailsDto;
+    } as TripOperationListWithTimesDto;
 }
 
 describe('TripPositionComponent', () => {

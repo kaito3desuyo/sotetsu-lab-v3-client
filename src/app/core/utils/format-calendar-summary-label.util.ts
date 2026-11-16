@@ -6,7 +6,7 @@ import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-
  * 例: '2026/3/14改正 土休日'。startDate がなければダイヤ名のみを返す。
  */
 export function formatCalendarSummaryLabel(
-    calendar: Pick<CalendarDetailsDto, 'calendarName' | 'startDate'>,
+    calendar: Partial<Pick<CalendarDetailsDto, 'calendarName' | 'startDate'>>,
 ): string {
     const name = calendar.calendarName ?? '';
     if (!calendar.startDate) {

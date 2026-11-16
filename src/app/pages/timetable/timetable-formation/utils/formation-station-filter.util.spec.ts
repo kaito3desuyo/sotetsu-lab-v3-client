@@ -17,7 +17,7 @@ function stopTime(stationId: string, seq: number, hms: string): TimeDetailsDto {
         arrivalTime: hms,
         departureDays: 1,
         departureTime: hms,
-    };
+    } as TimeDetailsDto;
 }
 
 function passTime(stationId: string, seq: number): TimeDetailsDto {
@@ -29,7 +29,7 @@ function passTime(stationId: string, seq: number): TimeDetailsDto {
         dropoffType: 1,
         arrivalTime: null,
         departureTime: null,
-    };
+    } as TimeDetailsDto;
 }
 
 function row(id: string, times: TimeDetailsDto[]): FormationDayRow {
@@ -57,14 +57,15 @@ function stopAtFutamata(id: string, hms: string): FormationDayRow {
 
 describe('filterByStation', () => {
     it('pickupType が無くても時刻が両方 null なら通過', () => {
-        const pass = passTime('futamata', 2);
+        // api の項目選択で省かれた場合を再現する
+        const pass: Partial<TimeDetailsDto> = passTime('futamata', 2);
         delete pass.pickupType;
         delete pass.dropoffType;
         const r = filterByStation(
             [
                 row('p', [
                     stopTime('yokohama', 1, '10:00:00'),
-                    pass,
+                    pass as TimeDetailsDto,
                     stopTime('ebina', 3, '11:00:00'),
                 ]),
             ],

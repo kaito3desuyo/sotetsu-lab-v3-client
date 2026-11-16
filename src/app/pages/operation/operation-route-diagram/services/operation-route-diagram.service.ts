@@ -20,6 +20,9 @@ export class OperationRouteDiagramService {
      */
     fetchOperationTrips(): Observable<boolean> {
         const operationId = this.#store.operationId();
+        if (operationId === null) {
+            return of(false);
+        }
 
         return this.#operationService.findOneWithTrips({ operationId }).pipe(
             tap((operationTrips) => {

@@ -2,7 +2,7 @@ import { formatFilterPart } from 'src/app/shared/control-band/control-band-summa
 
 /** 細帯の要約。例「絞り込み中：東急・K群（目黒線） 36/120 運用」。 */
 export function formatRealTimeSummary(params: {
-    agencies: { agencyId: string; agencyName?: string }[];
+    agencies: { agencyId: string; agencyName?: string | null }[];
     selectedAgencyIds: string[];
     selectedGroupNames: string[];
     shown: number;

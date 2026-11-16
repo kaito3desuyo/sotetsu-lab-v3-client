@@ -95,7 +95,7 @@ export class TrainLocationControllerComponent {
             label: route.routeName ?? '',
             // 会社名でグルーピング表示する（相鉄 / JR東日本 / 東急 …）
             group: route.agencyId
-                ? agencyNameById.get(route.agencyId)
+                ? (agencyNameById.get(route.agencyId) ?? undefined)
                 : undefined,
         }));
     });

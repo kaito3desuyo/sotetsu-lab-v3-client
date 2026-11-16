@@ -21,7 +21,7 @@ import {
     TRIP_BLOCK_TIMELINE_FIELDS,
     TripBlockFields,
 } from 'src/app/libs/trip-block/usecase/trip-block-fields';
-import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
+import { TripBlockWithTripsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
@@ -47,7 +47,7 @@ type StationPayload = {
     calendarId: string;
     tripDirection: number;
     stationId: string;
-    tripBlocks: TripBlockDetailsDto[];
+    tripBlocks: TripBlockWithTripsDto[];
 };
 
 const STATION_PAYLOAD_KEY = makeStateKey<StationPayload>(
@@ -213,13 +213,15 @@ export class TimetableStationService {
     fetchOperations(): Observable<void> {
         const calendarId = this.#store.calendarId();
 
-        return this.#operationService.findManyByCalendarId({ calendarId }).pipe(
-            map((data) => data.filter((o) => o.operationNumber !== '100')),
-            tap((data: OperationDetailsDto[]) => {
-                this.#store.setOperations(data);
-            }),
-            map(() => undefined),
-        );
+        return this.#operationService
+            .findManyByCalendarId({ calendarId: calendarId ?? undefined })
+            .pipe(
+                map((data) => data.filter((o) => o.operationNumber !== '100')),
+                tap((data: OperationDetailsDto[]) => {
+                    this.#store.setOperations(data);
+                }),
+                map(() => undefined),
+            );
     }
 
     /**

@@ -1,5 +1,5 @@
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
-import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
+import { TripWithTimesDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { ETimetableAllLineStationViewMode } from '../enums/timetable-all-line.enum';
 import { formatDiaTime } from './format-dia-time.util';
 import { hiddenStopsAround } from './trip-endpoints.util';
@@ -17,13 +17,13 @@ export function getTime({
     tripDirection: 0 | 1;
     mode: 'arrival' | 'departure';
     station: StationDetailsDto;
-    trip: TripDetailsDto;
+    trip: TripWithTimesDto;
     stations: StationDetailsDto[];
     /** 列の並びで 1 つ前の列車。ページ分けの前の並びから引く（前のページにあっても同じ運行の印を出すため） */
-    previousTrip?: TripDetailsDto;
+    previousTrip?: TripWithTimesDto;
     viewModes: ReadonlyMap<string, ETimetableAllLineStationViewMode>;
     bordersAfter: ReadonlyMap<string, boolean>;
-}): string {
+}): string | undefined {
     const time = trip.times.find((o) => {
         return o.stationId === station.stationId;
     });

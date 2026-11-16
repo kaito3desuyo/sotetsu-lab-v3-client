@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { QueryCache } from 'src/app/core/query-cache/query-cache';
+import { requireBody } from 'src/app/core/utils/require-body';
 import { toFieldsParams } from 'src/app/core/utils/to-fields-params';
 import { environment } from 'src/environments/environment';
 import { RouteDetailsDto } from '../../usecase/dtos/route-details.dto';
@@ -47,7 +48,9 @@ export class RouteQuery {
             })
             .pipe(
                 map((res) =>
-                    res.body.map((o) => RouteDtoBuilder.buildFromModel(o)),
+                    requireBody(res).map((o) =>
+                        RouteDtoBuilder.buildFromModel(o),
+                    ),
                 ),
             );
     }
@@ -55,7 +58,7 @@ export class RouteQuery {
     findOneWithStations(params: {
         routeId: string;
         forceReload?: boolean;
-    }): Observable<RouteStationsDto> {
+    }): Observable<RouteStationsDto | null> {
         const { routeId, forceReload } = params;
 
         return this.#cache

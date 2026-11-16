@@ -35,7 +35,7 @@ export function curateRouteDiagramStationsWithAliases(
 
     const curated = targetStations
         .map(({ routeName, stationName }) => {
-            const targetSet = new Set(routeName);
+            const targetSet = new Set<string | undefined>(routeName);
 
             const matches = stations.filter((s) => {
                 const dataSet = new Set(

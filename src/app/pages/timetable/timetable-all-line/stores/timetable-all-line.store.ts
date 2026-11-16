@@ -22,8 +22,14 @@ import { visibleStations } from 'src/app/core/utils/visible-stations.util';
 import { AgencyDetailsDto } from 'src/app/libs/agency/usecase/dtos/agency-details.dto';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
-import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
-import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
+import {
+    TripBlockDetailsDto,
+    TripBlockWithTripsDto,
+} from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
+import {
+    TripDetailsDto,
+    TripWithTimesDto,
+} from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import {
     FilterChipOption,
     FilterChipValue,
@@ -42,7 +48,7 @@ type StoreProps = {
     agencies: AgencyDetailsDto[];
     /** 路線チップの並び順（routeId）。ハンバーガーメニューの駅名選択・列車位置情報と同じ順 */
     routeOrder: string[];
-    tripBlocks: TripBlockDetailsDto[];
+    tripBlocks: TripBlockWithTripsDto[];
     selectedRouteIds: string[];
     pageSettings: PageEvent;
     loadingQueue: boolean[];
@@ -116,7 +122,9 @@ const SORTED_ORDER_KEY = makeStateKey<SortedOrderTransfer>(
  * ダイヤ並び替え済みの全列車（ページング前）。列は路線絞り込みの影響を受けない
  * （並びは全駅で決め、絞り込みは行を隠すだけ）。並べ方は sort-trips.util.ts を参照。
  */
-function sortedAllTrips(sortedBlocks: TripBlockDetailsDto[]): TripDetailsDto[] {
+function sortedAllTrips(
+    sortedBlocks: TripBlockWithTripsDto[],
+): TripWithTimesDto[] {
     return sortedBlocks.flatMap((tripBlock) => tripBlock.trips);
 }
 
@@ -125,8 +133,8 @@ function applyTransferredOrder(
     transferred: SortedOrderTransfer | null,
     calendarId: CalendarDetailsDto['calendarId'] | null,
     tripDirection: TripDetailsDto['tripDirection'] | null,
-    tripBlocks: TripBlockDetailsDto[],
-): TripBlockDetailsDto[] | null {
+    tripBlocks: TripBlockWithTripsDto[],
+): TripBlockWithTripsDto[] | null {
     if (
         !transferred ||
         transferred.calendarId !== calendarId ||
@@ -206,7 +214,9 @@ function extractRouteOptions(
     ).map((route) => ({
         value: route.routeId,
         label: route.routeName,
-        group: route.agencyId ? agencyNames.get(route.agencyId) : undefined,
+        group: route.agencyId
+            ? (agencyNames.get(route.agencyId) ?? undefined)
+            : undefined,
     }));
 }
 
@@ -449,11 +459,13 @@ export const TimetableAllLineStore = signalStore(
             isLatestFetch(seq: number): boolean {
                 return seq === fetchSeq;
             },
-            setCalendarId(calendarId: CalendarDetailsDto['calendarId']): void {
+            setCalendarId(
+                calendarId: CalendarDetailsDto['calendarId'] | null,
+            ): void {
                 patchState(store, { calendarId });
             },
             setTripDirection(
-                tripDirection: TripDetailsDto['tripDirection'],
+                tripDirection: TripDetailsDto['tripDirection'] | null,
             ): void {
                 patchState(store, { tripDirection });
             },
@@ -461,7 +473,7 @@ export const TimetableAllLineStore = signalStore(
              * trip_block_id が変わったらページネーションを 0 に戻す（旧 resolver と同じ挙動）。
              */
             setTripBlockId(
-                tripBlockId: TripBlockDetailsDto['tripBlockId'],
+                tripBlockId: TripBlockDetailsDto['tripBlockId'] | null,
             ): void {
                 const changed = store.tripBlockId() !== tripBlockId;
                 patchState(store, { tripBlockId });
@@ -475,7 +487,7 @@ export const TimetableAllLineStore = signalStore(
                 patchState(store, { stations });
             },
             /** 全量を入れる。削った配列で描いていた状態も終わる */
-            setTripBlocks(tripBlocks: TripBlockDetailsDto[]): void {
+            setTripBlocks(tripBlocks: TripBlockWithTripsDto[]): void {
                 patchState(store, {
                     tripBlocks,
                     isPartial: false,
@@ -487,7 +499,7 @@ export const TimetableAllLineStore = signalStore(
              * `listedCount` は、ページ送りに出す絞り込み後の全体の本数。
              */
             setPartialTripBlocks(params: {
-                tripBlocks: TripBlockDetailsDto[];
+                tripBlocks: TripBlockWithTripsDto[];
                 pageSize: number;
                 listedCount: number;
             }): void {

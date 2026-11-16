@@ -23,15 +23,16 @@ export function pruneOperationTrips(
             operation: operationTrip.operation,
             trips: operationTrip.trips.map((tripOperationList) => {
                 const trip = tripOperationList.trip;
+                // わざと項目を欠いた形にする（上の説明のとおり、描く分だけ）。型は全量の DTO のまま渡す
                 return {
                     tripOperationListId: tripOperationList.tripOperationListId,
-                    trip: trip && {
+                    trip: {
                         tripId: trip.tripId,
                         tripDirection: trip.tripDirection,
                         depotIn: trip.depotIn,
                         depotOut: trip.depotOut,
                     },
-                };
+                } as OperationTripsDto['trips'][number];
             }),
         };
     });

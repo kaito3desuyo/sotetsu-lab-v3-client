@@ -5,11 +5,11 @@ export interface StopDetailsDto {
 
     stopName: string;
 
-    stopDescription: string;
+    stopDescription: string | null;
 
-    stopLatlng: string;
+    stopLatlng: string | null;
 
-    zoneId: string;
+    zoneId: string | null;
 
     createdAt: string;
 

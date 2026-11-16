@@ -1,3 +1,4 @@
+import { TripClassModel } from '../models/trip-class.model';
 import { TripClassDtoBuilder } from './trip-class.dto.builder';
 
 describe('TripClassDtoBuilder', () => {
@@ -6,11 +7,11 @@ describe('TripClassDtoBuilder', () => {
             id: 'tc-1',
             tripClassName: '各停',
             trips: [{ id: 't-1' } as never],
-        });
+        } as unknown as TripClassModel);
 
         expect(dto.tripClassId).toBe('tc-1');
         expect(dto.tripClassName).toBe('各停');
         expect(dto).not.toHaveProperty('id');
-        expect(dto.trips[0].tripId).toBe('t-1');
+        expect(dto.trips?.[0].tripId).toBe('t-1');
     });
 });

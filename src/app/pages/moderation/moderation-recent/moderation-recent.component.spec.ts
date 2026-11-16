@@ -163,7 +163,7 @@ describe('ModerationRecentComponent', () => {
         const button = Array.from(el().querySelectorAll('button')).find((b) =>
             b.textContent?.includes('もっと見る'),
         );
-        button.click();
+        button?.click();
         await fixture.whenStable();
         fixture.detectChanges();
 
@@ -188,7 +188,7 @@ describe('ModerationRecentComponent', () => {
         );
 
         findManyRecent.mockReturnValue(of([sighting('s1')]));
-        retry.click();
+        retry?.click();
         await fixture.whenStable();
         fixture.detectChanges();
 

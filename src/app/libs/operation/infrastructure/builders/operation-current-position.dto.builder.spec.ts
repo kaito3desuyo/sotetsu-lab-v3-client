@@ -1,3 +1,4 @@
+import { OperationCurrentPositionModel } from '../models/operation-current-position.model';
 import { OperationCurrentPositionDtoBuilder } from './operation-current-position.dto.builder';
 
 describe('OperationCurrentPositionDtoBuilder', () => {
@@ -16,7 +17,7 @@ describe('OperationCurrentPositionDtoBuilder', () => {
                 current: { id: 'pc' },
                 next: { id: 'pn' },
             },
-        });
+        } as unknown as OperationCurrentPositionModel);
 
         expect(dto.operation).toEqual({
             operationId: 'op-1',

@@ -1,5 +1,5 @@
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
-import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
+import { TripOperationListWithTimesDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
 import {
     isRouteDiagramOutsideStationId,
     reconnectTripOperationLists,
@@ -45,7 +45,7 @@ describe('reconnectTripOperationLists', () => {
 
     it('始発/終着とも表示中の駅なら stationId を変更しない', () => {
         const visibleStations = allStations;
-        const trips: TripOperationListDetailsDto[] = [
+        const trips: TripOperationListWithTimesDto[] = [
             makeTrip('t1', '海老名', '横浜'),
         ];
 
@@ -63,7 +63,7 @@ describe('reconnectTripOperationLists', () => {
         const visibleStations = allStations.filter(
             (s) => s.stationName !== '横浜',
         );
-        const trips: TripOperationListDetailsDto[] = [
+        const trips: TripOperationListWithTimesDto[] = [
             makeTrip('t1', '海老名', '横浜'),
         ];
 
@@ -83,7 +83,7 @@ describe('reconnectTripOperationLists', () => {
 
     it('表示中の先頭より前の駅は、左端の「図外」の列へ付け替える', () => {
         const visibleStations = allStations.slice(2);
-        const trips: TripOperationListDetailsDto[] = [
+        const trips: TripOperationListWithTimesDto[] = [
             makeTrip('t1', '海老名', 'かしわ台'),
         ];
 
@@ -105,7 +105,7 @@ describe('reconnectTripOperationLists', () => {
         const visibleStations = allStations.filter(
             (s) => s.stationName !== '二俣川',
         );
-        const trips: TripOperationListDetailsDto[] = [
+        const trips: TripOperationListWithTimesDto[] = [
             makeTrip('t1', '二俣川', '横浜'),
         ];
 
@@ -127,7 +127,7 @@ describe('reconnectTripOperationLists', () => {
         const visibleStations = allStations.filter(
             (s) => !hidden.has(s.stationName),
         );
-        const trips: TripOperationListDetailsDto[] = [
+        const trips: TripOperationListWithTimesDto[] = [
             makeTrip('t1', '相模大塚', '二俣川'),
         ];
 
@@ -150,7 +150,7 @@ describe('reconnectTripOperationLists', () => {
         const visibleStations = allStations.filter(
             (s) => !hidden.has(s.stationName),
         );
-        const trips: TripOperationListDetailsDto[] = [
+        const trips: TripOperationListWithTimesDto[] = [
             makeTrip('t1', 'かしわ台', '二俣川'),
         ];
 
@@ -172,7 +172,7 @@ describe('reconnectTripOperationLists', () => {
         const visibleStations = allStations.filter(
             (s) => s.stationName !== '二俣川',
         );
-        const trips: TripOperationListDetailsDto[] = [
+        const trips: TripOperationListWithTimesDto[] = [
             makeTrip('t1', '海老名', '二俣川'),
             makeTrip('t2', '二俣川', '海老名'),
         ];
@@ -193,7 +193,7 @@ describe('reconnectTripOperationLists', () => {
 
     it('全駅順に存在しない駅（データ不整合）は変更せずそのまま返す', () => {
         const visibleStations = allStations;
-        const trips: TripOperationListDetailsDto[] = [
+        const trips: TripOperationListWithTimesDto[] = [
             makeTrip('t1', '存在しない駅', '横浜'),
         ];
 
@@ -210,7 +210,7 @@ describe('reconnectTripOperationLists', () => {
         const visibleStations = allStations.filter(
             (s) => s.stationName !== '横浜',
         );
-        const trips: TripOperationListDetailsDto[] = [
+        const trips: TripOperationListWithTimesDto[] = [
             makeTrip('t1', '海老名', '横浜'),
         ];
 
@@ -226,7 +226,7 @@ describe('reconnectTripOperationLists', () => {
     });
 
     it('全 ON（visibleStations が allStations と一致）に戻すと再接続されない', () => {
-        const trips: TripOperationListDetailsDto[] = [
+        const trips: TripOperationListWithTimesDto[] = [
             makeTrip('t1', '海老名', '横浜'),
         ];
 

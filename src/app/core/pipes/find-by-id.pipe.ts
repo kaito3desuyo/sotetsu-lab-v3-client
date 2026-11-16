@@ -32,7 +32,7 @@ export class FindByIdPipe implements PipeTransform {
             propertyName: keyof T;
             outputPropertyName?: never | keyof T | 'index';
         },
-    ): T | T[keyof T] | number {
+    ): T | T[keyof T] | number | undefined {
         if (!value || !setting.array || !setting.propertyName) return undefined;
 
         if (setting.outputPropertyName === 'index') {

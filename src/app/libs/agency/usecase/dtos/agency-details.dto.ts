@@ -1,23 +1,23 @@
 export interface AgencyDetailsDto {
     agencyId: string;
 
-    agencyNumber?: string;
+    agencyNumber: string;
 
-    parentAgencyNumber?: string;
+    parentAgencyNumber: string | null;
 
-    agencyOfficialName?: string;
+    agencyOfficialName: string;
 
-    agencyName?: string;
+    agencyName: string | null;
 
-    agencyType?: number;
+    agencyType: number;
 
-    agencyUrl?: string;
+    agencyUrl: string | null;
 
-    agencyPhone?: string;
+    agencyPhone: string | null;
 
-    agencyFareUrl?: string;
+    agencyFareUrl: string | null;
 
-    createdAt?: string;
+    createdAt: string;
 
-    updatedAt?: string;
+    updatedAt: string;
 }

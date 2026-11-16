@@ -71,8 +71,8 @@ export class TimetablePostCardComponent {
     ];
 
     readonly tripDirection = toSignal(
-        this.form.get('tripDirection').valueChanges,
-        { initialValue: this.form.get('tripDirection').value },
+        this.form.controls.tripDirection.valueChanges,
+        { initialValue: this.form.controls.tripDirection.value },
     );
 
     readonly calendars = inject(CalendarListState).calendars;
@@ -99,7 +99,7 @@ export class TimetablePostCardComponent {
     }
 
     onTripDirectionChange(value: number): void {
-        this.form.get('tripDirection').setValue(value);
+        this.form.controls.tripDirection.setValue(value);
     }
 
     submit(): void {

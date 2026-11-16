@@ -8,7 +8,7 @@ import {
 export function formatPastTimeSummary(params: {
     referenceDate: string | null;
     days: number | null;
-    agencies: { agencyId: string; agencyName?: string }[];
+    agencies: { agencyId: string; agencyName?: string | null }[];
     selectedAgencyIds: string[];
 }): string {
     const range =

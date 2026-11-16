@@ -62,7 +62,9 @@ export function buildRouteReachability(
         seen = new Set<number>();
         const queue = [from];
         while (queue.length) {
-            for (const to of next[queue.shift()]) {
+            const current = queue.shift();
+            if (current === undefined) break;
+            for (const to of next[current]) {
                 if (seen.has(to)) continue;
                 seen.add(to);
                 queue.push(to);
@@ -133,7 +135,7 @@ export function routeIdsTraversedBy(
         while (uncovered.size) {
             let best: string | null = null;
             let bestCount = 0;
-            stationsByRoute.forEach((members, routeId) => {
+            for (const [routeId, members] of stationsByRoute) {
                 const count = [...members].filter((id) =>
                     uncovered.has(id),
                 ).length;
@@ -141,9 +143,10 @@ export function routeIdsTraversedBy(
                     best = routeId;
                     bestCount = count;
                 }
-            });
+            }
+            if (best === null) break;
             traversed.add(best);
-            stationsByRoute.get(best).forEach((id) => uncovered.delete(id));
+            stationsByRoute.get(best)?.forEach((id) => uncovered.delete(id));
         }
     }
     return traversed;

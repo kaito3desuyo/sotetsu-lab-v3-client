@@ -12,7 +12,7 @@ import { QueryInvalidator } from 'src/app/core/query-cache/query-invalidator';
 import { skipTransferCacheContext } from 'src/app/core/ssr/skip-transfer-cache';
 import { ServiceListState } from 'src/app/global-states/service-list.state';
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
-import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
+import { TripBlockWithTripsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { TripBlockFields } from 'src/app/libs/trip-block/usecase/trip-block-fields';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { TimetableAllLineStore } from '../stores/timetable-all-line.store';
@@ -29,7 +29,7 @@ type AllLinePayload = {
     tripDirection: number;
     pageSize: number;
     listedCount: number;
-    tripBlocks: TripBlockDetailsDto[];
+    tripBlocks: TripBlockWithTripsDto[];
 };
 
 const ALL_LINE_PAYLOAD_KEY = makeStateKey<AllLinePayload>(
@@ -101,18 +101,20 @@ export class TimetableAllLineService {
                   .findOneById({ id: tripBlockId })
                   // api は無い ID に 404 でなく 200 と空の本文（null）を返す。空の配列にして呼び出し側が「無い」と分かるようにする
                   .pipe(map((tb) => (tb ? [tb] : [])))
-            : this.#tripBlockService.findManyByFilter({
-                  calendarId,
-                  tripDirection,
-                  fields: TIMETABLE_ALL_LINE_FIELDS,
-                  // 全量は HTML に積まない。1 ページ目の分だけを publishFirstPage が鍵に積む
-                  context: this.#isServer
-                      ? skipTransferCacheContext()
-                      : undefined,
-              });
+            : calendarId !== null && tripDirection !== null
+              ? this.#tripBlockService.findManyByFilter({
+                    calendarId,
+                    tripDirection,
+                    fields: TIMETABLE_ALL_LINE_FIELDS,
+                    // 全量は HTML に積まない。1 ページ目の分だけを publishFirstPage が鍵に積む
+                    context: this.#isServer
+                        ? skipTransferCacheContext()
+                        : undefined,
+                })
+              : of([] as TripBlockWithTripsDto[]);
 
         return tripBlocks$.pipe(
-            tap((data: TripBlockDetailsDto[]) => {
+            tap((data: TripBlockWithTripsDto[]) => {
                 // 取り直しの間に条件が替わったら、古い条件の中身で上書きしない
                 if (
                     calendarId !== this.#store.calendarId() ||

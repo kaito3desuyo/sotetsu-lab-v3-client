@@ -17,7 +17,7 @@ import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sig
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
-import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
+import { TripWithTimesDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
 import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
 import { TripLabelComponent } from 'src/app/shared/trip-label/trip-label.component';
@@ -59,7 +59,7 @@ import { FormationNumberLinkComponent } from 'src/app/shared/formation-number-li
 export class TimetableStationTripCellComponent {
     readonly #operationPostDialog = inject(OperationPostDialogService);
 
-    readonly trip = input.required<TripDetailsDto>();
+    readonly trip = input.required<TripWithTimesDto>();
     readonly calendarId = input.required<CalendarDetailsDto['calendarId']>();
     readonly stationId = input.required<StationDetailsDto['stationId']>();
     readonly tripClasses = input.required<TripClassDetailsDto[]>();

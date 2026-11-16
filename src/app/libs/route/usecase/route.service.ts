@@ -18,7 +18,7 @@ export class RouteService {
     findOneWithStations(params: {
         routeId: string;
         forceReload?: boolean;
-    }): Observable<RouteStationsDto> {
+    }): Observable<RouteStationsDto | null> {
         return this.#routeQuery.findOneWithStations(params);
     }
 }

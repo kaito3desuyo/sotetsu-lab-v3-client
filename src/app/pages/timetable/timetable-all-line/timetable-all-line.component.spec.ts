@@ -33,7 +33,7 @@ import { UserState } from 'src/app/global-states/user.state';
 import { LoadingService } from 'src/app/shared/loading/loading.service';
 import { CalendarSelectDialogService } from 'src/app/shared/calendar-select-dialog/services/calendar-select-dialog.service';
 import { ConfirmDialogService } from 'src/app/shared/confirm-dialog/services/confirm-dialog.service';
-import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
+import { TripBlockWithTripsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { TimetableAllLineService } from './services/timetable-all-line.service';
 import { TimetableAllLineStore } from './stores/timetable-all-line.store';
 import { TimetableAllLineComponent } from './timetable-all-line.component';
@@ -373,7 +373,7 @@ describe('TimetableAllLineComponent の URL の値', () => {
         { calendar_id: CALENDAR, trip_direction: '0', trip_block_id: 'abc' },
         { trip_direction: 'abc' },
     ])('%j は見つからない表示にして、補いも取得もしない', async (params) => {
-        const fixture = await create(params);
+        const fixture = await create(params as Record<string, string>);
 
         expect(mark).toHaveBeenCalledTimes(1);
         expect(fetchStations).not.toHaveBeenCalled();
@@ -385,7 +385,7 @@ describe('TimetableAllLineComponent の URL の値', () => {
 
     it('値が全部正しければ取得し、見つからない表示にしない', async () => {
         fetchTripBlocks = jest.fn(() => {
-            const found: TripBlockDetailsDto = {
+            const found: TripBlockWithTripsDto = {
                 tripBlockId: BLOCK,
                 trips: [],
             };
