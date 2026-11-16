@@ -81,6 +81,7 @@ export class OperationRealTimeComponent {
     );
 
     readonly isLoading = this.#store.isLoading;
+    readonly partialFailure = this.#store.partialFailure;
 
     readonly #agencies = inject(AgencyListState).agencies;
     readonly #operations = this.#store.sortedOperations;
@@ -210,6 +211,7 @@ export class OperationRealTimeComponent {
                 service.fetchOperations(),
                 service.fetchItineraryLinks(),
             ]);
+            this.#store.setPartialFailure(itineraryLinks?.failed ?? false);
             // 3 波目: 運用と編成に依存する
             await settleAll([
                 service.fetchCurrentPositions(),

@@ -38,6 +38,11 @@ type StoreProps = {
     operations: OperationDetailsDto[];
     /** 運用のつながり（乗り移りの端の判定用）。永続化しない */
     itineraryLinks: OperationItineraryLinkDto[];
+    /**
+     * 画面は出せたが、一部の取得（今は運用のつながり）に失敗したか。凡例の下に知らせを出す。
+     * 「無い」と「取れなかった」を見分けるため（Fable の全体レビュー「一部取れませんでした」）。保存には入れない
+     */
+    partialFailure: boolean;
     formations: FormationDetailsDto[];
     /**
      * 運用・編成を 1 回でも取ったか。空の配列だけでは「まだ取っていない」と「0 件」を区別できない。
@@ -99,6 +104,7 @@ export const OperationRealTimeStore = signalStore(
         calendar: null,
         operations: [],
         itineraryLinks: [],
+        partialFailure: false,
         formations: [],
         hasFetchedOperations: false,
         hasFetchedFormations: false,
@@ -178,6 +184,9 @@ export const OperationRealTimeStore = signalStore(
         },
         setItineraryLinks(links: OperationItineraryLinkDto[]): void {
             patchState(store, { itineraryLinks: links });
+        },
+        setPartialFailure(partialFailure: boolean): void {
+            patchState(store, { partialFailure });
         },
         setTripClasses(tripClasses: TripClassDetailsDto[]): void {
             patchState(store, { tripClasses });
