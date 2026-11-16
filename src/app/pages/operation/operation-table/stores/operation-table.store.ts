@@ -1,4 +1,4 @@
-import { computed } from '@angular/core';
+import { computed, inject } from '@angular/core';
 import {
     patchState,
     signalStore,
@@ -8,6 +8,7 @@ import {
     withMethods,
     withState,
 } from '@ngrx/signals';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { withAppDevtools } from 'src/app/core/store-features/with-app-devtools';
 import { withOfflineSnapshots } from 'src/app/core/store-features/with-offline-snapshots';
 import { withSettingsStorage } from 'src/app/core/store-features/with-settings-storage';
@@ -24,7 +25,6 @@ type StoreProps = {
     calendar: CalendarDetailsDto | null;
     operationTrips: OperationTripsDto[];
     itineraryLinks: OperationItineraryLinkDto[];
-    stations: StationDetailsDto[];
     tripClasses: TripClassDetailsDto[];
     selectedGroupNames: string[];
     hasFetchedOperationTrips: boolean;
@@ -41,11 +41,7 @@ type StoreProps = {
  */
 export type OperationTableSnapshot = Pick<
     StoreProps,
-    | 'calendar'
-    | 'operationTrips'
-    | 'itineraryLinks'
-    | 'stations'
-    | 'tripClasses'
+    'calendar' | 'operationTrips' | 'itineraryLinks' | 'tripClasses'
 >;
 
 const initialState: StoreProps = {
@@ -53,7 +49,6 @@ const initialState: StoreProps = {
     calendar: null,
     operationTrips: [],
     itineraryLinks: [],
-    stations: [],
     tripClasses: [],
     selectedGroupNames: [],
     hasFetchedOperationTrips: false,
@@ -86,6 +81,8 @@ export const OperationTableStore = signalStore(
             normalizeGroupNames(selectedGroupNames()),
         ),
         isLoading: computed(() => loadingQueue().length > 0),
+        /** 全駅（マスターデータ。RouteStationListState から読む） */
+        stations: inject(RouteStationListState).stations,
     })),
     withMethods((store) => {
         // 取得の世代番号。ページを離れてすぐ戻ったとき、前のインスタンスの取得が
@@ -120,9 +117,6 @@ export const OperationTableStore = signalStore(
             ): void {
                 patchState(store, { itineraryLinks });
             },
-            setStations(stations: StationDetailsDto[]): void {
-                patchState(store, { stations });
-            },
             setTripClasses(tripClasses: TripClassDetailsDto[]): void {
                 patchState(store, { tripClasses });
             },
@@ -152,7 +146,6 @@ export const OperationTableStore = signalStore(
                     calendar: store.calendar(),
                     operationTrips: store.operationTrips(),
                     itineraryLinks: store.itineraryLinks(),
-                    stations: store.stations(),
                     tripClasses: store.tripClasses(),
                 };
             },
@@ -164,7 +157,6 @@ export const OperationTableStore = signalStore(
                     isPartial: false,
                     // つながりを持たない古い保存でも空にして戻す
                     itineraryLinks: data.itineraryLinks ?? [],
-                    stations: data.stations,
                     tripClasses: data.tripClasses,
                 });
             },

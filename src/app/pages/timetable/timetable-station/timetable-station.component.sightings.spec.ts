@@ -82,7 +82,6 @@ describe('TimetableStationComponent の充当編成の圏外の保存', () => {
                         fetchTrips: () => of(undefined),
                         usedTransferredTrips: () => false,
                         fetchTripClasses: () => of(undefined),
-                        fetchStations: () => of(undefined),
                         fetchOperations: () => of(undefined),
                         fetchOperationSightingTimeCrossSections: () =>
                             sightingsFetched,

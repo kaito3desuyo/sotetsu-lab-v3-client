@@ -1,4 +1,4 @@
-import { computed } from '@angular/core';
+import { computed, inject } from '@angular/core';
 import {
     patchState,
     signalStore,
@@ -6,6 +6,7 @@ import {
     withMethods,
     withState,
 } from '@ngrx/signals';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { withAppDevtools } from 'src/app/core/store-features/with-app-devtools';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
@@ -35,7 +36,6 @@ type StoreProps = {
     sightings: OperationSightingDetailsDto[];
     tripsByOperationId: Record<string, OperationTripsDto>;
     links: OperationItineraryLinkDto[];
-    stations: StationDetailsDto[];
     /** 目撃が無いときの最初の運用（今日は time-cross-section、明日は明日 12:00 の問い合わせ） */
     firstOperationId: string | null;
     /** 明日の問い合わせで返った運用。null なら明日は選べない */
@@ -62,7 +62,6 @@ const initialState: StoreProps = {
     sightings: [],
     tripsByOperationId: {},
     links: [],
-    stations: [],
     firstOperationId: null,
     tomorrowOperationId: null,
     tomorrowOperationNumber: null,
@@ -77,6 +76,10 @@ const initialState: StoreProps = {
 export const TimetableFormationStore = signalStore(
     { providedIn: 'root' },
     withState<StoreProps>(initialState),
+    withComputed(() => ({
+        /** 全駅（マスターデータ。RouteStationListState から読む） */
+        stations: inject(RouteStationListState).stations,
+    })),
     withComputed(
         ({
             formation,
@@ -210,9 +213,6 @@ export const TimetableFormationStore = signalStore(
             },
             setLinks(links: OperationItineraryLinkDto[]): void {
                 patchState(store, { links });
-            },
-            setStations(stations: StationDetailsDto[]): void {
-                patchState(store, { stations });
             },
             setFirstOperationId(firstOperationId: string | null): void {
                 patchState(store, { firstOperationId });

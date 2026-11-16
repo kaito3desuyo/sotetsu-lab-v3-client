@@ -15,7 +15,6 @@ import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
-import { StationService } from 'src/app/libs/station/usecase/station.service';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
 import { OperationTableStore } from '../stores/operation-table.store';
@@ -43,7 +42,6 @@ export class OperationTableService {
     readonly #store = inject(OperationTableStore);
     readonly #calendarService = inject(CalendarService);
     readonly #operationService = inject(OperationService);
-    readonly #stationService = inject(StationService);
     readonly #tripClassService = inject(TripClassService);
     readonly #transferState = inject(TransferState);
     readonly #queryInvalidator = inject(QueryInvalidator);
@@ -171,15 +169,6 @@ export class OperationTableService {
                 }),
                 map(() => undefined),
             );
-    }
-
-    fetchStations(): Observable<void> {
-        return this.#stationService.findMany({}).pipe(
-            tap((stations: StationDetailsDto[]) => {
-                this.#store.setStations(stations);
-            }),
-            map(() => undefined),
-        );
     }
 
     fetchTripClasses(): Observable<void> {

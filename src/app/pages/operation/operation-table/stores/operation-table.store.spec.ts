@@ -173,11 +173,9 @@ describe('OperationTableStore', () => {
         const store = TestBed.inject(OperationTableStore);
         store.setCalendar({ calendarId: 'cal-1' } as never);
         store.setOperationTrips([operationTrip('11')]);
-        store.setStations([{ stationId: 'st-1' }] as never);
         const snapshot = store.snapshot();
         store.setCalendar(null as never);
         store.setOperationTrips([]);
-        store.setStations([]);
         store.setCalendarId('cal-2');
         store.setSelectedGroupNames(['1群']);
 
@@ -191,7 +189,6 @@ describe('OperationTableStore', () => {
                 'calendar',
                 'operationTrips',
                 'itineraryLinks',
-                'stations',
                 'tripClasses',
             ].sort(),
         );
