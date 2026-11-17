@@ -127,6 +127,7 @@ export class TimetableFormationService {
                 this.#store.setLoadError(failed);
                 this.#store.setCalendar(r.calendar ?? null);
                 this.#store.setFormation(formation);
+                this.#store.setFormationNumbers(r.formations);
                 this.#store.setSightings(r.sightings);
                 this.#store.setTomorrowOperationId(r.tomorrow.operationId);
                 this.#store.setTomorrowOperationNumber(
