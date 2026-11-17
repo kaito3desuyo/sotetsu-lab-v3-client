@@ -11,6 +11,9 @@
                     class="tw-border-0 tw-border-t tw-border-solid tw-border-rule"
                     [class.tw-text-muted]="states()[i] === 'past'"
                     [class.tw-bg-accent-50]="states()[i] === 'running'"
+                    [class.tw-bg-paper-2]="
+                        wide() && isSelected(row) && states()[i] !== 'running'
+                    "
                     [attr.data-state]="states()[i]"
                 >
                     <div
@@ -30,11 +33,11 @@
                         ></app-trip-label>
                         <button
                             type="button"
-                            class="tw-grid tw-min-w-0 tw-flex-1 tw-cursor-pointer tw-grid-cols-[auto_auto_auto_1fr] tw-items-center tw-gap-x-1.5 tw-border-0 tw-p-0 tw-text-left tw-text-[13px] tw-leading-snug [background-color:transparent] [color:inherit] [font-family:inherit]"
-                            [attr.aria-expanded]="isExpanded(row)"
+                            class="tw-grid tw-min-w-0 tw-flex-1 tw-cursor-pointer tw-grid-cols-[auto_auto_auto_1fr] tw-items-center tw-gap-x-1.5 tw-border-0 tw-p-0 tw-text-left tw-text-[13px] tw-leading-snug [background-color:transparent] [color:inherit] [font-family:inherit] xl:tw-flex xl:tw-flex-row xl:tw-gap-x-1 xl:tw-text-sm"
+                            [attr.aria-expanded]="isOpen(row)"
                             (click)="toggle(row)"
                         >
-                            <!-- 1 段目に発・着の駅名、2 段目にそれぞれの時刻。矢印と印は 2 段の真ん中に置く -->
+                            <!-- 狭い画面は 1 段目に発・着の駅名、2 段目にそれぞれの時刻。矢印と印は 2 段の真ん中に置く。広い画面は横 1 列に並べる -->
                             <span class="tw-col-start-1 tw-row-start-1">{{
                                 name(row.trip.startStationId)
                             }}</span>
@@ -54,7 +57,7 @@
                                 >{{ endClock(row) }}</span
                             >
                             <span
-                                class="tw-col-start-4 tw-row-span-2 tw-row-start-1 tw-flex tw-flex-col tw-items-end tw-text-xs tw-font-bold"
+                                class="tw-col-start-4 tw-row-span-2 tw-row-start-1 tw-flex tw-flex-col tw-items-end tw-text-xs tw-font-bold xl:tw-ml-auto xl:tw-flex-row xl:tw-gap-2"
                             >
                                 @if (states()[i] === 'running') {
                                     <span data-testid="running-label"
@@ -79,32 +82,21 @@
                             class="tw-shrink-0 tw-text-muted"
                             aria-hidden="true"
                             >{{
-                                isExpanded(row) ? 'expand_less' : 'expand_more'
+                                wide()
+                                    ? 'chevron_right'
+                                    : isExpanded(row)
+                                      ? 'expand_less'
+                                      : 'expand_more'
                             }}</mat-icon
                         >
                     </div>
-                    @if (isExpanded(row)) {
-                        <ul
-                            class="tw-m-0 tw-list-none tw-px-3 tw-py-2 tw-text-xs"
-                            data-testid="trip-times"
-                        >
-                            @for (time of times(row); track time.timeId) {
-                                <li
-                                    class="tw-flex tw-flex-row tw-gap-2 tw-py-0.5"
-                                >
-                                    <span class="tw-min-w-0 tw-flex-1">{{
-                                        name(time.stationId)
-                                    }}</span>
-                                    @if (passing(time)) {
-                                        <span class="tw-text-muted">通過</span>
-                                    } @else {
-                                        <span class="tw-tabular-nums">{{
-                                            clock(time)
-                                        }}</span>
-                                    }
-                                </li>
-                            }
-                        </ul>
+                    @if (!wide() && isExpanded(row)) {
+                        <ng-container
+                            *ngTemplateOutlet="
+                                timesList;
+                                context: { $implicit: row }
+                            "
+                        ></ng-container>
                     }
                 </li>
             }
@@ -184,3 +176,57 @@
         }
     }
 </ol>
+
+<!-- 広い画面は、押した列車の各駅の時刻を一覧の右に出す。一覧を下へ送っても画面に残す -->
+@if (wide()) {
+    <aside
+        class="tw-sticky tw-top-14 tw-rounded-card tw-bg-white tw-px-4 tw-py-3"
+        data-testid="trip-detail"
+    >
+        @if (selectedRow(); as row) {
+            <div
+                class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-x-2 tw-text-sm"
+            >
+                <app-trip-label
+                    class="tw-font-bold"
+                    chipSize="sm"
+                    [tripClassName]="row.trip.trip?.tripClass?.tripClassName"
+                    [tripClassColor]="row.trip.trip?.tripClass?.tripClassColor"
+                    [tripNumber]="row.trip.trip?.tripNumber"
+                    [link]="link(row)"
+                ></app-trip-label>
+                <span class="tw-tabular-nums"
+                    >{{ name(row.trip.startStationId) }} {{ startClock(row) }} →
+                    {{ name(row.trip.endStationId) }} {{ endClock(row) }}</span
+                >
+            </div>
+            <ng-container
+                *ngTemplateOutlet="timesList; context: { $implicit: row }"
+            ></ng-container>
+        } @else {
+            <p class="tw-m-0 tw-text-sm tw-text-muted">
+                列車を押すと、各駅の時刻をここに出します。
+            </p>
+        }
+    </aside>
+}
+
+<ng-template #timesList let-row>
+    <ul
+        class="tw-m-0 tw-list-none tw-px-3 tw-py-2 tw-text-xs xl:tw-px-0 xl:tw-text-[13px]"
+        data-testid="trip-times"
+    >
+        @for (time of times(row); track time.timeId) {
+            <li class="tw-flex tw-flex-row tw-gap-2 tw-py-0.5">
+                <span class="tw-min-w-0 tw-flex-1">{{
+                    name(time.stationId)
+                }}</span>
+                @if (passing(time)) {
+                    <span class="tw-text-muted">通過</span>
+                } @else {
+                    <span class="tw-tabular-nums">{{ clock(time) }}</span>
+                }
+            </li>
+        }
+    </ul>
+</ng-template>
