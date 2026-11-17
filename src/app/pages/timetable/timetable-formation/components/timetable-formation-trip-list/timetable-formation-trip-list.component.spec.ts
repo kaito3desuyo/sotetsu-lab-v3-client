@@ -75,8 +75,8 @@ const text = (f: ComponentFixture<unknown>): string =>
 describe('TimetableFormationTripListComponent', () => {
     it('始発と終着の駅名と時刻を出し、走っている列車に印を付ける', () => {
         const fixture = create([trip()], ['running']);
-        expect(text(fixture)).toContain('いずみ野 07:07');
-        expect(text(fixture)).toContain('湘南台 07:14');
+        expect(text(fixture)).toMatch(/いずみ野\s*07:07/);
+        expect(text(fixture)).toMatch(/湘南台\s*07:14/);
         expect(text(fixture)).toContain('走行中');
     });
 
