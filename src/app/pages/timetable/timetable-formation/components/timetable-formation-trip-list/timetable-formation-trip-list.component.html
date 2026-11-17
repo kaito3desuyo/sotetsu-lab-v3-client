@@ -50,11 +50,11 @@
                                     >走行中</span
                                 >
                             }
-                            @if (row.estimated) {
+                            @for (t of row.sightingTimes; track $index) {
                                 <span
-                                    class="tw-text-xs tw-text-muted"
-                                    data-testid="estimated-label"
-                                    >推定</span
+                                    class="tw-text-xs tw-font-bold"
+                                    data-testid="sighted-label"
+                                    >目撃 {{ sightingClock(t) }}</span
                                 >
                             }
                         </button>
@@ -75,7 +75,7 @@
                     </div>
                     @if (isExpanded(row)) {
                         <ul
-                            class="tw-m-0 tw-list-none tw-bg-paper-2 tw-px-3 tw-py-2 tw-text-xs"
+                            class="tw-m-0 tw-list-none tw-px-3 tw-py-2 tw-text-xs"
                             data-testid="trip-times"
                         >
                             @for (time of times(row); track time.timeId) {

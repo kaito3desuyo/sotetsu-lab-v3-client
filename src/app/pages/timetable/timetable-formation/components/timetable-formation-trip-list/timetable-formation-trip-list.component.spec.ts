@@ -44,6 +44,7 @@ const trip = (over: Partial<Extract<FormationDayRow, { kind: 'trip' }>> = {}) =>
         operationNumber: '55',
         estimated: false,
         carriedOver: false,
+        sightingTimes: [],
         ...over,
     }) as FormationDayRow;
 
@@ -117,9 +118,17 @@ describe('TimetableFormationTripListComponent', () => {
         ).not.toContain('tw-text-ink');
     });
 
-    it('推定の列車に「推定」を出す', () => {
+    it('推定の列車にも「推定」の字は出さない（切り替わりは区切りの行が示す）', () => {
         const fixture = create([trip({ estimated: true })], ['past']);
-        expect(text(fixture)).toContain('推定');
+        expect(text(fixture)).not.toContain('推定');
+    });
+
+    it('目撃した列車に「目撃 HH:mm」を出す', () => {
+        const fixture = create(
+            [trip({ sightingTimes: ['2026-11-11T07:10:00+09:00'] })],
+            ['past'],
+        );
+        expect(text(fixture)).toContain('目撃 07:10');
     });
 
     it('行を押すと各駅の時刻が開き、通過は「通過」と出る', () => {

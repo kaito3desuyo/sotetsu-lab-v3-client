@@ -5,8 +5,8 @@ describe('formatClock', () => {
         expect(formatClock(1, '07:07:00')).toBe('07:07');
     });
 
-    it('days=2 の 0:30 発を 24:30 と出す', () => {
-        expect(formatClock(2, '00:30:00')).toBe('24:30');
+    it('days=2 の 0:30 発は時計の時刻の 00:30 と出す', () => {
+        expect(formatClock(2, '00:30:00')).toBe('00:30');
     });
 
     it('days が無ければその日（1）として出す', () => {

@@ -197,6 +197,64 @@ describe('buildFormationDay', () => {
         expect(summarize(rows)).toEqual(['trip:m1', 'swap:59', 'trip:n2']);
     });
 
+    it('目撃の時刻を、その時刻を含む同じ運用の列車に付ける', () => {
+        const m1 = tol('m1', 'op55', '07:00', '08:00');
+        const m2 = tol('m2', 'op55', '09:00', '09:30');
+        const n1 = tol('n1', 'op59', '07:00', '08:00');
+        const n2 = tol('n2', 'op59', '09:00', '09:30');
+        const rows = buildFormationDay(
+            input({
+                sightings: [
+                    sighting('s1', 'f1', 'op55', '07:30'),
+                    sighting('s2', 'f1', 'op59', '09:06'),
+                    sighting('s3', 'f1', 'op59', '09:20'),
+                ],
+                tripsByOperationId: {
+                    op55: op('op55', '55', [m1, m2]),
+                    op59: op('op59', '59', [n1, n2]),
+                },
+            }),
+        );
+        const marks = rows.flatMap((r) =>
+            r.kind === 'trip'
+                ? [[r.trip.tripOperationListId, r.sightingTimes]]
+                : [],
+        );
+        expect(marks).toEqual([
+            ['m1', [jst('07:30')]],
+            ['n2', [jst('09:06'), jst('09:20')]],
+        ]);
+    });
+
+    it('自分の目撃がある列車は、次の差し替えの前でも推定にしない', () => {
+        const m = ['07:00', '09:00', '10:00'].map((h, i) =>
+            tol(`m${i + 1}`, 'op55', h, h.replace(':00', ':30')),
+        );
+        const n = ['07:00', '09:00', '10:00'].map((h, i) =>
+            tol(`n${i + 1}`, 'op59', h, h.replace(':00', ':30')),
+        );
+        const rows = buildFormationDay(
+            input({
+                sightings: [
+                    sighting('s1', 'f1', 'op55', '07:10'),
+                    sighting('s2', 'f1', 'op59', '09:06'),
+                    sighting('s3', 'f1', 'op55', '10:10'),
+                ],
+                tripsByOperationId: {
+                    op55: op('op55', '55', m),
+                    op59: op('op59', '59', n),
+                },
+            }),
+        );
+        const n2 = rows.find(
+            (r) => r.kind === 'trip' && r.trip.tripOperationListId === 'n2',
+        );
+        expect(n2).toMatchObject({
+            estimated: false,
+            sightingTimes: [jst('09:06')],
+        });
+    });
+
     it('乗り移りで 16K から 15K に続け、transfer の帯を入れる', () => {
         const rows = buildFormationDay(
             input({
@@ -610,7 +668,7 @@ describe('buildFormationDay', () => {
             kind: 'depot',
             label: 'in',
             stationId: 's-e4-end',
-            time: '24:50',
+            time: '00:50',
         });
     });
 
