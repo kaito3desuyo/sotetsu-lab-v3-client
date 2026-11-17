@@ -91,6 +91,7 @@ describe('Store: TimetableFormation', () => {
             {
                 ...original,
                 operationSightingId: 's1#15K',
+                carriedFromSightingId: 's1',
                 operationId: 'op15',
                 sightedAsOperation: {
                     operationId: 'op16',

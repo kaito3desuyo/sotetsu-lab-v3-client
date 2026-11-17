@@ -22,4 +22,6 @@ export interface OperationSightingModel {
         operationId: string;
         operationNumber: string;
     } | null;
+    /** 同日引き継ぎの写しだけに付く、元の目撃の id */
+    carriedFromSightingId?: string;
 }
