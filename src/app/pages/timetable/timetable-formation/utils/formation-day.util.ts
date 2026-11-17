@@ -5,11 +5,12 @@ import {
 } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
+import { toServiceSeconds } from 'src/app/core/utils/railway-day';
 import {
-    toDisplayTime,
-    toServiceSeconds,
-} from 'src/app/core/utils/railway-day';
-import { isInferredBasis, toZeroBasedDays } from './formation-display.util';
+    formatClock,
+    isInferredBasis,
+    toZeroBasedDays,
+} from './formation-display.util';
 
 /** 運用を何で決めたか（画面で出し分けるときの材料） */
 export type FormationDayBasis =
@@ -24,6 +25,8 @@ export type FormationDayRow =
           estimated: boolean;
           /** 同日引き継ぎの目撃で運用が決まった列車 */
           carriedOver: boolean;
+          /** この列車で見た、この編成の目撃の時刻（ISO・時刻順）。列車の行に「目撃 HH:mm」と出す */
+          sightingTimes: string[];
       }
     | { kind: 'depot'; label: 'out' | 'in'; stationId: string; time: string }
     | { kind: 'transfer'; from: string; to: string; stationId: string }
@@ -54,6 +57,7 @@ type TripEntry = {
     operationId: string;
     estimated: boolean;
     carriedOver: boolean;
+    sightingTimes: string[];
 };
 type PathEntry =
     | TripEntry
@@ -159,6 +163,7 @@ function build(
         operationId,
         estimated: false,
         carriedOver: false,
+        sightingTimes: [],
     });
 
     /** 時刻 sec を含む（終わりが sec 以後の最初の）列車の添字。無ければ -1 */
@@ -441,6 +446,17 @@ function build(
         }
     }
 
+    // 目撃を、その時刻を含む列車（終わりが目撃の時刻以後の最初の列車）に付ける。運用が違う列車と、最後の列車より後の目撃には付けない
+    for (const s of own) {
+        const at = pathIndexContaining(path, sightingSeconds(s));
+        const e = at >= 0 ? path[at] : null;
+        if (e?.type === 'trip' && e.operationId === effectiveOperationId(s)) {
+            e.sightingTimes.push(s.sightingTime);
+            // 自分の目撃がある列車は、この編成が走ったと分かっている
+            e.estimated = false;
+        }
+    }
+
     // 5. 入出庫を depot の行にする
     const rows: FormationDayRow[] = [];
     for (const e of path) {
@@ -475,8 +491,8 @@ function build(
                 kind: 'depot',
                 label: 'out',
                 stationId: trip.startStationId ?? '',
-                time: toDisplayTime(
-                    toZeroBasedDays(trip.startTime?.departureDays),
+                time: formatClock(
+                    trip.startTime?.departureDays,
                     trip.startTime?.departureTime ?? '00:00:00',
                 ),
             });
@@ -488,14 +504,15 @@ function build(
             operationNumber: numberOf(e.operationId),
             estimated: e.estimated,
             carriedOver: e.carriedOver,
+            sightingTimes: e.sightingTimes,
         });
         if (trip.trip?.depotIn) {
             rows.push({
                 kind: 'depot',
                 label: 'in',
                 stationId: trip.endStationId ?? '',
-                time: toDisplayTime(
-                    toZeroBasedDays(trip.endTime?.arrivalDays),
+                time: formatClock(
+                    trip.endTime?.arrivalDays,
                     trip.endTime?.arrivalTime ?? '00:00:00',
                 ),
             });

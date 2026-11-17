@@ -1,4 +1,6 @@
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
 import { provideRouter } from '@angular/router';
 import { FormationDayRow } from '../../utils/formation-day.util';
 import { TimetableFormationTripListComponent } from './timetable-formation-trip-list.component';
@@ -44,16 +46,26 @@ const trip = (over: Partial<Extract<FormationDayRow, { kind: 'trip' }>> = {}) =>
         operationNumber: '55',
         estimated: false,
         carriedOver: false,
+        sightingTimes: [],
         ...over,
     }) as FormationDayRow;
 
 function create(
     rows: FormationDayRow[],
     states: ('past' | 'running' | 'future')[] = [],
+    wide = false,
 ): ComponentFixture<TimetableFormationTripListComponent> {
     TestBed.configureTestingModule({
         imports: [TimetableFormationTripListComponent],
-        providers: [provideRouter([])],
+        providers: [
+            provideRouter([]),
+            {
+                provide: BreakpointObserver,
+                useValue: {
+                    observe: () => of({ matches: wide, breakpoints: {} }),
+                },
+            },
+        ],
     });
     const fixture = TestBed.createComponent(
         TimetableFormationTripListComponent,
@@ -72,10 +84,46 @@ const text = (f: ComponentFixture<unknown>): string =>
     (f.nativeElement as HTMLElement).textContent ?? '';
 
 describe('TimetableFormationTripListComponent', () => {
+    describe('広い画面', () => {
+        const el = (f: ComponentFixture<unknown>) =>
+            f.nativeElement as HTMLElement;
+        const click = (f: ComponentFixture<unknown>) => {
+            el(f).querySelector<HTMLButtonElement>('li button')?.click();
+            f.detectChanges();
+        };
+
+        it('押した列車の各駅の時刻を、行の中でなく右のカードに出す', () => {
+            const fixture = create([trip()], ['future'], true);
+            const detail = () =>
+                el(fixture).querySelector('[data-testid="trip-detail"]');
+            expect(detail()?.textContent).toContain('列車を押すと');
+            click(fixture);
+            expect(
+                detail()?.querySelector('[data-testid="trip-times"]'),
+            ).not.toBeNull();
+            expect(
+                el(fixture).querySelector(
+                    '[data-testid="trip-list"] [data-testid="trip-times"]',
+                ),
+            ).toBeNull();
+        });
+
+        it('同じ列車をもう一度押すと右のカードを空ける', () => {
+            const fixture = create([trip()], ['future'], true);
+            click(fixture);
+            click(fixture);
+            expect(
+                el(fixture).querySelector(
+                    '[data-testid="trip-detail"] [data-testid="trip-times"]',
+                ),
+            ).toBeNull();
+        });
+    });
+
     it('始発と終着の駅名と時刻を出し、走っている列車に印を付ける', () => {
         const fixture = create([trip()], ['running']);
-        expect(text(fixture)).toContain('いずみ野 07:07');
-        expect(text(fixture)).toContain('湘南台 07:14');
+        expect(text(fixture)).toMatch(/いずみ野\s*07:07/);
+        expect(text(fixture)).toMatch(/湘南台\s*07:14/);
         expect(text(fixture)).toContain('走行中');
     });
 
@@ -117,9 +165,17 @@ describe('TimetableFormationTripListComponent', () => {
         ).not.toContain('tw-text-ink');
     });
 
-    it('推定の列車に「推定」を出す', () => {
+    it('推定の列車にも「推定」の字は出さない（切り替わりは区切りの行が示す）', () => {
         const fixture = create([trip({ estimated: true })], ['past']);
-        expect(text(fixture)).toContain('推定');
+        expect(text(fixture)).not.toContain('推定');
+    });
+
+    it('目撃した列車に「目撃 HH:mm」を出す', () => {
+        const fixture = create(
+            [trip({ sightingTimes: ['2026-11-11T07:10:00+09:00'] })],
+            ['past'],
+        );
+        expect(text(fixture)).toContain('目撃 07:10');
     });
 
     it('行を押すと各駅の時刻が開き、通過は「通過」と出る', () => {

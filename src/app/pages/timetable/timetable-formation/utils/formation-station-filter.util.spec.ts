@@ -43,6 +43,7 @@ function row(id: string, times: TimeDetailsDto[]): FormationDayRow {
         operationNumber: '1',
         estimated: false,
         carriedOver: false,
+        sightingTimes: [],
     };
 }
 

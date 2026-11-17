@@ -22,12 +22,21 @@ export const isInferredBasis = (basis: FormationDayBasis): boolean =>
 export const toZeroBasedDays = (days: number | null | undefined): number =>
     (days ?? 1) - 1;
 
-/** 'HH:mm'（24 時超えはそのまま 25:10 のように出す）。時刻が無ければ空 */
+/**
+ * 24 時超えの 'HH:mm'（25:10）を時計の時刻（01:10）にする。目撃の時刻（時計の時刻）とそろえる。
+ * ほかの画面の「いま」（shared の trip-position）も時計の時刻で出している
+ */
+export function toWallClock(display: string): string {
+    const [h, m] = display.split(':');
+    return `${String(Number(h) % 24).padStart(2, '0')}:${m}`;
+}
+
+/** 'HH:mm'（時計の時刻。24 時超えは 0 時からに戻す）。時刻が無ければ空 */
 export function formatClock(
     days: number | null | undefined,
     time: string | null | undefined,
 ): string {
-    return time ? toDisplayTime(toZeroBasedDays(days), time) : '';
+    return time ? toWallClock(toDisplayTime(toZeroBasedDays(days), time)) : '';
 }
 
 /** ISO の時刻を日本時間の 'HH:mm' にする */

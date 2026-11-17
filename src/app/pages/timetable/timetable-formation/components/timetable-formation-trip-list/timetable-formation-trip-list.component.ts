@@ -1,10 +1,16 @@
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { NgTemplateOutlet } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
+    computed,
+    inject,
     input,
     output,
     signal,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
 import { MatIconModule } from '@angular/material/icon';
 import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
 import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
@@ -21,7 +27,12 @@ import { FormationNumberLinkComponent } from 'src/app/shared/formation-number-li
 
 type TripRow = Extract<FormationDayRow, { kind: 'trip' }>;
 
-/** 編成の 1 日の列車の並び（最初の出庫から最後の入庫まで）。行を押すと各駅の時刻が開く */
+const WIDE_QUERY = '(min-width: 1280px)';
+
+/**
+ * 編成の 1 日の列車の並び（最初の出庫から最後の入庫まで）。行を押すと各駅の時刻が開く。
+ * 広い画面（xl）では、行の中で開かずに、一覧の右のカードに最後に押した列車の時刻を出す
+ */
 @Component({
     selector: 'app-timetable-formation-trip-list',
     templateUrl: './timetable-formation-trip-list.component.html',
@@ -29,10 +40,13 @@ type TripRow = Extract<FormationDayRow, { kind: 'trip' }>;
     imports: [
         FormationNumberLinkComponent,
         MatIconModule,
+        NgTemplateOutlet,
         OperationNumberTagComponent,
         TripLabelComponent,
     ],
-    host: { class: 'tw-block' },
+    host: {
+        class: 'tw-block xl:tw-grid xl:tw-grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)] xl:tw-items-start xl:tw-gap-4',
+    },
 })
 export class TimetableFormationTripListComponent {
     readonly rows = input<FormationDayRow[]>([]);
@@ -66,12 +80,49 @@ export class TimetableFormationTripListComponent {
     /** 開いた列車の tripOperationListId（取り直しで行がずれても同じ列車を開いたままにする） */
     protected readonly expanded = signal<ReadonlySet<string>>(new Set());
 
+    /** 右のカードに出す列車の tripOperationListId（広い画面だけで使う） */
+    protected readonly selectedId = signal<string | null>(null);
+
+    /** 右のカードに出す列車の行。取り直しで消えた列車なら無し */
+    protected readonly selectedRow = computed<TripRow | null>(() => {
+        const id = this.selectedId();
+        if (!id) return null;
+        return (
+            this.rows().find(
+                (r): r is TripRow =>
+                    r.kind === 'trip' && r.trip.tripOperationListId === id,
+            ) ?? null
+        );
+    });
+
     protected isExpanded(row: TripRow): boolean {
         return this.expanded().has(row.trip.tripOperationListId);
     }
 
+    protected isSelected(row: TripRow): boolean {
+        return this.selectedId() === row.trip.tripOperationListId;
+    }
+
+    /** 行が開いているか（広い画面は右のカードに出しているか） */
+    protected isOpen(row: TripRow): boolean {
+        return this.wide() ? this.isSelected(row) : this.isExpanded(row);
+    }
+
+    /** 広い画面か（Tailwind の xl と同じ 1280px 以上）。右のカードを出す幅 */
+    protected readonly wide = toSignal(
+        inject(BreakpointObserver)
+            .observe(WIDE_QUERY)
+            .pipe(map((s) => s.matches)),
+        { initialValue: false },
+    );
+
+    /** 狭い画面は行の中で開き閉じし、広い画面は右のカードに出す列車を替える（同じ列車ならカードを空ける） */
     protected toggle(row: TripRow): void {
         const id = row.trip.tripOperationListId;
+        if (this.wide()) {
+            this.selectedId.update((cur) => (cur === id ? null : id));
+            return;
+        }
         this.expanded.update((set) => {
             const next = new Set(set);
             if (!next.delete(id)) next.add(id);
