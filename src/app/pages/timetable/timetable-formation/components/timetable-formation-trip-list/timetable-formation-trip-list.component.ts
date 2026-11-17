@@ -45,8 +45,23 @@ export class TimetableFormationTripListComponent {
     /** 運用番号 → 運用 ID（乗り移り・交換の行のチップを行路図へのリンクにする。ストアの operationIdByNumber） */
     readonly operationIdByNumber = input<Record<string, string>>({});
     protected readonly routeDiagramLink = routeDiagramLink;
-    /** 「不明」の行から投稿へ進む。最後に分かっている運用番号を渡す */
+    /** 「不明」の行から投稿へ進む。最後に分かっている運用番号を渡す（途中の不明は空） */
     readonly postRequested = output<string>();
+
+    /**
+     * 投稿の画面に入れる運用番号。途中の不明（あとに目撃で運用が変わった行がある）は、
+     * いまの運用がその目撃で分かっているので、追い出された運用の番号を入れない
+     */
+    protected postOperationNumber(
+        index: number,
+        lastOperationNumber: string,
+    ): string {
+        return this.rows()
+            .slice(index + 1)
+            .some((r) => r.kind === 'swap')
+            ? ''
+            : lastOperationNumber;
+    }
 
     /** 開いた列車の tripOperationListId（取り直しで行がずれても同じ列車を開いたままにする） */
     protected readonly expanded = signal<ReadonlySet<string>>(new Set());

@@ -55,7 +55,7 @@ const hasTime = (t: TimeDetailsDto): boolean =>
 /**
  * 編成の 1 日の行から、ある駅に来る列車を拾って回数を数える。
  * 時刻は baseDate（営業日 'yyyy-MM-dd'）の日本時間 0 時からの秒数で比べる。
- * now が null（過去の日）なら全部 done。unknown の行より後の列車は数えない。
+ * now が null（過去の日）なら全部 done。最後の unknown の行より後の列車は数えない（途中の unknown は次の swap まで数えない）。
  */
 export function filterByStation(
     rows: FormationDayRow[],
@@ -69,8 +69,16 @@ export function filterByStation(
             : (now.getTime() - Date.parse(`${baseDate}T00:00:00+09:00`)) / 1000;
 
     const visits: FormationStationVisit[] = [];
-    for (const r of rows) {
-        if (r.kind === 'unknown') break;
+    let skipping = false;
+    for (const [i, r] of rows.entries()) {
+        if (r.kind === 'unknown') {
+            // 途中の不明は、次の目撃で運用が決まる（swap）まで数えない。最後の不明より後は数えない
+            if (!rows.slice(i + 1).some((x) => x.kind === 'swap')) break;
+            skipping = true;
+            continue;
+        }
+        if (r.kind === 'swap') skipping = false;
+        if (skipping) continue;
         if (r.kind !== 'trip') continue;
         const times = [...(r.trip.trip?.times ?? [])].sort(
             (a, b) => (a.stopSequence ?? 0) - (b.stopSequence ?? 0),

@@ -324,6 +324,126 @@ describe('buildFormationDay', () => {
         });
     });
 
+    it('目撃の一覧は編成を付けて返さないので、unknown の行の編成番号は formationNumberById から引く', () => {
+        const op55 = op('op55', '55', [
+            tol('d1', 'op55', '08:00', '09:00'),
+            tol('d2', 'op55', '15:00', '16:00'),
+        ]);
+        const rows = buildFormationDay(
+            input({
+                sightings: [
+                    sighting('s1', 'f1', 'op55', '08:30'),
+                    sighting('s2', 'f2', 'op55', '15:20'),
+                ],
+                tripsByOperationId: { op55 },
+                formationNumberById: { f1: '9702', f2: '10701' },
+            }),
+        );
+        expect(rows[1]).toEqual({
+            kind: 'unknown',
+            lastOperationNumber: '55',
+            evictedBy: { formationNumber: '10701', sightingTime: jst('15:20') },
+        });
+    });
+
+    describe('自分の目撃と目撃の間で別の編成に追い出された', () => {
+        const f2 = {
+            formationId: 'f2',
+            formationNumber: '10701',
+        } as FormationDetailsDto;
+        const op63 = (withDepot: boolean) =>
+            op('op63', '63', [
+                tol('e1', 'op63', '06:14', '09:33', { depotOut: true }),
+                tol('e2', 'op63', '09:40', '10:00', {
+                    depotIn: withDepot,
+                }),
+                tol('e3', 'op63', '14:17', '15:00', { depotOut: withDepot }),
+                tol('e4', 'op63', '15:30', '17:53'),
+            ]);
+        const op69 = op('op69', '69', [
+            tol('g1', 'op69', '17:50', '18:30'),
+            tol('g2', 'op69', '18:40', '19:30', { depotIn: true }),
+        ]);
+
+        it('入庫を挟む運用は、最後の入庫の列車までを推定で残して不明を入れる', () => {
+            const rows = buildFormationDay(
+                input({
+                    sightings: [
+                        sighting('s1', 'f1', 'op63', '06:50'),
+                        sighting('s2', 'f2', 'op63', '14:21', {
+                            formation: f2,
+                        }),
+                        sighting('s3', 'f1', 'op69', '18:00'),
+                    ],
+                    tripsByOperationId: { op63: op63(true), op69 },
+                }),
+            );
+            expect(summarize(rows)).toEqual([
+                'depot:out',
+                'trip:e1',
+                'trip:e2?',
+                'depot:in',
+                'unknown:63',
+                'swap:69',
+                'trip:g1',
+                'trip:g2',
+                'depot:in',
+            ]);
+            const u = rows.find((r) => r.kind === 'unknown');
+            expect(u).toEqual({
+                kind: 'unknown',
+                lastOperationNumber: '63',
+                evictedBy: {
+                    formationNumber: '10701',
+                    sightingTime: jst('14:21'),
+                },
+            });
+        });
+
+        it('入庫を挟まなければ、追い出した目撃の列車の手前で切る', () => {
+            const rows = buildFormationDay(
+                input({
+                    sightings: [
+                        sighting('s1', 'f1', 'op63', '06:50'),
+                        sighting('s2', 'f2', 'op63', '14:21', {
+                            formation: f2,
+                        }),
+                        sighting('s3', 'f1', 'op69', '18:00'),
+                    ],
+                    tripsByOperationId: { op63: op63(false), op69 },
+                }),
+            );
+            expect(summarize(rows)).toEqual([
+                'depot:out',
+                'trip:e1',
+                'trip:e2?',
+                'unknown:63',
+                'swap:69',
+                'trip:g1',
+                'trip:g2',
+                'depot:in',
+            ]);
+        });
+
+        it('別の編成の目撃が違う運用なら何も変わらない', () => {
+            const rows = buildFormationDay(
+                input({
+                    sightings: [
+                        sighting('s1', 'f1', 'op63', '06:50'),
+                        sighting('s2', 'f2', 'op69', '14:21', {
+                            formation: f2,
+                        }),
+                        sighting('s3', 'f1', 'op69', '18:00'),
+                    ],
+                    tripsByOperationId: { op63: op63(true), op69 },
+                }),
+            );
+            expect(rows.some((r) => r.kind === 'unknown')).toBe(false);
+            expect(summarize(rows)).toContain('swap:69');
+            expect(summarize(rows)).toContain('trip:e3?');
+        });
+    });
+
     it('乗り移りで同じ運用に戻っても止まる', () => {
         // A(a1) -> B(b1) -> A(a1) の輪
         const x1 = tol('x1', 'opA', '08:00', '09:00');
@@ -711,6 +831,13 @@ describe('basisAt', () => {
     });
     it('unknown の行以降は unknown', () => {
         expect(basisAt([trip(), unknown], 1, 'sighting')).toBe('unknown');
+    });
+    it('途中の unknown のあとの swap より後の列車は、unknown に引きずられない', () => {
+        const rows = [trip(), unknown, swap, trip(), trip(true)];
+        expect(basisAt(rows, 0, 'sighting')).toBe('sighting');
+        expect(basisAt(rows, 1, 'sighting')).toBe('unknown');
+        expect(basisAt(rows, 3, 'circulated')).toBe('sighting');
+        expect(basisAt(rows, 4, 'circulated')).toBe('carried-over');
     });
 });
 

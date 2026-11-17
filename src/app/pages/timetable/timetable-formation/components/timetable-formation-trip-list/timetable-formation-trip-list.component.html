@@ -1,5 +1,6 @@
+<!-- 先頭の行の上の罫線は、角の丸みで両端が削れて短く見えるので消す（面の端が区切りになる） -->
 <ol
-    class="tw-m-0 tw-list-none tw-overflow-hidden tw-rounded-card tw-bg-white tw-p-0"
+    class="tw-m-0 tw-list-none tw-overflow-hidden tw-rounded-card tw-bg-white tw-p-0 [&>li:first-child]:tw-border-t-0"
     data-testid="trip-list"
 >
     @for (row of rows(); track $index; let i = $index) {
@@ -99,7 +100,7 @@
             }
             @case ('depot') {
                 <li
-                    class="tw-border-0 tw-border-t tw-border-solid tw-border-rule tw-bg-paper-2 tw-px-3 tw-py-1 tw-text-xs tw-text-muted"
+                    class="tw-border-0 tw-border-t tw-border-solid tw-border-rule tw-px-3 tw-py-1 tw-text-xs tw-text-muted"
                 >
                     {{ row.label === 'out' ? '○' : '△' }}
                     {{ name(row.stationId) }} {{ row.time }}
@@ -108,7 +109,7 @@
             }
             @case ('transfer') {
                 <li
-                    class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-1 tw-border-0 tw-border-t tw-border-solid tw-border-rule tw-bg-paper-2 tw-px-3 tw-py-1 tw-text-xs tw-text-muted"
+                    class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-1 tw-border-0 tw-border-t tw-border-solid tw-border-rule tw-px-3 tw-py-1 tw-text-xs tw-text-muted"
                 >
                     <span>□ {{ name(row.stationId) }} で乗り移り</span>
                     <app-operation-number-tag
@@ -126,7 +127,7 @@
             }
             @case ('swap') {
                 <li
-                    class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-1 tw-border-0 tw-border-t tw-border-solid tw-border-rule tw-bg-paper-2 tw-px-3 tw-py-1 tw-text-xs tw-text-muted"
+                    class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-1 tw-border-0 tw-border-t tw-border-solid tw-border-rule tw-px-3 tw-py-1 tw-text-xs tw-text-muted"
                 >
                     <span>{{ sightingClock(row.sightingTime) }} の目撃で</span>
                     <app-operation-number-tag
@@ -160,7 +161,11 @@
                         type="button"
                         class="tw-w-fit tw-cursor-pointer tw-border-0 tw-p-0 tw-text-sm tw-text-accent-ink tw-underline [background-color:transparent] [font-family:inherit]"
                         data-testid="post-link"
-                        (click)="postRequested.emit(row.lastOperationNumber)"
+                        (click)="
+                            postRequested.emit(
+                                postOperationNumber(i, row.lastOperationNumber)
+                            )
+                        "
                     >
                         目撃を投稿する
                     </button>

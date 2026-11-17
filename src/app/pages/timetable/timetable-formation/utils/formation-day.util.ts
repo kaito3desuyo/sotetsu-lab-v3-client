@@ -44,6 +44,8 @@ export interface FormationDayInput {
     firstOperationId: string | null;
     tripsByOperationId: Record<string, OperationTripsDto>;
     links: OperationItineraryLinkDto[];
+    /** formationId → 編成番号。目撃の一覧は編成を付けて返さないので、不明の行の番号はここから引く */
+    formationNumberById?: Record<string, string>;
 }
 
 type TripEntry = {
@@ -56,7 +58,12 @@ type TripEntry = {
 type PathEntry =
     | TripEntry
     | { type: 'transfer'; from: string; to: string; stationId: string }
-    | { type: 'swap'; sightingTime: string; toOperationNumber: string };
+    | { type: 'swap'; sightingTime: string; toOperationNumber: string }
+    | {
+          type: 'unknown';
+          lastOperationNumber: string;
+          evictedBy: { formationNumber: string; sightingTime: string };
+      };
 
 /** 時刻順に並べた 1 つの運用の列車 */
 type Sorted = TripOperationListDetailsDto[];
@@ -284,6 +291,53 @@ function build(
         .filter((s) => s.formationId === input.formationId)
         .sort((a, b) => sightingSeconds(a) - sightingSeconds(b));
 
+    /** 追い出した目撃から「不明」の中身を作る */
+    const unknownOf = (
+        evictor: OperationSightingDetailsDto,
+    ): Extract<PathEntry, { type: 'unknown' }> => {
+        // 追い出した目撃は、その時刻にこの編成がたどっている運用で見ている（乗り移りの先もある）
+        const evictedOpId = effectiveOperationId(evictor);
+        return {
+            type: 'unknown',
+            lastOperationNumber:
+                numberOf(evictedOpId) ||
+                evictor.operation?.operationNumber ||
+                evictor.sightedAsOperation?.operationNumber ||
+                '',
+            evictedBy: {
+                formationNumber:
+                    evictor.formation?.formationNumber ??
+                    input.formationNumberById?.[evictor.formationId] ??
+                    '',
+                sightingTime: evictor.sightingTime,
+            },
+        };
+    };
+    /** 別の編成の有効な目撃のうち、from 秒より後・to 秒より前で、その時刻に path がたどる列車と同じ運用のもの（いちばん早い） */
+    const findEvictor = (
+        path: PathEntry[],
+        fromSec: number,
+        toSec: number,
+    ): OperationSightingDetailsDto | undefined =>
+        valid
+            .filter((s) => {
+                const sec = sightingSeconds(s);
+                return (
+                    s.formationId !== input.formationId &&
+                    sec > fromSec &&
+                    sec < toSec
+                );
+            })
+            .sort((a, b) => sightingSeconds(a) - sightingSeconds(b))
+            .find((s) => {
+                const at = pathIndexContaining(path, sightingSeconds(s));
+                return (
+                    at >= 0 &&
+                    (path[at] as TripEntry).operationId ===
+                        effectiveOperationId(s)
+                );
+            });
+
     const path: PathEntry[] = [];
     let lastKnown = -1;
 
@@ -314,23 +368,44 @@ function build(
     }
 
     // 3. 目撃のほうがダイヤより強い
+    let prevOwnSec = own.length > 0 ? sightingSeconds(own[0]) : 0;
     for (const s of own.slice(1)) {
         const sec = sightingSeconds(s);
         const opId = effectiveOperationId(s);
+        const previousSec = prevOwnSec;
+        prevOwnSec = sec;
+        // 前の自分の目撃から s までの間に、別の編成が同じ運用で目撃されていたら、そこは不明
+        const midEvictor = findEvictor(path, previousSec, sec);
         const at = pathIndexContaining(path, sec);
         const here = at >= 0 ? (path[at] as TripEntry) : null;
-        if (here && here.operationId === opId) {
+        if (!midEvictor && here && here.operationId === opId) {
             lastKnown = at;
             continue;
         }
         const list = tripsOf(opId);
-        const cut = at >= 0 ? at : path.length;
+        let cut = at >= 0 ? at : path.length;
+        if (midEvictor) {
+            const evictAt = pathIndexContaining(
+                path,
+                sightingSeconds(midEvictor),
+            );
+            cut = Math.max(evictAt, lastKnown + 1);
+            // 入庫する列車があれば、その最後の列車までは残す
+            for (let i = evictAt - 1; i > lastKnown; i--) {
+                const e = path[i];
+                if (e.type === 'trip' && e.trip.trip?.depotIn) {
+                    cut = i + 1;
+                    break;
+                }
+            }
+        }
         for (let i = lastKnown + 1; i < cut; i++) {
             const e = path[i];
             if (e.type === 'trip') e.estimated = true;
         }
         path.length = cut;
         trimTrailingTransfers(path);
+        if (midEvictor) path.push(unknownOf(midEvictor));
         path.push({
             type: 'swap',
             sightingTime: s.sightingTime,
@@ -352,39 +427,16 @@ function build(
     let unknown: FormationDayRow | null = null;
     if (own.length > 0) {
         const lastOwn = own[own.length - 1];
-        const lastSec = sightingSeconds(lastOwn);
-        const evictor = valid
-            .filter(
-                (s) =>
-                    s.formationId !== input.formationId &&
-                    sightingSeconds(s) > lastSec,
-            )
-            .sort((a, b) => sightingSeconds(a) - sightingSeconds(b))
-            .find((s) => {
-                const at = pathIndexContaining(path, sightingSeconds(s));
-                return (
-                    at >= 0 &&
-                    (path[at] as TripEntry).operationId ===
-                        effectiveOperationId(s)
-                );
-            });
+        const evictor = findEvictor(path, sightingSeconds(lastOwn), Infinity);
         if (evictor) {
             const at = pathIndexContaining(path, sightingSeconds(evictor));
             path.length = at;
             trimTrailingTransfers(path);
-            // 追い出した目撃は、その時刻にこの編成がたどっている運用で見ている（乗り移りの先もある）
-            const evictedOpId = effectiveOperationId(evictor);
+            const u = unknownOf(evictor);
             unknown = {
                 kind: 'unknown',
-                lastOperationNumber:
-                    numberOf(evictedOpId) ||
-                    evictor.operation?.operationNumber ||
-                    evictor.sightedAsOperation?.operationNumber ||
-                    '',
-                evictedBy: {
-                    formationNumber: evictor.formation?.formationNumber ?? '',
-                    sightingTime: evictor.sightingTime,
-                },
+                lastOperationNumber: u.lastOperationNumber,
+                evictedBy: u.evictedBy,
             };
         }
     }
@@ -392,6 +444,14 @@ function build(
     // 5. 入出庫を depot の行にする
     const rows: FormationDayRow[] = [];
     for (const e of path) {
+        if (e.type === 'unknown') {
+            rows.push({
+                kind: 'unknown',
+                lastOperationNumber: e.lastOperationNumber,
+                evictedBy: e.evictedBy,
+            });
+            continue;
+        }
         if (e.type !== 'trip') {
             rows.push(
                 e.type === 'transfer'
@@ -459,7 +519,7 @@ export function missingOperationIds(input: FormationDayInput): string[] {
 
 /**
  * rows[index] の列車の運用を何で決めたか。index から前へたどり、いちばん近い決め手で決める。
- * unknown の行が手前にあれば unknown、引き継ぎの列車なら carried-over、乗り移りなら transfer、
+ * 手前に unknown の行があり、そのあとに目撃で差し替えた（swap）行が無ければ unknown、引き継ぎの列車なら carried-over、乗り移りなら transfer、
  * 目撃で差し替えた（swap）なら sighting。決め手が無ければ最初の運用の決め方（firstBasis）。
  */
 export function basisAt(
@@ -467,11 +527,9 @@ export function basisAt(
     index: number,
     firstBasis: FormationDayBasis,
 ): FormationDayBasis {
-    if (rows.slice(0, index + 1).some((r) => r.kind === 'unknown')) {
-        return 'unknown';
-    }
     for (let i = Math.min(index, rows.length - 1); i >= 0; i--) {
         const r = rows[i];
+        if (r.kind === 'unknown') return 'unknown';
         if (r.kind === 'trip' && r.carriedOver) return 'carried-over';
         if (r.kind === 'transfer') return 'transfer';
         if (r.kind === 'swap') return 'sighting';

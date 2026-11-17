@@ -31,6 +31,8 @@ type StoreProps = {
     date: string | null;
     dateKind: FormationDateKind;
     formation: FormationDetailsDto | null;
+    /** その日の編成の formationId → 編成番号（目撃の一覧は編成を付けて返さない） */
+    formationNumberById: Record<string, string>;
     calendar: CalendarDetailsDto | null;
     /** その営業日の全編成の目撃 */
     sightings: OperationSightingDetailsDto[];
@@ -58,6 +60,7 @@ const initialState: StoreProps = {
     date: null,
     dateKind: 'today',
     formation: null,
+    formationNumberById: {},
     calendar: null,
     sightings: [],
     tripsByOperationId: {},
@@ -83,6 +86,7 @@ export const TimetableFormationStore = signalStore(
     withComputed(
         ({
             formation,
+            formationNumberById,
             date,
             dateKind,
             sightings,
@@ -106,6 +110,7 @@ export const TimetableFormationStore = signalStore(
                     firstOperationId: firstOperationId(),
                     tripsByOperationId: tripsByOperationId(),
                     links: links(),
+                    formationNumberById: formationNumberById(),
                 };
             });
             // この編成の目撃を時刻順に並べる（無効なものと、元の目撃と重なる引き継ぎの写しは除く）
@@ -199,6 +204,16 @@ export const TimetableFormationStore = signalStore(
             },
             setFormation(formation: FormationDetailsDto | null): void {
                 patchState(store, { formation });
+            },
+            setFormationNumbers(formations: FormationDetailsDto[]): void {
+                patchState(store, {
+                    formationNumberById: Object.fromEntries(
+                        formations.map((f) => [
+                            f.formationId,
+                            f.formationNumber,
+                        ]),
+                    ),
+                });
             },
             setCalendar(calendar: CalendarDetailsDto | null): void {
                 patchState(store, { calendar });

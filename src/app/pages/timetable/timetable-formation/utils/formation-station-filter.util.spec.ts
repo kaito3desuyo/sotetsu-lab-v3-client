@@ -179,6 +179,28 @@ describe('filterByStation', () => {
         expect(filterByStation(rows, 'futamata', BASE, null).total).toBe(1);
     });
 
+    it('途中の unknown は次の swap まで数えず、そのあとの列車は数える', () => {
+        const rows: FormationDayRow[] = [
+            stopAtFutamata('a', '08:00:00'),
+            {
+                kind: 'unknown',
+                lastOperationNumber: '1',
+                evictedBy: { formationNumber: '9000', sightingTime: '' },
+            },
+            {
+                kind: 'swap',
+                sightingTime: '',
+                toOperationNumber: '2',
+            },
+            stopAtFutamata('b', '09:00:00'),
+        ];
+        expect(
+            filterByStation(rows, 'futamata', BASE, null).visits.map(
+                (v) => v.trip.tripOperationListId,
+            ),
+        ).toEqual(['a', 'b']);
+    });
+
     it('その駅に来ない列車は数えない', () => {
         const r = filterByStation(
             [stopAtFutamata('a', '08:00:00')],
