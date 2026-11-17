@@ -1,5 +1,6 @@
+<!-- 先頭の行の上の罫線は、角の丸みで両端が削れて短く見えるので消す（面の端が区切りになる） -->
 <ol
-    class="tw-m-0 tw-list-none tw-overflow-hidden tw-rounded-card tw-bg-white tw-p-0"
+    class="tw-m-0 tw-list-none tw-overflow-hidden tw-rounded-card tw-bg-white tw-p-0 [&>li:first-child]:tw-border-t-0"
     data-testid="trip-list"
 >
     @for (row of rows(); track $index; let i = $index) {
