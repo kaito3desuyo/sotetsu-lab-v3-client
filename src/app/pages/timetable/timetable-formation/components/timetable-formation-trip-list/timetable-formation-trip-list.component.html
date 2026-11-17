@@ -160,7 +160,11 @@
                         type="button"
                         class="tw-w-fit tw-cursor-pointer tw-border-0 tw-p-0 tw-text-sm tw-text-accent-ink tw-underline [background-color:transparent] [font-family:inherit]"
                         data-testid="post-link"
-                        (click)="postRequested.emit(row.lastOperationNumber)"
+                        (click)="
+                            postRequested.emit(
+                                postOperationNumber(i, row.lastOperationNumber)
+                            )
+                        "
                     >
                         目撃を投稿する
                     </button>

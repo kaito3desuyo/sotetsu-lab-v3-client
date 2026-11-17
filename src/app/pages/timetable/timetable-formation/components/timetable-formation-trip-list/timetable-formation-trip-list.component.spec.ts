@@ -162,6 +162,32 @@ describe('TimetableFormationTripListComponent', () => {
         expect(emitted).toEqual(['55']);
     });
 
+    it('途中の unknown（あとに swap がある）からの投稿は運用番号を渡さない', () => {
+        const fixture = create([
+            {
+                kind: 'unknown',
+                lastOperationNumber: '63',
+                evictedBy: {
+                    formationNumber: '10701',
+                    sightingTime: '2026-11-17T14:21:00+09:00',
+                },
+            },
+            {
+                kind: 'swap',
+                sightingTime: '2026-11-17T18:00:00+09:00',
+                toOperationNumber: '69',
+            },
+        ]);
+        const emitted: string[] = [];
+        fixture.componentInstance.postRequested.subscribe((v) =>
+            emitted.push(v),
+        );
+        (fixture.nativeElement as HTMLElement)
+            .querySelector<HTMLButtonElement>('[data-testid="post-link"]')
+            ?.click();
+        expect(emitted).toEqual(['']);
+    });
+
     it('運用番号のチップは行路図へのリンク（列車の行は行の運用 ID、乗り移り・交換は番号から引く）', () => {
         const fixture = create([
             trip({ carriedOver: true, operationId: 'op-55' }),

@@ -464,7 +464,7 @@ export class TimetableFormationComponent {
     onPostRequested(lastOperationNumber: string): void {
         this.#postDialog.open('timetable_formation', {
             formationOrVehicleNumber: this.formationNumber() ?? undefined,
-            operationNumber: lastOperationNumber,
+            operationNumber: lastOperationNumber || undefined,
         });
     }
 }
