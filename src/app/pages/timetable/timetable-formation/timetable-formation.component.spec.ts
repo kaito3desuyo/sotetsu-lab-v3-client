@@ -56,6 +56,7 @@ function setup(options: {
         doNotFake: [...ONLY_DATE],
     });
     const socket$ = new Subject<unknown>();
+    const resync$ = new Subject<void>();
     const mark = jest.fn();
     const clear = jest.fn();
     const paramMap$ = new BehaviorSubject(convertToParamMap(options.params));
@@ -71,7 +72,10 @@ function setup(options: {
             provideHttpClientTesting(),
             provideRouter([]),
             { provide: ActivatedRoute, useValue: { paramMap: paramMap$ } },
-            { provide: SocketService, useValue: { on: () => socket$ } },
+            {
+                provide: SocketService,
+                useValue: { on: () => socket$, resync: () => resync$ },
+            },
             { provide: PageNotFound, useValue: { mark, clear } },
             { provide: NotificationService, useValue: { open: jest.fn() } },
             {
@@ -123,6 +127,7 @@ function setup(options: {
         service,
         navigate,
         socket$,
+        resync$,
         paramMap$,
         mark,
         clear,
@@ -551,6 +556,20 @@ describe('TimetableFormationComponent', () => {
                 params: { formation_number: '8713', date: '2026-11-01' },
             });
             past.socket$.next(signal);
+            expect(past.service.refetchSightings).not.toHaveBeenCalled();
+        });
+
+        it('今日のときだけ resync で refetchSightings を呼ぶ', () => {
+            const today = setup({
+                params: { formation_number: '8713', date: '2026-11-11' },
+            });
+            today.resync$.next();
+            expect(today.service.refetchSightings).toHaveBeenCalledTimes(1);
+            TestBed.resetTestingModule();
+            const past = setup({
+                params: { formation_number: '8713', date: '2026-11-01' },
+            });
+            past.resync$.next();
             expect(past.service.refetchSightings).not.toHaveBeenCalled();
         });
 
