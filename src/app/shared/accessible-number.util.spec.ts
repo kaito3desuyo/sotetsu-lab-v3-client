@@ -7,17 +7,17 @@ describe('toAccessibleNumber', () => {
     });
 
     it('番号の終わりの「?」は外して、後ろに「（推測）」を付ける', () => {
-        expect(toAccessibleNumber('編成', '10706?')).toBe('編成 10706（推測）');
+        expect(toAccessibleNumber('編成', '10706?')).toBe('編成 10706（推定）');
     });
 
     it('推測の印を別に渡すと、番号に「?」が無くても「（推測）」を付ける', () => {
-        expect(toAccessibleNumber('運用', '11', true)).toBe('運用 11（推測）');
-        expect(toAccessibleNumber('運用', '11?', true)).toBe('運用 11（推測）');
+        expect(toAccessibleNumber('運用', '11', true)).toBe('運用 11（推定）');
+        expect(toAccessibleNumber('運用', '11?', true)).toBe('運用 11（推定）');
     });
 
     it('全角の「？」も推測として扱う', () => {
         expect(toAccessibleNumber('編成', '10706？')).toBe(
-            '編成 10706（推測）',
+            '編成 10706（推定）',
         );
     });
 

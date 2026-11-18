@@ -80,7 +80,7 @@ describe('FormationNumberLinkComponent', () => {
 
         expect(el.querySelector('a')).toHaveAttribute(
             'aria-label',
-            '編成 10706（推測）',
+            '編成 10706（推定）',
         );
         expect(el.querySelector('a')).toHaveTextContent(/^10706$/);
     });

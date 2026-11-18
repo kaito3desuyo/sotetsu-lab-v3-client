@@ -97,7 +97,7 @@ describe('OperationRealTimeOperationCardComponent', () => {
 
         const el = fixture.nativeElement as HTMLElement;
         const link = el.querySelector('a[href*="formation_number=8713"]');
-        expect(link).toHaveAttribute('aria-label', '編成 8713（推測）');
+        expect(link).toHaveAttribute('aria-label', '編成 8713（推定）');
         const mark = link?.nextElementSibling;
         expect(mark?.textContent).toBe('?');
         expect(mark).toHaveAttribute('aria-hidden', 'true');

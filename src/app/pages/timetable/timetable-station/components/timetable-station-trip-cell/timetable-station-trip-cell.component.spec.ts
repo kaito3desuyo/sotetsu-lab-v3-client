@@ -240,7 +240,7 @@ describe('TimetableStationTripCellComponent', () => {
             'a[href*="/timetable/formation"]',
         );
 
-        expect(link?.getAttribute('aria-label')).toBe('編成 10708（推測）');
+        expect(link?.getAttribute('aria-label')).toBe('編成 10708（推定）');
         const mark = link?.parentElement?.nextElementSibling;
         expect(mark?.textContent).toBe('?');
         expect(mark?.getAttribute('aria-hidden')).toBe('true');
