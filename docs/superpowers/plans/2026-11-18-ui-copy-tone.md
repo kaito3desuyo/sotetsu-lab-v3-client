@@ -18,7 +18,7 @@
 - 硬すぎて使わない：「当該」「該当する」（→その）、「本サイト」「本画面」（→このサイト・この画面）、「経由する」（→通る）、「以後の」、「〜であるほど」
 - 読み手がふだん使わない漢語に置き換えて読みにくくなるなら、今の言葉を残す
 - 語を一括置換しない。1 文ずつ読んで直す（「だけでなく」「見るだけで」のように「のみ」にすると不自然な使い方がある）
-- 変えないもの：コードのコメント、テストの名前、docs/、GA のイベント名と値、ログ、api が返す文言、免責事項、プライバシーポリシー、帯の「開く」「畳む」、「運番変更」、ページの名前、ナビの項目名、目撃・運用・列車番号などのサイトの用語、短く定着した 1 語のボタンやラベル（「保存」「検索」「戻る」など。使わない言い方に当たるときだけ直す）
+- 変えないもの：コードのコメント、テストの名前、docs/、GA のイベント名と値、ログ、api が返す文言、免責事項、プライバシーポリシー、ライブラリ（`src/app/pages/library/`。ユーザーが自分で書いた文章）、帯の「開く」「畳む」、「運番変更」、ページの名前、ナビの項目名、目撃・運用・列車番号などのサイトの用語、短く定着した 1 語のボタンやラベル（「保存」「検索」「戻る」など。使わない言い方に当たるときだけ直す）
 - 文言は今ある html と ts の中で直す。定数化も i18n もしない
 - spec の例文の硬さを手本にする（例：「運用番号を押すと、その運用の行路図に移ります。」→「運用番号を選択すると、その運用の行路図へ移動します。」）
 - client jest は関係する spec だけを `TZ=UTC npx jest --ci --watchAll=false --testPathPatterns=<paths>` で流す。全体は流さない（ターミナルが固まる）
@@ -99,7 +99,7 @@ Expected：lint の指摘を直すか、理由を付けて残す。
 ### Task 3: 閲覧のページ
 
 **Files:**
-- Modify: `src/app/pages/timetable/{timetable-all-line,timetable-station,timetable-formation,timetable-operation}/**`、`src/app/pages/operation/{operation-table,operation-route-diagram,operation-past-time}/**`、`src/app/pages/train-diagram/**`、`src/app/pages/train-location/**`、`src/app/pages/dashboard/**`、`src/app/pages/library/**`
+- Modify: `src/app/pages/timetable/{timetable-all-line,timetable-station,timetable-formation,timetable-operation}/**`、`src/app/pages/operation/{operation-table,operation-route-diagram,operation-past-time}/**`、`src/app/pages/train-diagram/**`、`src/app/pages/train-location/**`、`src/app/pages/dashboard/**`
 
 **Interfaces:**
 - Consumes: `docs/style-profile.md`
@@ -166,7 +166,7 @@ libs と global-states は、snackbar やエラーとして画面に出る文字
 
 - [ ] **Step 1: 使わない言い方を全体で探す**
 
-Run：`grep -rnE '出ます|移ります|押すと|押して|入っている|みんなの|の人は|当該|該当する|本サイト|本画面|経由' src/app src/index.html --include='*.html' --include='*.ts' | grep -v '\.spec\.ts'`
+Run：`grep -rnE '出ます|移ります|押すと|押して|入っている|みんなの|の人は|当該|該当する|本サイト|本画面|経由' src/app src/index.html --include='*.html' --include='*.ts' | grep -v '\.spec\.ts' | grep -v 'pages/library/'`
 Expected：残ったものは、すべてコメントか、変えないものに当たる。
 
 - [ ] **Step 2: ビルドと lint**
