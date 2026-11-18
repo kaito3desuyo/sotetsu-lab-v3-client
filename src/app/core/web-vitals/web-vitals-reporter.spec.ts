@@ -41,4 +41,20 @@ describe('WebVitalsReporter', () => {
         expect(onINP).toHaveBeenCalledTimes(1);
         expect(onCLS).toHaveBeenCalledTimes(1);
     });
+
+    it('送らない値は GA に渡さない', () => {
+        setup('browser').start();
+        const send = (onLCP as jest.Mock).mock.calls[0][0];
+
+        send({
+            name: 'LCP',
+            value: 43_879_148,
+            delta: 43_879_148,
+            rating: 'poor',
+        });
+
+        expect(
+            TestBed.inject(GoogleAnalyticsService).sendEvent,
+        ).not.toHaveBeenCalled();
+    });
 });

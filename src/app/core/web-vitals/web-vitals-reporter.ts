@@ -19,8 +19,10 @@ export class WebVitalsReporter {
         }
 
         const send = (metric: Metric) => {
-            const { name, params } = toWebVitalsEvent(metric);
-            this.#ga.sendEvent(name, params);
+            const event = toWebVitalsEvent(metric);
+            if (event) {
+                this.#ga.sendEvent(event.name, event.params);
+            }
         };
 
         onLCP(send);
