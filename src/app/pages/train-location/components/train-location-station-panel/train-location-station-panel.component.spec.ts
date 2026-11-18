@@ -150,6 +150,24 @@ describe('TrainLocationStationPanelComponent', () => {
         );
     });
 
+    it('今日でないダイヤを見ているときは、運用番号をそのダイヤの形で開く', () => {
+        fixture.componentRef.setInput('stationId', 'C');
+        fixture.componentRef.setInput('stationName', '二俣川');
+        fixture.componentRef.setInput('operationLinkAt', {
+            calendarId: 'cal-x',
+        });
+        fixture.componentRef.setInput('arrivals', {
+            inbound: [arrival({ tripId: 'a' })],
+            outbound: [],
+        });
+        fixture.detectChanges();
+
+        expect(el().querySelector('[data-operation-number] a')).toHaveAttribute(
+            'href',
+            '/timetable/operation;operation_number=30K;calendar_id=cal-x',
+        );
+    });
+
     it('編成番号は編成別時刻表へのリンク（今の見込みなので日付は付けない）', () => {
         fixture.componentRef.setInput('stationId', 'C');
         fixture.componentRef.setInput('stationName', '二俣川');

@@ -107,13 +107,15 @@ export class TimetableOperationComponent {
         () => this.#store.calendar()?.calendarId,
     );
 
-    /** ストアの中身が、いま URL で見ている運用・日（ダイヤ）のものか（前の訪問の残りを出さない） */
+    /**
+     * ストアの中身が、いま URL で見ている運用・日（ダイヤ）のものか（前の訪問の残りを出さない）。
+     * 今日か過去かは比べない。今日を開いたまま 4 時を越えると、取り直さないまま過去の扱いに変わるため
+     */
     protected readonly ready = computed(() => {
         const store = this.#store;
         if (store.operationNumber() !== (this.operationNumber() ?? '')) {
             return false;
         }
-        if (store.viewKind() !== this.viewKind()) return false;
         return this.date()
             ? store.date() === this.date()
             : store.calendar()?.calendarId === this.urlCalendarId() ||

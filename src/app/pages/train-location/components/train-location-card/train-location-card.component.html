@@ -36,7 +36,12 @@
                 data-operation-number
                 class="tw-relative tw-shrink-0 !tw-text-[10px]"
                 [operationNumber]="card().operationNumber"
-                [link]="operationTimetableLink(card().operationNumber, 'today')"
+                [link]="
+                    operationTimetableLink(
+                        card().operationNumber,
+                        operationLinkAt()
+                    )
+                "
             ></app-operation-number-tag>
         }
     </span>

@@ -243,6 +243,21 @@ describe('TrainLocationCardComponent', () => {
         ).toHaveAttribute('href', '/timetable/operation;operation_number=54');
     });
 
+    it('今日でないダイヤを見ているときは、運用番号をそのダイヤの形で開く', () => {
+        fixture.componentRef.setInput('card', card({ operationNumber: '54' }));
+        fixture.componentRef.setInput('operationLinkAt', {
+            calendarId: 'cal-x',
+        });
+        fixture.detectChanges();
+
+        expect(
+            fixture.nativeElement.querySelector('[data-operation-number] a'),
+        ).toHaveAttribute(
+            'href',
+            '/timetable/operation;operation_number=54;calendar_id=cal-x',
+        );
+    });
+
     // 運用番号のチップは共通部品（docs/design.md 運用番号のチップ）。カードが狭いので字だけ 10px に上書きする
     it('運用番号は共通のチップで、普通の字・10px', () => {
         fixture.componentRef.setInput(

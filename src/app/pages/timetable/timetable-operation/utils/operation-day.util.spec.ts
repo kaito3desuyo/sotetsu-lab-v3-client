@@ -236,6 +236,46 @@ describe('buildOperationDay', () => {
         expect(formations(rows)[0]).toEqual(['8708', true]);
     });
 
+    it('持ち越しの写しの編成が食い違うときは、どの枠の写しか分からないので推し量りに使わない', () => {
+        const morning = sighting('c1', 'f1', '05:00', {
+            carriedFromSightingId: 'orig-1',
+        });
+        const later = sighting('c2', 'f2', '05:30', {
+            carriedFromSightingId: 'orig-2',
+        });
+        const past = buildOperationDay(
+            input({
+                sightings: [morning, later],
+                inferredFormationNumber: null,
+            }),
+        );
+        expect(formations(past)[0]).toEqual([null, false]);
+
+        const today = buildOperationDay(
+            input({
+                sightings: [morning, later],
+                inferredFormationNumber: '8713',
+            }),
+        );
+        expect(formations(today)[0]).toEqual(['8713', true]);
+    });
+
+    it('持ち越しの写しが何件あっても、編成が同じならその編成で推し量る', () => {
+        const rows = buildOperationDay(
+            input({
+                sightings: [
+                    sighting('c1', 'f1', '05:00', {
+                        carriedFromSightingId: 'o1',
+                    }),
+                    sighting('c2', 'f1', '05:30', {
+                        carriedFromSightingId: 'o2',
+                    }),
+                ],
+            }),
+        );
+        expect(formations(rows)[0]).toEqual(['8708', true]);
+    });
+
     it('無効にされた目撃は数えない', () => {
         const rows = buildOperationDay(
             input({

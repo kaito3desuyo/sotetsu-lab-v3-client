@@ -87,8 +87,10 @@ export function buildOperationDay(input: OperationDayInput): OperationDayRow[] {
     const carried = valid.filter(isCarried).sort(byTime);
     const direct = valid.filter((s) => !isCarried(s)).sort(byTime);
 
-    // 最初の目撃より前の列車の編成
-    const lastCarried = carried.at(-1);
+    // 最初の目撃より前の列車の編成。持ち越しの写しはどの枠の写しかを持たないので、
+    // 編成が食い違う写しが 2 件以上あれば推し量りに使わない（同じ運用が 2 つの行程にまたがる日）
+    const carriedAgree = new Set(carried.map((s) => s.formationId)).size <= 1;
+    const lastCarried = carriedAgree ? carried.at(-1) : undefined;
     let current: {
         formationId: string | null;
         number: string | null;

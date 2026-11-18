@@ -250,6 +250,26 @@ describe('TimetableOperationComponent', () => {
         );
     });
 
+    it('今日を開いたまま 4 時を越えても、読み込み中のまま止まらず列車を出し続ける', () => {
+        const { fixture } = setup({
+            params: { operation_number: '63', date: '2026-11-16' },
+        });
+        fixture.detectChanges();
+        expect(
+            el(fixture).querySelector('[data-testid="trip-list"]'),
+        ).not.toBeNull();
+
+        fixture.componentInstance.now.set(at(4, 10, 17));
+        fixture.detectChanges();
+
+        expect(
+            el(fixture).querySelector('[data-testid="trip-list"]'),
+        ).not.toBeNull();
+        expect(
+            el(fixture).querySelector('[data-testid="current-formation"]'),
+        ).toBeNull();
+    });
+
     it('今日で編成が分からなければ「編成不明」', () => {
         const { fixture } = setup({
             params: { operation_number: '63', date: '2026-11-16' },
