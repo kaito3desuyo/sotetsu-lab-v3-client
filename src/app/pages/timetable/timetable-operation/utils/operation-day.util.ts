@@ -87,10 +87,13 @@ export function buildOperationDay(input: OperationDayInput): OperationDayRow[] {
     const carried = valid.filter(isCarried).sort(byTime);
     const direct = valid.filter((s) => !isCarried(s)).sort(byTime);
 
-    // 最初の目撃より前の列車の編成。持ち越しの写しはどの枠の写しかを持たないので、
-    // 編成が食い違う写しが 2 件以上あれば推し量りに使わない（同じ運用が 2 つの行程にまたがる日）
-    const carriedAgree = new Set(carried.map((s) => s.formationId)).size <= 1;
-    const lastCarried = carriedAgree ? carried.at(-1) : undefined;
+    // 同日引き継ぎの写しのうち、写した枠の始まりが分かるもの。その枠の最初の列車から当てる
+    const placed = carried.filter((s) => s.carriedRunStartSeconds != null);
+    // 枠の分からない持ち越し（前日からの引き継ぎ・枠の始まりを返さない古い api の写し）は、最初の列車からの推し量りにする。
+    // 編成が食い違うものが 2 件以上あれば、どの枠のものか分からないので使わない
+    const unplaced = carried.filter((s) => s.carriedRunStartSeconds == null);
+    const unplacedAgree = new Set(unplaced.map((s) => s.formationId)).size <= 1;
+    const lastCarried = unplacedAgree ? unplaced.at(-1) : undefined;
     let current: {
         formationId: string | null;
         number: string | null;
@@ -122,9 +125,27 @@ export function buildOperationDay(input: OperationDayInput): OperationDayRow[] {
         directAt.set(i, [...(directAt.get(i) ?? []), s]);
     }
 
+    // 写しごとに、写した枠の最初の列車の添字（枠の始まり以降に出る最初の列車。始まりの秒は api と同じ鉄道日の 0 時から）
+    const copyAt = new Map<number, OperationSightingDetailsDto>();
+    for (const s of placed) {
+        const i = trips.findIndex(
+            (t) => startSeconds(t) >= (s.carriedRunStartSeconds ?? 0),
+        );
+        if (i >= 0) copyAt.set(i, s);
+    }
+
     let lastDirectFormationId: string | null = null;
     const rows: OperationDayRow[] = [];
     trips.forEach((trip, i) => {
+        // 写しは推し量りなので swap に数えない。同じ列車に直接の目撃があれば、下でそちらに替わる
+        const copy = copyAt.get(i);
+        if (copy) {
+            current = {
+                formationId: copy.formationId,
+                number: numberOf(copy.formationId),
+                inferred: true,
+            };
+        }
         const here = directAt.get(i) ?? [];
         for (const s of here) {
             const number = numberOf(s.formationId);

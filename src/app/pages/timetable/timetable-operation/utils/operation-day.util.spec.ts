@@ -236,7 +236,7 @@ describe('buildOperationDay', () => {
         expect(formations(rows)[0]).toEqual(['8708', true]);
     });
 
-    it('持ち越しの写しの編成が食い違うときは、どの枠の写しか分からないので推し量りに使わない', () => {
+    it('枠の始まりの無い写しの編成が食い違うときは、どの枠の写しか分からないので推し量りに使わない', () => {
         const morning = sighting('c1', 'f1', '05:00', {
             carriedFromSightingId: 'orig-1',
         });
@@ -274,6 +274,72 @@ describe('buildOperationDay', () => {
             }),
         );
         expect(formations(rows)[0]).toEqual(['8708', true]);
+    });
+
+    describe('写しに枠の始まり（carriedRunStartSeconds）があるとき', () => {
+        const sec = (hm: string) => {
+            const [h, m] = hm.split(':').map(Number);
+            return h * 3600 + m * 60;
+        };
+        const copy = (id: string, formationId: string, runStart: string) =>
+            sighting(id, formationId, '05:30', {
+                carriedFromSightingId: `orig-${id}`,
+                sightedAsOperation: {
+                    operationId: 'op62',
+                    operationNumber: '62',
+                },
+                carriedRunStartSeconds: sec(runStart),
+            });
+
+        it('直接の目撃のあとでも、写しはその枠の最初の列車から当て、swap は出さない', () => {
+            const rows = buildOperationDay(
+                input({
+                    sightings: [
+                        sighting('s1', 'f1', '06:10'),
+                        copy('c1', 'f2', '08:00'),
+                    ],
+                }),
+            );
+            expect(formations(rows)).toEqual([
+                ['8708', false],
+                ['8708', false],
+                ['10701', true],
+            ]);
+            expect(rows.some((r) => r.kind === 'swap')).toBe(false);
+        });
+
+        it('枠が 2 つあり写しの編成が違っても、それぞれの枠から当てる', () => {
+            const rows = buildOperationDay(
+                input({
+                    sightings: [
+                        copy('c1', 'f1', '06:00'),
+                        copy('c2', 'f2', '08:00'),
+                    ],
+                    inferredFormationNumber: '8713',
+                }),
+            );
+            expect(formations(rows)).toEqual([
+                ['8708', true],
+                ['8708', true],
+                ['10701', true],
+            ]);
+        });
+
+        it('同じ列車に直接の目撃があれば、直接の目撃を先にする', () => {
+            const rows = buildOperationDay(
+                input({
+                    sightings: [
+                        copy('c1', 'f2', '07:00'),
+                        sighting('s1', 'f1', '07:10'),
+                    ],
+                }),
+            );
+            expect(formations(rows)).toEqual([
+                [null, false],
+                ['8708', false],
+                ['8708', false],
+            ]);
+        });
     });
 
     it('無効にされた目撃は数えない', () => {
