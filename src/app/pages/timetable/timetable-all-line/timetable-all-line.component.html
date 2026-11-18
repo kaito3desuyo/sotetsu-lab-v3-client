@@ -84,10 +84,10 @@
                 ></app-today-calendar-button>
             </div>
             <mat-form-field class="tw-w-full" subscriptSizing="dynamic">
-                <mat-label>駅別時刻表へ移る</mat-label>
+                <mat-label>駅別時刻表へ移動する</mat-label>
                 <!-- ダイヤが無い間は選べない（calendar_id=null の URL に移らない） -->
                 <mat-select
-                    placeholder="駅を選ぶ"
+                    placeholder="駅を選択する"
                     [disabled]="!calendarId()"
                     (valueChange)="onStationSelect($event)"
                     appLazyOptions
