@@ -122,7 +122,7 @@ describe('MyPageComponent', () => {
         expect(text).toContain('10/25');
         expect(text).toContain('11/2');
         expect(text).toContain(
-            '2026/10/24 以降のログイン中の投稿を集計。裏付けありは、同じ日に他の人が同じ編成を同じ運用番号で目撃したもの',
+            '2026/10/24 以降のログイン中の投稿を集計。裏付けありは、同じ日に他の利用者が同じ編成を同じ運用番号で目撃したもの',
         );
     });
 

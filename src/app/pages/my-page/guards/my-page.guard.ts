@@ -31,7 +31,7 @@ export const myPageGuard: CanActivateFn = async (route, state) => {
 
     if (userState.isViewer()) {
         notification.open(
-            'マイページは投稿できるアカウントだけが使えます',
+            'マイページは投稿できるアカウントのみ使用できます',
             'OK',
         );
         return router.parseUrl('/');
