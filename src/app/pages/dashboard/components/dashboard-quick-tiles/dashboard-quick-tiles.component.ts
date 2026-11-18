@@ -36,14 +36,14 @@ export class DashboardQuickTilesComponent {
         {
             icon: 'my_location',
             title: '列車位置情報',
-            subtitle: 'いまどこを走っているか',
+            subtitle: '現在どこを走っているか',
             link: ['/train-location'],
             accent: true,
         },
         {
             icon: 'schedule',
             title: '駅別時刻表',
-            subtitle: '駅を選んですぐ表示',
+            subtitle: '駅を選択してすぐ表示',
             link: ['/timetable', 'station'],
             accent: false,
         },
