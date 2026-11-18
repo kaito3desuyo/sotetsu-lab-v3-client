@@ -1,5 +1,6 @@
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
+import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { TripOperationListWithTimesDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
 import {
@@ -438,5 +439,108 @@ describe('buildOperationDay', () => {
             'y',
             'z',
         ]);
+    });
+
+    describe('乗り移り', () => {
+        /** 列車 b から 30K へ移り、c で 30K から戻ってくる 1 日 */
+        const LINKS: OperationItineraryLinkDto[] = [
+            {
+                tripOperationListId: 'b',
+                tripId: 'trip-b',
+                operationId: OP,
+                previous: null,
+                next: {
+                    tripOperationListId: 'x1',
+                    tripId: 'trip-x1',
+                    operationId: 'op30',
+                    operationNumber: '30K',
+                    stationId: 'st-shonandai',
+                    rule: 2,
+                },
+            },
+            {
+                tripOperationListId: 'c',
+                tripId: 'trip-c',
+                operationId: OP,
+                previous: {
+                    tripOperationListId: 'x9',
+                    tripId: 'trip-x9',
+                    operationId: 'op30',
+                    operationNumber: '30K',
+                    stationId: 'st-kashiwadai',
+                    rule: 2,
+                },
+                next: null,
+            },
+        ];
+        const kinds = (rows: OperationDayRow[]) =>
+            rows.map((r) =>
+                r.kind === 'trip'
+                    ? r.trip.tripOperationListId
+                    : r.kind === 'depot'
+                      ? `depot-${r.label}`
+                      : r.kind === 'transfer'
+                        ? `${r.from}>${r.to}@${r.stationId}`
+                        : r.kind,
+            );
+
+        it('別の運用へ移る列車のあとと、戻ってくる列車の前に乗り移りの行を入れる', () => {
+            const rows = buildOperationDay(input({ links: LINKS }));
+            expect(kinds(rows)).toEqual([
+                'depot-out',
+                'a',
+                'b',
+                '63>30K@st-shonandai',
+                '30K>63@st-kashiwadai',
+                'c',
+                'depot-in',
+            ]);
+        });
+
+        it('乗り移りの行は出庫・入庫の行の外側に置く', () => {
+            const rows = buildOperationDay(
+                input({
+                    links: LINKS,
+                    trips: {
+                        ...TRIPS,
+                        trips: [
+                            tol('a', '06:00', '06:40', { depotOut: true }),
+                            tol('b', '07:00', '07:40', { depotIn: true }),
+                            tol('c', '20:00', '20:40', {
+                                depotOut: true,
+                                depotIn: true,
+                            }),
+                        ],
+                    },
+                }),
+            );
+            expect(kinds(rows)).toEqual([
+                'depot-out',
+                'a',
+                'b',
+                'depot-in',
+                '63>30K@st-shonandai',
+                '30K>63@st-kashiwadai',
+                'depot-out',
+                'c',
+                'depot-in',
+            ]);
+        });
+
+        it('ほかの運用の区間のつながりは使わない', () => {
+            const rows = buildOperationDay(
+                input({
+                    links: LINKS.map((l) => ({ ...l, operationId: 'op30' })),
+                }),
+            );
+            expect(rows.some((r) => r.kind === 'transfer')).toBe(false);
+        });
+
+        it('ダイヤの形（baseDate null）でも乗り移りの行は出す', () => {
+            const rows = buildOperationDay(
+                input({ baseDate: null, links: LINKS }),
+            );
+            expect(rows.filter((r) => r.kind === 'transfer')).toHaveLength(2);
+        });
     });
 });

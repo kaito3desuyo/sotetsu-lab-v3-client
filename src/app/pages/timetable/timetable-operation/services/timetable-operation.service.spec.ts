@@ -42,6 +42,7 @@ describe('Service: TimetableOperation', () => {
         findManyByCalendarId: jest.fn(),
         findOneWithTrips: jest.fn(),
         findOneWithCurrentPosition: jest.fn(),
+        findManyItineraryLinks: jest.fn(),
     };
     const tripBlockService = { findManyByCalendarId: jest.fn() };
     const sightingService = {
@@ -63,6 +64,7 @@ describe('Service: TimetableOperation', () => {
         );
         operationService.findManyByCalendarId.mockReturnValue(of([op63, op64]));
         operationService.findOneWithTrips.mockReturnValue(of(trips63));
+        operationService.findManyItineraryLinks.mockReturnValue(of([]));
         tripBlockService.findManyByCalendarId.mockReturnValue(
             of({
                 0: [
@@ -221,6 +223,46 @@ describe('Service: TimetableOperation', () => {
         expect(store.rows().find((r) => r.kind === 'trip')).toEqual(
             expect.objectContaining({ formationNumber: null }),
         );
+    });
+
+    it('ダイヤの、運番が変わるつながりを取って乗り移りの行にする', async () => {
+        operationService.findManyItineraryLinks.mockReturnValue(
+            of([
+                {
+                    tripOperationListId: 'a',
+                    tripId: 'trip-a',
+                    operationId: 'op63',
+                    previous: null,
+                    next: {
+                        tripOperationListId: 'x',
+                        tripId: 'trip-x',
+                        operationId: 'op64',
+                        operationNumber: '64',
+                        stationId: 'st1',
+                        rule: 2,
+                    },
+                },
+            ]),
+        );
+        await byDate('past');
+        expect(operationService.findManyItineraryLinks).toHaveBeenCalledWith(
+            expect.objectContaining({ calendarId: 'c1' }),
+        );
+        expect(store.rows().at(-1)).toEqual({
+            kind: 'transfer',
+            from: '63',
+            to: '64',
+            stationId: 'st1',
+        });
+    });
+
+    it('つながりの取得に失敗したら loadError で、列車は出す', async () => {
+        operationService.findManyItineraryLinks.mockReturnValue(
+            throwError(() => new Error('x')),
+        );
+        await byDate('past');
+        expect(store.loadError()).toBe(true);
+        expect(store.rows().some((r) => r.kind === 'trip')).toBe(true);
     });
 
     it('その番号の運用が無ければ notFound で、エラーにしない', async () => {

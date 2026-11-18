@@ -116,6 +116,27 @@
                     {{ row.label === 'out' ? '出庫' : '入庫' }}
                 </li>
             }
+            @case ('transfer') {
+                <li
+                    class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-1 tw-border-0 tw-border-t tw-border-solid tw-border-rule tw-px-3 tw-py-1 tw-text-xs tw-text-muted"
+                    data-testid="transfer-row"
+                >
+                    <span>□ {{ name(row.stationId) }} で乗り移り</span>
+                    <app-operation-number-tag
+                        [operationNumber]="row.from"
+                        [link]="
+                            operationTimetableLink(row.from, operationLinkAt())
+                        "
+                    ></app-operation-number-tag>
+                    <span>→</span>
+                    <app-operation-number-tag
+                        [operationNumber]="row.to"
+                        [link]="
+                            operationTimetableLink(row.to, operationLinkAt())
+                        "
+                    ></app-operation-number-tag>
+                </li>
+            }
             @case ('swap') {
                 <li
                     class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-1 tw-border-0 tw-border-t tw-border-solid tw-border-rule tw-px-3 tw-py-1 tw-text-xs tw-text-muted"

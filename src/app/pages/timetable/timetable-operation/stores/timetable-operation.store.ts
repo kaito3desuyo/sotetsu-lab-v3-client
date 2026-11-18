@@ -11,6 +11,7 @@ import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos/operation-current-position.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
+import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { buildOperationDay } from '../utils/operation-day.util';
 
@@ -27,6 +28,8 @@ type StoreProps = {
     operations: OperationDetailsDto[];
     /** その運用の列車（各駅の時刻付き）。運用が無ければ null */
     trips: OperationTripsDto | null;
+    /** そのダイヤの、運番が変わるつながり（乗り移りの行に使う） */
+    links: OperationItineraryLinkDto[];
     /** その営業日の全目撃（日付の形だけ） */
     sightings: OperationSightingDetailsDto[];
     formationNumberById: Record<string, string>;
@@ -45,6 +48,7 @@ const initialState: StoreProps = {
     calendar: null,
     operations: [],
     trips: null,
+    links: [],
     sightings: [],
     formationNumberById: {},
     inferredFormationNumber: null,
@@ -65,6 +69,7 @@ export const TimetableOperationStore = signalStore(
             viewKind,
             calendar,
             trips,
+            links,
             sightings,
             formationNumberById,
             inferredFormationNumber,
@@ -95,6 +100,7 @@ export const TimetableOperationStore = signalStore(
                         sightings: sightings(),
                         formationNumberById: formationNumberById(),
                         inferredFormationNumber: inferredFormationNumber(),
+                        links: links(),
                     });
                 }),
                 /** この運用の、無効でない目撃（時刻順）。上の段に並べる */
@@ -146,6 +152,7 @@ export const TimetableOperationStore = signalStore(
                     calendar: null,
                     operations: [],
                     trips: null,
+                    links: [],
                     sightings: [],
                     formationNumberById: {},
                     inferredFormationNumber: null,
@@ -162,6 +169,9 @@ export const TimetableOperationStore = signalStore(
             },
             setTrips(trips: OperationTripsDto | null): void {
                 patchState(store, { trips });
+            },
+            setLinks(links: OperationItineraryLinkDto[]): void {
+                patchState(store, { links });
             },
             setSightings(sightings: OperationSightingDetailsDto[]): void {
                 patchState(store, { sightings });

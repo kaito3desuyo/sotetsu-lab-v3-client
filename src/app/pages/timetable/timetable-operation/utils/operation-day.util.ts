@@ -1,5 +1,6 @@
 import { toServiceSeconds } from 'src/app/core/utils/railway-day';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
+import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
 import {
@@ -19,7 +20,9 @@ export type OperationDayRow =
           sightingTimes: string[];
       }
     | { kind: 'depot'; label: 'out' | 'in'; stationId: string; time: string }
-    | { kind: 'swap'; sightingTime: string; toFormationNumber: string };
+    | { kind: 'swap'; sightingTime: string; toFormationNumber: string }
+    /** 車両が from の運用から to の運用へ移る所。どちらかがこの運用 */
+    | { kind: 'transfer'; from: string; to: string; stationId: string };
 
 export interface OperationDayInput {
     /** 見ている運用（その日のダイヤの運用 ID） */
@@ -32,6 +35,8 @@ export interface OperationDayInput {
     formationNumberById: Record<string, string>;
     /** 今日で、この運用に今日の目撃が無いときの time-cross-section の編成番号。それ以外は null */
     inferredFormationNumber: string | null;
+    /** そのダイヤの、運番が変わるつながり（区間ごと）。無ければ乗り移りの行を出さない */
+    links?: OperationItineraryLinkDto[];
 }
 
 function startSeconds(t: TripOperationListDetailsDto): number {
@@ -63,7 +68,8 @@ const isCarried = (s: OperationSightingDetailsDto): boolean =>
  * - 目撃した時刻を含む列車から、その目撃の編成が走ったとする。列車と列車の間なら次の列車から。
  * - 最初の目撃より前は、持ち越しの目撃 → time-cross-section の順で推し量る（inferred）。
  * - 続く 2 つの目撃で編成が違えば、後の編成が走る最初の列車の前に swap の行を入れる。
- * - 乗り移りは追わない。並べるのはこの運用の列車だけ。
+ * - 並べるのはこの運用の列車だけ。車両が別の運用へ移る列車のあとと、別の運用から戻ってくる列車の前に
+ *   transfer の行を入れる（出庫・入庫の行より外側）。
  */
 export function buildOperationDay(input: OperationDayInput): OperationDayRow[] {
     const trips = [...input.trips.trips].sort(
@@ -134,6 +140,14 @@ export function buildOperationDay(input: OperationDayInput): OperationDayRow[] {
         if (i >= 0) copyAt.set(i, s);
     }
 
+    // この運用の区間ごとの、運番が変わるつながり
+    const ownNumber = input.trips.operation.operationNumber;
+    const linkOf = new Map(
+        (input.links ?? [])
+            .filter((l) => l.operationId === input.operationId)
+            .map((l) => [l.tripOperationListId, l]),
+    );
+
     let lastDirectFormationId: string | null = null;
     const rows: OperationDayRow[] = [];
     trips.forEach((trip, i) => {
@@ -163,6 +177,15 @@ export function buildOperationDay(input: OperationDayInput): OperationDayRow[] {
             lastDirectFormationId = s.formationId;
             current = { formationId: s.formationId, number, inferred: false };
         }
+        const link = linkOf.get(trip.tripOperationListId);
+        if (link?.previous) {
+            rows.push({
+                kind: 'transfer',
+                from: link.previous.operationNumber,
+                to: ownNumber,
+                stationId: link.previous.stationId,
+            });
+        }
         if (trip.trip?.depotOut) {
             rows.push({
                 kind: 'depot',
@@ -190,6 +213,14 @@ export function buildOperationDay(input: OperationDayInput): OperationDayRow[] {
                     trip.endTime?.arrivalDays,
                     trip.endTime?.arrivalTime ?? '00:00:00',
                 ),
+            });
+        }
+        if (link?.next) {
+            rows.push({
+                kind: 'transfer',
+                from: ownNumber,
+                to: link.next.operationNumber,
+                stationId: link.next.stationId,
             });
         }
     });

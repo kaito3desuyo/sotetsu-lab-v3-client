@@ -124,6 +124,12 @@ export class TimetableOperationService {
                                         forceReload,
                                     })
                                     .pipe(catchError(() => fail(null))),
+                                links: this.#operationService
+                                    .findManyItineraryLinks({
+                                        calendarId: cid,
+                                        forceReload,
+                                    })
+                                    .pipe(catchError(() => fail([]))),
                                 times: this.#fetchTimesByTripId(
                                     cid,
                                     forceReload,
@@ -141,13 +147,14 @@ export class TimetableOperationService {
                                       )
                                     : of(null),
                             }).pipe(
-                                tap(({ trips, times, inferred }) => {
+                                tap(({ trips, links, times, inferred }) => {
                                     if (!latest()) return;
                                     this.#store.setTrips(
                                         trips
                                             ? attachTimes(trips, times)
                                             : null,
                                     );
+                                    this.#store.setLinks(links);
                                     this.#store.setInferredFormationNumber(
                                         inferred,
                                     );

@@ -128,6 +128,40 @@ describe('TimetableOperationTripListComponent', () => {
         );
     });
 
+    it('乗り移りの行に駅と 2 つの運用番号を出し、運用番号を見ている日の運用別時刻表へのリンクにする', () => {
+        const f = create([
+            trip('t1'),
+            { kind: 'transfer', from: '29K', to: '30K', stationId: 'b' },
+        ]);
+        const row = el(f).querySelector('[data-testid="transfer-row"]');
+        expect(row?.textContent?.replace(/\s+/g, '')).toBe(
+            '□湘南台で乗り移り29K→30K',
+        );
+        expect(
+            Array.from(row?.querySelectorAll('a') ?? []).map((a) =>
+                a.getAttribute('href'),
+            ),
+        ).toEqual([
+            '/timetable/operation;operation_number=29K;date=2026-11-16',
+            '/timetable/operation;operation_number=30K;date=2026-11-16',
+        ]);
+    });
+
+    it('ダイヤの形では、乗り移りの運用番号をそのダイヤの運用別時刻表へのリンクにする', () => {
+        const f = create([
+            { kind: 'transfer', from: '29K', to: '30K', stationId: 'b' },
+        ]);
+        f.componentRef.setInput('date', null);
+        f.componentRef.setInput('calendarId', 'cal-1');
+        f.detectChanges();
+        const href = el(f)
+            .querySelector('[data-testid="transfer-row"] a')
+            ?.getAttribute('href');
+        expect(href).toBe(
+            '/timetable/operation;operation_number=29K;calendar_id=cal-1',
+        );
+    });
+
     it('目撃のある列車に「目撃 HH:mm」を出す', () => {
         const f = create([
             trip('t1', { sightingTimes: ['2026-11-17T00:46:00+09:00'] }),

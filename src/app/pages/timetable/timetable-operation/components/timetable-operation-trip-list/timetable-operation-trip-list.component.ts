@@ -1,3 +1,7 @@
+import {
+    operationTimetableLink,
+    OperationTimetableLinkAt,
+} from 'src/app/core/utils/operation-timetable-link';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { NgTemplateOutlet } from '@angular/common';
 import {
@@ -13,6 +17,7 @@ import { map } from 'rxjs';
 import { MatIconModule } from '@angular/material/icon';
 import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
 import { FormationNumberLinkComponent } from 'src/app/shared/formation-number-link/formation-number-link.component';
+import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
 import { TripLabelComponent } from 'src/app/shared/trip-label/trip-label.component';
 import {
     formatClock,
@@ -39,6 +44,7 @@ const WIDE_QUERY = '(min-width: 1280px)';
         FormationNumberLinkComponent,
         MatIconModule,
         NgTemplateOutlet,
+        OperationNumberTagComponent,
         TripLabelComponent,
     ],
     host: {
@@ -53,6 +59,15 @@ export class TimetableOperationTripListComponent {
     readonly calendarId = input<string | undefined>(undefined);
     /** 見ている日 'yyyy-MM-dd'。編成番号をその日の編成別時刻表へのリンクにする。ダイヤの形では null */
     readonly date = input<string | null>(null);
+
+    /** 乗り移りの運用番号のリンク先。日付の形はその日、ダイヤの形はそのダイヤの運用別時刻表 */
+    protected readonly operationLinkAt = computed<OperationTimetableLinkAt>(
+        () => {
+            const date = this.date();
+            return date ? { date } : { calendarId: this.calendarId() };
+        },
+    );
+    protected readonly operationTimetableLink = operationTimetableLink;
 
     /** 開いた列車の tripOperationListId（取り直しで行がずれても同じ列車を開いたままにする） */
     protected readonly expanded = signal<ReadonlySet<string>>(new Set());
