@@ -25,6 +25,8 @@ const GUTTER_MARGIN =
 const GUTTER_PADDING_X = 'tw-px-4 md:tw-px-6 lg:tw-px-8 xl:tw-px-16';
 /** 開く・畳むの動き（ユーザー指示 2026-10-06「開く/畳む動きはアニメーションしてほしい」） */
 const MOTION = 'tw-duration-200 tw-ease-out motion-reduce:tw-transition-none';
+/** 開き終えたことにするまでの長さ。動き（200ms）より少し長くする */
+const SETTLE_FALLBACK_MS = 250;
 let nextId = 0;
 
 /**
@@ -132,16 +134,38 @@ export class ControlBandComponent {
             : '';
         return `tw-absolute tw-inset-x-0 tw-top-full tw-grid tw-bg-white tw-transition-[grid-template-rows] ${MOTION} ${rows}${rule}`;
     });
-    readonly contentInnerClass = computed(() =>
-        this.open()
-            ? 'tw-min-h-0 tw-overflow-y-auto tw-max-h-[calc(100dvh_-_88px)] md:tw-max-h-[calc(100dvh_-_104px)]'
-            : 'tw-min-h-0 tw-overflow-hidden',
-    );
+    /**
+     * 開き終えたか。伸びている途中は中身が枠に収まらず、縦のスクロールを許すとスクロールバーが一瞬出る
+     * （ユーザー指摘 2026-11-18「アニメーション途中にスクロールバーが出るのはなかなかうざい」）。
+     * 伸び終えるまでは overflow-hidden にし、終えてから overflow-y-auto にする
+     */
+    readonly #settled = signal(false);
+    readonly contentInnerClass = computed(() => {
+        if (!this.open()) return 'tw-min-h-0 tw-overflow-hidden';
+        const overflow = this.#settled()
+            ? 'tw-overflow-y-auto'
+            : 'tw-overflow-hidden';
+        return `tw-min-h-0 ${overflow} tw-max-h-[calc(100dvh_-_88px)] md:tw-max-h-[calc(100dvh_-_104px)]`;
+    });
     readonly contentPaddingClass = computed(() =>
         this.flush() ? '' : `tw-py-4 ${GUTTER_PADDING_X}`,
     );
 
     constructor() {
+        // 開くたびに「伸びている途中」に戻す。動きを減らす設定では transitionend が来ないので、
+        // 動きの長さ（200ms）を過ぎたら開き終えたことにする
+        effect((onCleanup) => {
+            if (!this.open()) {
+                this.#settled.set(false);
+                return;
+            }
+            this.#settled.set(false);
+            const id = setTimeout(
+                () => this.#settled.set(true),
+                SETTLE_FALLBACK_MS,
+            );
+            onCleanup(() => clearTimeout(id));
+        });
         effect(() => {
             if (this.collapse() !== 'page') return;
             this.#document.documentElement.style.setProperty(
@@ -156,6 +180,12 @@ export class ControlBandComponent {
                 );
             }
         });
+    }
+
+    /** 操作部の高さが伸び終えた（中の要素の transition は数えない） */
+    onContentTransitionEnd(event: TransitionEvent): void {
+        if (event.target !== event.currentTarget) return;
+        if (this.open()) this.#settled.set(true);
     }
 
     toggle(): void {

@@ -42,6 +42,7 @@
         [id]="contentId"
         [class]="contentClass()"
         [attr.inert]="open() ? null : ''"
+        (transitionend)="onContentTransitionEnd($event)"
     >
         <div [class]="contentInnerClass()">
             <div [class]="contentPaddingClass()">
