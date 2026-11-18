@@ -1,0 +1,71 @@
+<div class="tw-flex tw-flex-col tw-gap-4" data-testid="operation-controls">
+    <mat-form-field subscriptSizing="dynamic">
+        <mat-label>運用番号</mat-label>
+        <mat-select
+            data-testid="operation-number-select"
+            [value]="operationNumber()"
+            (valueChange)="operationNumberChange.emit($event)"
+        >
+            @for (number of options(); track number) {
+                <mat-option [value]="number">{{ number }}運</mat-option>
+            }
+        </mat-select>
+    </mat-form-field>
+
+    @if (byCalendar()) {
+        <mat-form-field subscriptSizing="dynamic">
+            <mat-label>ダイヤ</mat-label>
+            <mat-select
+                data-testid="calendar-select"
+                [value]="calendarId()"
+                (valueChange)="calendarChange.emit($event)"
+                appLazyOptions
+                #lazyCalendar="appLazyOptions"
+            >
+                @if (lazyCalendar.ready()) {
+                    @for (calendar of calendars(); track calendar.calendarId) {
+                        <mat-option [value]="calendar.calendarId">{{
+                            calendarLabel(calendar)
+                        }}</mat-option>
+                    }
+                } @else if (selectedCalendar(); as selected) {
+                    <mat-option [value]="selected.calendarId">{{
+                        calendarLabel(selected)
+                    }}</mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
+    }
+
+    <mat-form-field subscriptSizing="dynamic">
+        <mat-label>{{ dateLabel() }}</mat-label>
+        <input
+            matInput
+            type="date"
+            data-testid="date-input"
+            [value]="date() ?? ''"
+            [max]="maxDate() ?? ''"
+            (change)="onDate($event)"
+        />
+    </mat-form-field>
+
+    @if (!byCalendar()) {
+        <div class="tw-flex tw-flex-col tw-gap-1">
+            <p class="tw-m-0 tw-text-xs tw-text-muted">前後の日</p>
+            <app-step-nav
+                [prev]="neighborDays().prev"
+                [next]="neighborDays().next"
+                (step)="onStep($event)"
+            ></app-step-nav>
+        </div>
+        <button
+            mat-button
+            type="button"
+            class="tw-w-fit"
+            data-testid="view-by-calendar"
+            (click)="viewByCalendar.emit()"
+        >
+            ダイヤで見る
+        </button>
+    }
+</div>
