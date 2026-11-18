@@ -206,12 +206,15 @@ export class ControlBandComponent {
 
     /**
      * Tab で帯の外へ出たら閉じる。開いたまま幕の裏の本文にフォーカスが移らないようにする。
-     * mat-select などの選択肢は帯の外（cdk の overlay、または popover）に出るので、そこへ移るのは帯の中と同じに扱う
+     * mat-select などの選択肢は帯の外（cdk の overlay、または popover）に出るので、そこへ移るのは帯の中と同じに扱う。
+     * 帯を包む要素へ移るのも閉じない。ページを移ったあとは main に tabindex=-1 が付き、帯の中のフォーカスできない所
+     * （欄のラベル・空き）を押すとフォーカスが main へ移る（ユーザー指摘 2026-11-18）。Tab では tabindex=-1 に止まらない
      */
     onFocusOut(event: FocusEvent): void {
         if (!this.open()) return;
         const next = event.relatedTarget as HTMLElement | null;
-        if (!next || this.#host.nativeElement.contains(next)) return;
+        const host = this.#host.nativeElement;
+        if (!next || host.contains(next) || next.contains(host)) return;
         if (next.closest?.('.cdk-overlay-container, [popover]')) return;
         this.close();
     }

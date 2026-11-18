@@ -430,6 +430,24 @@ describe('ControlBandComponent', () => {
             expect(q('control-band-scrim')).toBeNull();
         });
 
+        it('帯を包む要素（tabindex=-1 の main など）へフォーカスが移っても閉じない', async () => {
+            // ページを移ったあとは main に tabindex=-1 が付く。帯の中のフォーカスできない所
+            // （欄のラベル・空き）を押すと、フォーカスは帯を包む main へ移る（ユーザー指摘 2026-11-18）
+            await start();
+            click('control-band-toggle');
+            const chip = fixture.nativeElement.querySelector(
+                '.chip',
+            ) as HTMLElement;
+            chip.dispatchEvent(
+                new FocusEvent('focusout', {
+                    bubbles: true,
+                    relatedTarget: fixture.nativeElement,
+                }),
+            );
+            fixture.detectChanges();
+            expect(q('control-band-scrim')).toBeInTheDocument();
+        });
+
         it('閉じているときの focusout では何も起きない', async () => {
             await start();
             const chip = fixture.nativeElement.querySelector(
