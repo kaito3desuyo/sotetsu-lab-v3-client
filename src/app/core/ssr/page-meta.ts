@@ -8,7 +8,7 @@ const SITE_NAME = 'Sotetsu Lab. v3';
 
 /** index.html の description と同じ。ページが説明を持たないときに使う */
 export const DEFAULT_DESCRIPTION =
-    '相模鉄道こと相鉄線に関する情報を提供する、相鉄ファンサイトです。運用目撃情報・運用表・時刻表等を公開しています。';
+    '相鉄線の各列車に充当されている編成を、利用者から寄せられた目撃情報をもとに記録しています。運用表・時刻表等も公開しています。';
 
 /** SNS のプレビューに出すサイト共通の 1 枚（spec 5.1。ページごとの画像は作らない） */
 const OG_IMAGE_PATH = '/assets/icons/android-chrome-512x512.png';

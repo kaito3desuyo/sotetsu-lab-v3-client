@@ -3,7 +3,7 @@ import { FormationNumberLinkComponent } from 'src/app/shared/formation-number-li
 import { PageMeta } from 'src/app/core/ssr/page-meta';
 
 const LIBRARY_VEHICLE_DESCRIPTION =
-    '相鉄の車両の形式ごとの解説。編成・製造・装備の移り変わりを載せています。';
+    '相鉄の車両の形式ごとの解説。編成・製造・装備の変遷を載せています。';
 
 @Component({
     selector: 'app-library-vehicle',
