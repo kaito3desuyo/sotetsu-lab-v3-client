@@ -17,6 +17,11 @@ describe('toHelpPage（GA に送るパスの型）', () => {
         expect(PAGE_HELP_TABLE['/timetable/formation']).toBeDefined();
     });
 
+    it('運用別時刻表は説明のあるページとして扱う', () => {
+        expect(toHelpPage('/timetable/operation')).toBe('/timetable/operation');
+        expect(PAGE_HELP_TABLE['/timetable/operation']).toBeDefined();
+    });
+
     it('投稿者ページは id を送らずに型に丸める', () => {
         expect(toHelpPage('/moderation/users/abc-123')).toBe(
             '/moderation/users/:userId',
