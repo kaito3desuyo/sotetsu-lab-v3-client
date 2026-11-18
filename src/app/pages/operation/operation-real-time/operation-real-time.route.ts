@@ -17,7 +17,7 @@ export const OPERATION_REAL_TIME_ROUTES: Route[] = [
         data: {
             title: 'リアルタイム運用情報',
             description:
-                '相鉄線の運用ごとに、いまどの編成が走っているかを目撃情報から一覧にします。',
+                '相鉄線の運用ごとに、現在どの編成が走っているかを目撃情報から一覧にします。',
         },
         runGuardsAndResolvers: 'always',
     },
