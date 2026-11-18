@@ -72,7 +72,7 @@ export class TimetableOperationControlsComponent {
             case 'past':
                 return '日付（過去の日）';
             default:
-                return '日付（選ぶとその日の記録を出します）';
+                return '日付（選択するとその日の記録を表示します）';
         }
     });
 

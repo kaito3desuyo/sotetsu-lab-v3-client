@@ -218,7 +218,7 @@ describe('OperationNumberTagComponent', () => {
             ]);
             fixture.detectChanges();
 
-            expect(getTagEl()).toHaveAttribute('aria-label', '運用 11（推測）');
+            expect(getTagEl()).toHaveAttribute('aria-label', '運用 11（推定）');
         });
 
         it('リンクでない span には aria-label を付けない', () => {

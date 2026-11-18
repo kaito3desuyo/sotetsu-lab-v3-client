@@ -37,7 +37,7 @@ export function arrivalTimeToSeconds(time: string): number {
     template: `
         <mat-form-field class="tw-w-full" subscriptSizing="dynamic">
             <mat-select
-                aria-label="次の運用（車両が運番を離れるときだけ）"
+                aria-label="次の運用（車両が運番を離れるときのみ）"
                 [formControl]="tripForm().controls.nextTripOperationListId"
                 [canSelectNullableOptions]="true"
             >

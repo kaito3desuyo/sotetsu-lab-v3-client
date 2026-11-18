@@ -202,7 +202,7 @@ export class TimetableOperationComponent {
 
     protected readonly bandSummary = computed(() => {
         const number = this.operationNumber();
-        const head = number ? `${number}運` : '運用番号を選ぶ';
+        const head = number ? `${number}運` : '運用番号を選択する';
         const date = this.date();
         if (date) {
             const [, m, d] = date.split('-').map(Number);

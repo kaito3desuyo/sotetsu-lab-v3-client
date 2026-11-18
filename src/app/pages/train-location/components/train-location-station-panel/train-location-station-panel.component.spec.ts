@@ -51,7 +51,7 @@ describe('TrainLocationStationPanelComponent', () => {
         fixture.componentRef.setInput('stationId', null);
         fixture.detectChanges();
 
-        expect(el()).toHaveTextContent(/図の駅名を押して駅を選ぶ/);
+        expect(el()).toHaveTextContent(/図の駅名を選択してください/);
     });
 
     it('上り・下りの見出しと行（あと何分・時刻・行先・列番・運用・いまどこか）を出す', () => {

@@ -104,7 +104,7 @@ describe('myPageGuard', () => {
 
         expect(router.serializeUrl(result as UrlTree)).toBe('/');
         expect(notificationOpen).toHaveBeenCalledWith(
-            'マイページは投稿できるアカウントだけが使えます',
+            'マイページは投稿できるアカウントのみ使用できます',
             'OK',
         );
     });

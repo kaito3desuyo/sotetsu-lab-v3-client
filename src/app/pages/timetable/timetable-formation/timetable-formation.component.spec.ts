@@ -285,7 +285,7 @@ describe('TimetableFormationComponent', () => {
         it('編成番号が無いときは、入れるボタンで操作帯を開く', () => {
             const { fixture } = setup({ params: {} });
             fixture.detectChanges();
-            expect(text(fixture)).toContain('編成番号を入れてください');
+            expect(text(fixture)).toContain('編成番号を入力してください');
             q<HTMLButtonElement>(fixture, 'app-empty-state button')?.click();
             fixture.detectChanges();
             expect(
@@ -341,7 +341,7 @@ describe('TimetableFormationComponent', () => {
             });
             fixture.detectChanges();
             expect(text(fixture)).toContain(
-                '順送りで明日の運用が決まらないので、明日は選べません。',
+                '順送りで明日の運用が決まらないので、明日は選択できません。',
             );
         });
 
@@ -449,7 +449,7 @@ describe('TimetableFormationComponent', () => {
 
             expect(mark).not.toHaveBeenCalled();
             expect(hasNotFound(fixture)).toBe(false);
-            expect(text(fixture)).toContain('編成番号を入れてください');
+            expect(text(fixture)).toContain('編成番号を入力してください');
         });
 
         it('その日に編成が無いと api が返したら、取得のあとで見つからない表示にする', async () => {

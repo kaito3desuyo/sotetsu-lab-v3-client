@@ -26,7 +26,7 @@ export const SIGHTING_BLOCK_MESSAGES: Record<SightingBlockReason, string> = {
 };
 
 export const FORMATION_NOT_IN_TODAY_MESSAGE =
-    '今日の編成に無い番号です（車両番号ならそのまま送れます）';
+    '今日の編成にない番号です（車両番号であればそのまま送信できます）';
 
 /** 休車。今日の一覧には出ないが、手で打つのは止めない */
 const NO_TRIP_OPERATION_NUMBER = '100';

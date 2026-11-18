@@ -245,7 +245,7 @@ describe('TimetableEditFormGridComponent', () => {
 
         expect(component.columns()[0].cells[2].arrivalTime.error).toBe(true);
         expect(component.messages()).toEqual([
-            '3040: 大和の着（12:10）が海老名（12:15）より早い',
+            '3040: 大和の着（12:10）が海老名（12:15）より早くなっています',
         ]);
         expect(input('3040 大和 着').parentElement).toHaveClass('tw-bg-red-50');
         expect(tripsForm.invalid).toBe(true);
@@ -269,7 +269,9 @@ describe('TimetableEditFormGridComponent', () => {
         fixture.detectChanges();
 
         expect(times().at(0).get('stopType')?.value).toBe(S.STOP);
-        expect(component.messages()).toEqual(['3030: 停車駅が 2 つ以上必要']);
+        expect(component.messages()).toEqual([
+            '3030: 停車駅が 2 つ以上必要です',
+        ]);
     });
 
     it('停車種別のボタンは 停 → レ → ‖ → 停 と進め、dirty にする', () => {
@@ -415,7 +417,7 @@ describe('TimetableEditFormGridComponent', () => {
 
         expect(component.columns().map((c) => c.tripNumber)).toEqual(['3040']);
         expect(component.messages()).toEqual([
-            '3030: かしわ台の着（12:10）が海老名（12:15）より早い',
+            '3030: かしわ台の着（12:10）が海老名（12:15）より早くなっています',
         ]);
     });
 
@@ -483,7 +485,7 @@ describe('TimetableEditFormGridComponent', () => {
             false,
         ]);
         expect(component.messages()).toContain(
-            '1234: 厚木から海老名へは上りで行けない（分岐をまたいでいる）',
+            '1234: 厚木から海老名へは上りで移動できません（分岐をまたいでいます）',
         );
         expect(
             fixture.nativeElement.querySelector(

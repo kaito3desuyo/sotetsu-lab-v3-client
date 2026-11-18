@@ -18,7 +18,7 @@ export function formatFormationBandSummary(params: {
     dateKind: FormationDateKind;
     stationName: string | null;
 }): string {
-    if (!params.formationNumber) return '編成番号を入れてください';
+    if (!params.formationNumber) return '編成番号を入力してください';
     const day = params.date
         ? `${format(parse(params.date, 'yyyy-MM-dd', new Date()), 'M/d')}${DATE_KIND_NOTE[params.dateKind]}`
         : null;

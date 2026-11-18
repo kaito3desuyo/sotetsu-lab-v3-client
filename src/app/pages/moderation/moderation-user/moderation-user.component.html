@@ -115,7 +115,7 @@
                     </div>
                 } @else {
                     <p class="tw-m-0 tw-text-sm tw-text-muted">
-                        自分と manager の人は BAN できません。
+                        自分と manager 権限を持つ利用者は BAN できません。
                     </p>
                 }
             </section>
@@ -318,7 +318,7 @@
                     "
                     (click)="invalidateSelected()"
                 >
-                    選んだ {{ selectedCount() }} 件を無効にする
+                    選択した {{ selectedCount() }} 件を無効にする
                 </button>
                 <mat-checkbox
                     data-testid="select-all-valid"
@@ -326,11 +326,11 @@
                     [disabled]="sightings().length === 0"
                     (change)="toggleAllValid($event.checked)"
                 >
-                    まだ有効なものを全部選ぶ
+                    まだ有効なものをすべて選択する
                 </mat-checkbox>
                 @if (overSelectionLimit()) {
                     <span class="tw-text-sm tw-text-red-700">
-                        一度に {{ maxIds }} 件まで（いま
+                        一度に {{ maxIds }} 件まで（現在
                         {{ selectedCount() }} 件）
                     </span>
                 }
@@ -361,7 +361,7 @@
                                         'select-row-' + row.operationSightingId
                                     "
                                     [attr.aria-label]="
-                                        row.operationNumber + ' を選ぶ'
+                                        row.operationNumber + ' を選択する'
                                     "
                                     [checked]="
                                         selectedSet().has(

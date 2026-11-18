@@ -275,7 +275,7 @@ describe('buildStationArrivals', () => {
         expect(row).toMatchObject({
             tripId: '1',
             isStopped: true,
-            whereText: 'いま 二俣川に停車中',
+            whereText: '現在 二俣川に停車中',
         });
     });
 
@@ -481,7 +481,9 @@ describe('buildStationArrivals', () => {
             AT,
         ).outbound;
 
-        expect(row.departureTime).toEqual(new Date('2026-09-26T10:07:00+09:00'));
+        expect(row.departureTime).toEqual(
+            new Date('2026-09-26T10:07:00+09:00'),
+        );
     });
 
     it('いま停車中（着 <= at < 発）の列車は isStopped で 0 分', () => {
@@ -604,7 +606,7 @@ describe('buildStationArrivals', () => {
 
         const result = run(blocks(running, waiting), AT, { positions });
 
-        expect(result.outbound[0].whereText).toBe('いま 横浜→星川');
+        expect(result.outbound[0].whereText).toBe('現在 横浜→星川');
         expect(result.outbound[1].whereText).toBe('横浜 10:02 発');
     });
 
@@ -627,7 +629,7 @@ describe('buildStationArrivals', () => {
 
         const [row] = run(blocks(t), AT, { positions: [] }).inbound;
 
-        expect(row.whereText).toBe('いま いずみ野線内');
+        expect(row.whereText).toBe('現在 いずみ野線内');
     });
 
     it('いまどこか: 図の外の駅に停車中でも「いま ○○線内」', () => {
@@ -648,7 +650,7 @@ describe('buildStationArrivals', () => {
 
         const [row] = run(blocks(t), AT, { positions: [] }).inbound;
 
-        expect(row.whereText).toBe('いま いずみ野線内');
+        expect(row.whereText).toBe('現在 いずみ野線内');
     });
 
     it('いまどこか: 路線が分からない他線区間は「いま 他線内」', () => {
@@ -669,7 +671,7 @@ describe('buildStationArrivals', () => {
 
         const [row] = run(blocks(t), AT, { positions: [] }).inbound;
 
-        expect(row.whereText).toBe('いま 他線内');
+        expect(row.whereText).toBe('現在 他線内');
     });
 
     it('いまどこか: 停車中の位置は「に停車中」', () => {
@@ -693,30 +695,37 @@ describe('buildStationArrivals', () => {
 
         const [row] = run(blocks(t), AT, { positions }).outbound;
 
-        expect(row.whereText).toBe('いま 星川に停車中');
+        expect(row.whereText).toBe('現在 星川に停車中');
     });
 
     it.each([
-        ['turnaround', 'いま 星川で折返し'],
-        ['depotIn', 'いま 星川で入庫中'],
-        ['depotOut', 'いま 星川で出庫中'],
-    ] as const)('いまどこか: 停車の理由が %s なら「%s」', (stoppedReason, whereText) => {
-        const t = trip('1', 1, [
-            time({
-                stationId: 'B',
-                stopSequence: 1,
-                departureTime: '10:01:00',
-            }),
-            time({ stationId: 'C', stopSequence: 2, arrivalTime: '10:08:00' }),
-        ]);
-        const positions: TrainPosition[] = [
-            { type: 'stopped', tripId: '1', stationId: 'B', stoppedReason },
-        ];
+        ['turnaround', '現在 星川で折返し'],
+        ['depotIn', '現在 星川で入庫中'],
+        ['depotOut', '現在 星川で出庫中'],
+    ] as const)(
+        'いまどこか: 停車の理由が %s なら「%s」',
+        (stoppedReason, whereText) => {
+            const t = trip('1', 1, [
+                time({
+                    stationId: 'B',
+                    stopSequence: 1,
+                    departureTime: '10:01:00',
+                }),
+                time({
+                    stationId: 'C',
+                    stopSequence: 2,
+                    arrivalTime: '10:08:00',
+                }),
+            ]);
+            const positions: TrainPosition[] = [
+                { type: 'stopped', tripId: '1', stationId: 'B', stoppedReason },
+            ];
 
-        const [row] = run(blocks(t), AT, { positions }).outbound;
+            const [row] = run(blocks(t), AT, { positions }).outbound;
 
-        expect(row.whereText).toBe(whereText);
-    });
+            expect(row.whereText).toBe(whereText);
+        },
+    );
 
     it('行先・運用・種別はカードから引き、無ければ trip から組み立てる', () => {
         const t = trip(
@@ -794,7 +803,7 @@ describe('buildStationArrivals', () => {
         const [row] = run(blocks(t), AT, { positions: [] }).outbound;
 
         expect(row.isStopped).toBe(true);
-        expect(row.whereText).toBe('いま 二俣川に停車中');
+        expect(row.whereText).toBe('現在 二俣川に停車中');
     });
 
     it('選んだ駅を通らない列車・該当 0 本は空配列', () => {

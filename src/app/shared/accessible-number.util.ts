@@ -12,5 +12,5 @@ export function toAccessibleNumber(
     const isInferred = inferred || /[?？]$/.test(text);
     const number = text.replace(/[?？]$/, '').trim();
     if (!number) return null;
-    return `${prefix} ${number}${isInferred ? '（推測）' : ''}`;
+    return `${prefix} ${number}${isInferred ? '（推定）' : ''}`;
 }

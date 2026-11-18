@@ -341,7 +341,7 @@ export class TimetableEditFormGridComponent {
 
         const messages = errors.map(
             (e) =>
-                `${tripNumber}: ${stations[e.index]?.stationName}の${timetableEditFormTimeFieldLabel.get(e.field)}（${e.time}）が${stations[e.prevIndex]?.stationName}（${e.prevTime}）より早い`,
+                `${tripNumber}: ${stations[e.index]?.stationName}の${timetableEditFormTimeFieldLabel.get(e.field)}（${e.time}）が${stations[e.prevIndex]?.stationName}（${e.prevTime}）より早くなっています`,
         );
         const direction = tripDirectionLabel.get(
             tripForm.controls.tripDirection.value,
@@ -349,7 +349,7 @@ export class TimetableEditFormGridComponent {
         messages.push(
             ...routeErrors.map(
                 (e) =>
-                    `${tripNumber}: ${stations[e.prevIndex]?.stationName}から${stations[e.index]?.stationName}へは${direction}で行けない（分岐をまたいでいる）`,
+                    `${tripNumber}: ${stations[e.prevIndex]?.stationName}から${stations[e.index]?.stationName}へは${direction}で移動できません（分岐をまたいでいます）`,
             ),
         );
         if (
@@ -358,7 +358,7 @@ export class TimetableEditFormGridComponent {
                 'stopsStationCountShouldBeGreaterAndEqualThanTwo',
             )
         ) {
-            messages.push(`${tripNumber}: 停車駅が 2 つ以上必要`);
+            messages.push(`${tripNumber}: 停車駅が 2 つ以上必要です`);
         }
 
         return {

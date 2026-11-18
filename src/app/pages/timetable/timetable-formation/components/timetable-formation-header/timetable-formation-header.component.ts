@@ -67,7 +67,7 @@ export class TimetableFormationHeaderComponent {
 
     protected readonly operationHeading = computed(() =>
         this.dateKind() === 'today'
-            ? 'いまの運用'
+            ? '現在の運用'
             : this.dateKind() === 'tomorrow'
               ? '見込みの運用'
               : 'この日の運用',
