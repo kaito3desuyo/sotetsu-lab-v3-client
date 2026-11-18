@@ -271,7 +271,7 @@ export class TrainLocationComponent {
     /** 時刻指定モードでは時刻変更を促す補足文を出す（現在時刻モードでは省略）。 */
     readonly emptyStateSubtitle = computed(() =>
         this.mode() === 'specified'
-            ? '時刻を変えてお試しください。'
+            ? '時刻を変更してお試しください。'
             : undefined,
     );
 

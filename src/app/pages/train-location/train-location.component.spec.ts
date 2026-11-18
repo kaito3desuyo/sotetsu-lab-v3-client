@@ -119,7 +119,9 @@ describe('TrainLocationComponent', () => {
         const footer: HTMLElement =
             fixture.nativeElement.querySelector('footer');
         expect(footer).toBeTruthy();
-        expect(footer).toHaveTextContent(/ダイヤ通りに走った場合の位置です/);
+        expect(footer).toHaveTextContent(
+            /ダイヤどおりに運行した場合の位置です/,
+        );
         expect(footer).toHaveTextContent(/リアルタイム運用情報/);
 
         // ロード中も消えない（常設）
@@ -197,9 +199,9 @@ describe('TrainLocationComponent', () => {
     it('免責文はページ下端の 1 か所だけ', () => {
         fixture.detectChanges();
         const text = fixture.nativeElement.textContent as string;
-        expect(text.split('ダイヤ通りに走った場合の位置です').length - 1).toBe(
-            1,
-        );
+        expect(
+            text.split('ダイヤどおりに運行した場合の位置です').length - 1,
+        ).toBe(1);
     });
 
     it('時計は表示設定（操作部）の 2 行目に渡し、ページには時計の行を持たない', () => {

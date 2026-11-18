@@ -130,7 +130,7 @@ function buildOffAxisWhereText(
     const routeName = first.find((name) =>
         rest.every((names) => names.includes(name)),
     );
-    return routeName ? `いま ${routeName}内` : 'いま 他線内';
+    return routeName ? `現在 ${routeName}内` : '現在 他線内';
 }
 
 function buildWhereText(
@@ -144,11 +144,11 @@ function buildWhereText(
         id ? (input.stationNameById.get(id) ?? '') : '';
     if (position?.type === 'stopped') {
         return position.stoppedReason
-            ? `いま ${name(position.stationId)}で${STOPPED_REASON_LABEL[position.stoppedReason]}`
-            : `いま ${name(position.stationId)}に停車中`;
+            ? `現在 ${name(position.stationId)}で${STOPPED_REASON_LABEL[position.stoppedReason]}`
+            : `現在 ${name(position.stationId)}に停車中`;
     }
     if (position?.type === 'between') {
-        return `いま ${name(position.fromStationId)}→${name(position.toStationId)}`;
+        return `現在 ${name(position.fromStationId)}→${name(position.toStationId)}`;
     }
     return buildOffAxisWhereText(times, base, at, input);
 }
@@ -254,7 +254,7 @@ function buildArrival(
         formationNumber: card?.formationNumber,
         formationAgencyName: card?.formationAgencyName,
         whereText: isStopped
-            ? `いま ${input.stationNameById.get(input.stationId) ?? ''}に停車中`
+            ? `現在 ${input.stationNameById.get(input.stationId) ?? ''}に停車中`
             : buildWhereText(
                   positionByTripId.get(trip.tripId),
                   times,
