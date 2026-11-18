@@ -27,7 +27,7 @@
             class="tw-m-0 tw-flex tw-flex-wrap tw-items-center tw-gap-2 tw-text-sm"
             data-testid="current-formation"
         >
-            <span class="tw-text-xs tw-text-muted">いまの編成</span>
+            <span class="tw-text-xs tw-text-muted">現在の編成</span>
             @if (currentFormationNumber(); as number) {
                 <span
                     ><app-formation-number-link
@@ -67,7 +67,7 @@
 
     @if (position(); as pos) {
         <div class="tw-text-sm" data-testid="current-position">
-            <span class="tw-text-xs tw-text-muted">いま</span>
+            <span class="tw-text-xs tw-text-muted">現在</span>
             <app-trip-position
                 [position]="pos"
                 [stations]="positionStations()"

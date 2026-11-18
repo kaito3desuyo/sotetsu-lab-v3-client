@@ -187,7 +187,7 @@ describe('TimetableOperationTripListComponent', () => {
         const f = create([trip('t1')], true);
         const detail = () =>
             el(f).querySelector('[data-testid="trip-detail"]')!;
-        expect(detail()).toHaveTextContent(/列車を押すと/);
+        expect(detail()).toHaveTextContent(/列車を選択すると/);
         el(f)
             .querySelector<HTMLButtonElement>('button[aria-expanded]')!
             .click();

@@ -246,7 +246,7 @@ describe('TimetableOperationComponent', () => {
             '[data-testid="current-formation"]',
         );
         expect(current?.textContent?.replace(/\s+/g, '')).toBe(
-            'いまの編成8708?',
+            '現在の編成8708?',
         );
     });
 
