@@ -166,7 +166,7 @@ function isTransferEndOf(
  * 折り返し: 同じ運用の列車が終点に着き、別の trip block（逆向き）で同じ駅を発つとき、
  * 発つ列車の tripId → 着く列車 を返す。折り返しは block に含まれないので運用でつなぐ。
  * 入庫する列車・出庫する列車は車両基地を挟むので含めない。
- * 別の運用へ移る端・別の運用から来る端（乗り移り・決まり 2）も、入出庫の値に頼らず links で見分けて含めない。
+ * 別の運用へ移る端・別の運用から来る端（運番変更・決まり 2）も、入出庫の値に頼らず links で見分けて含めない。
  */
 export function findTurnarounds(
     tripBlocks: readonly TripBlockDetailsDto[],
@@ -335,7 +335,7 @@ function estimateTripPosition(
  * @param tripBlocks 対象ダイヤの全 tripBlock（tripDirection 上下分含めて呼び出し側で束ねたもの）
  * @param stationAxis 対象路線の駅リスト（route-stations 由来。順序は問わない）
  * @param at 位置算出の基準時刻
- * @param links 運用の乗り移りを見分けるつながり（省略すると乗り移りは見分けない）
+ * @param links 運番変更を見分けるつながり（省略すると運番変更は見分けない）
  */
 export function estimatePositions(
     tripBlocks: TripBlockDetailsDto[],

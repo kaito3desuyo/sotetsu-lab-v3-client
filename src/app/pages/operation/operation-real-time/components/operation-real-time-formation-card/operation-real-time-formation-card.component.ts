@@ -72,7 +72,7 @@ export class OperationRealTimeFormationCardComponent {
     readonly stations = input<StationDetailsDto[]>([]);
     readonly tripClasses = input<TripClassDetailsDto[]>([]);
     readonly calendarId = input<string | undefined>(undefined);
-    /** 運用のつながり。位置表示で乗り移りの端を見分ける */
+    /** 運用のつながり。位置表示で運番変更の端を見分ける */
     readonly links = input<OperationItineraryLinkDto[]>([]);
     readonly isVisibleSightingHistories = input<boolean>(false);
     readonly isVisibleCurrentPosition = input<boolean>(false);

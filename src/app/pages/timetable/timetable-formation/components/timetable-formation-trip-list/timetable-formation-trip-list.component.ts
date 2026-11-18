@@ -59,7 +59,7 @@ export class TimetableFormationTripListComponent {
     readonly calendarId = input<string | undefined>(undefined);
     /** 見ている日 'yyyy-MM-dd'。ほかの編成の番号をその日の編成別時刻表へのリンクにする */
     readonly date = input<string | null>(null);
-    /** 運用番号 → 運用 ID（乗り移り・交換の行のチップを行路図へのリンクにする。ストアの operationIdByNumber） */
+    /** 運用番号 → 運用 ID（運番変更・交換の行のチップを行路図へのリンクにする。ストアの operationIdByNumber） */
     readonly operationIdByNumber = input<Record<string, string>>({});
     /** 運用番号のチップの飛び先（運用別時刻表）。見ている日、明日の見込みならそのダイヤ */
     readonly operationLinkAt = input<OperationTimetableLinkAt>('today');

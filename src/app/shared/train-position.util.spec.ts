@@ -330,7 +330,7 @@ describe('estimatePositions', () => {
             ]);
         });
 
-        describe('運用の乗り移り（入出庫の値が false でも折返しにしない）', () => {
+        describe('運番変更（入出庫の値が false でも折返しにしない）', () => {
             function endOf(
                 tripId: string,
                 rule: 1 | 2 | 3,
@@ -375,7 +375,7 @@ describe('estimatePositions', () => {
                 ).toEqual([]);
             });
 
-            it('入出庫をともなわない乗り移り（depot=false）は、着いた列車が消え、次の運用の列車は発車で走行中として現れる', () => {
+            it('入出庫をともなわない運番変更（depot=false）は、着いた列車が消え、次の運用の列車は発車で走行中として現れる', () => {
                 const links = [link('T1', { next: endOf('T2', 2) })];
                 const positions = estimatePositions(
                     turnaroundBlocks(),

@@ -244,7 +244,7 @@ describe('TimetableFormationTripListComponent', () => {
         expect(emitted).toEqual(['']);
     });
 
-    it('運用番号のチップは見ている日の運用別時刻表へのリンク（列車の行・乗り移り・交換）', () => {
+    it('運用番号のチップは見ている日の運用別時刻表へのリンク（列車の行・運番変更・交換）', () => {
         const fixture = create([
             trip({ carriedOver: true, operationId: 'op-55' }),
             { kind: 'transfer', from: '16K', to: '15K', stationId: 'b' },
@@ -310,7 +310,7 @@ describe('TimetableFormationTripListComponent', () => {
         );
     });
 
-    it('入出庫・乗り移り・車両交換の帯を出す', () => {
+    it('入出庫・運番変更・車両交換の帯を出す', () => {
         const fixture = create([
             { kind: 'depot', label: 'out', stationId: 'a', time: '07:07' },
             { kind: 'transfer', from: '16K', to: '15K', stationId: 'b' },

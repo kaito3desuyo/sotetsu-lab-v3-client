@@ -28,7 +28,7 @@ type StoreProps = {
     operations: OperationDetailsDto[];
     /** その運用の列車（各駅の時刻付き）。運用が無ければ null */
     trips: OperationTripsDto | null;
-    /** そのダイヤの、運番が変わるつながり（乗り移りの行に使う） */
+    /** そのダイヤの、運番が変わるつながり（運番変更の行に使う） */
     links: OperationItineraryLinkDto[];
     /** その営業日の全目撃（日付の形だけ） */
     sightings: OperationSightingDetailsDto[];

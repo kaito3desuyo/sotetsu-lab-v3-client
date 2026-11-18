@@ -63,7 +63,7 @@ function toChainInfo(
         firstDepartureMs: firstDeparture?.getTime(),
         lastStationId: lastStop?.stationId ?? undefined,
         lastArrivalMs: lastArrival?.getTime(),
-        // 入出庫と、別の運用への乗り移り（つながりで見分ける）は、どちらも切れ目
+        // 入出庫と、別の運用への運番変更（つながりで見分ける）は、どちらも切れ目
         headDepotOut:
             headTrip?.depotOut === true || isTransferOf('out', headTrip, links),
         tailDepotIn:

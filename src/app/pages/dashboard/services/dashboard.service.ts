@@ -89,7 +89,7 @@ export class DashboardService {
             routes: defer(() =>
                 of(this.#routeStationListState.routeStations()),
             ),
-            // 乗り移り（折り返しではない）の端を数えないため。取れなくても本数は出す
+            // 運番変更（折り返しではない）の端を数えないため。取れなくても本数は出す
             links: this.#operationService
                 .findManyItineraryLinks({ calendarId: calendar.calendarId })
                 .pipe(catchError(() => of([] as OperationItineraryLinkDto[]))),

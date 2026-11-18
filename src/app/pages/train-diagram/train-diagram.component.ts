@@ -311,7 +311,7 @@ export class TrainDiagramComponent {
     readonly hasDepotOut = computed(() => this.#layout().hasDepotOut);
     /** 描いている線に入庫（△）の印を持つものが 1 本でもあるか。凡例の見本の表示条件。 */
     readonly hasDepotIn = computed(() => this.#layout().hasDepotIn);
-    /** 描いている線に乗り移り（□）の印を持つものが 1 本でもあるか。凡例の見本の表示条件。 */
+    /** 描いている線に運番変更（□）の印を持つものが 1 本でもあるか。凡例の見本の表示条件。 */
     readonly hasTransfer = computed(() => this.#layout().hasTransfer);
     /** tripId → そのつながりの全 tripId の集合。同じ chain 内の列車をまとめて強調するために使う。 */
     readonly tripIdsByChainOf = computed(

@@ -441,7 +441,7 @@ describe('buildOperationDay', () => {
         ]);
     });
 
-    describe('乗り移り', () => {
+    describe('運番変更', () => {
         /** 列車 b から 30K へ移り、c で 30K から戻ってくる 1 日 */
         const LINKS: OperationItineraryLinkDto[] = [
             {
@@ -484,7 +484,7 @@ describe('buildOperationDay', () => {
                         : r.kind,
             );
 
-        it('別の運用へ移る列車のあとと、戻ってくる列車の前に乗り移りの行を入れる', () => {
+        it('別の運用へ移る列車のあとと、戻ってくる列車の前に運番変更の行を入れる', () => {
             const rows = buildOperationDay(input({ links: LINKS }));
             expect(kinds(rows)).toEqual([
                 'depot-out',
@@ -497,7 +497,7 @@ describe('buildOperationDay', () => {
             ]);
         });
 
-        it('乗り移りの行は出庫・入庫の行の外側に置く', () => {
+        it('運番変更の行は出庫・入庫の行の外側に置く', () => {
             const rows = buildOperationDay(
                 input({
                     links: LINKS,
@@ -536,7 +536,7 @@ describe('buildOperationDay', () => {
             expect(rows.some((r) => r.kind === 'transfer')).toBe(false);
         });
 
-        it('ダイヤの形（baseDate null）でも乗り移りの行は出す', () => {
+        it('ダイヤの形（baseDate null）でも運番変更の行は出す', () => {
             const rows = buildOperationDay(
                 input({ baseDate: null, links: LINKS }),
             );

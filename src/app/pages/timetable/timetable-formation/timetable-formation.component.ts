@@ -171,7 +171,7 @@ export class TimetableFormationComponent {
         );
     });
 
-    /** いまの運用を決めた根拠（目撃・ダイヤの乗り移り・順送り・同日引き継ぎ・不明） */
+    /** いまの運用を決めた根拠（目撃・ダイヤの運番変更・順送り・同日引き継ぎ・不明） */
     protected readonly currentBasis = computed(() =>
         basisAt(
             this.rows(),

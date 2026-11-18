@@ -54,7 +54,7 @@ export class TripPositionComponent {
     /** 種別・列番から全線時刻表へ飛ぶリンクに使う。 */
     readonly calendarId = input<string | undefined>(undefined);
     /**
-     * 運用のつながり。入出庫をともなわない乗り移り（depot=false）の端を
+     * 運用のつながり。入出庫をともなわない運番変更（depot=false）の端を
      * 「出庫前○」「入庫済△」として見分けるのに使う。省略時は入出庫の値だけで判定。
      */
     readonly links = input<OperationItineraryLinkDto[]>([]);

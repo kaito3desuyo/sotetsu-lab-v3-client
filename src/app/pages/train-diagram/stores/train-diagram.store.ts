@@ -65,7 +65,7 @@ type StoreProps = {
     hasFetchedTrainDiagram: boolean;
     /** 画面は出せたが、一部の取得（運用のつながり）に失敗したか。知らせの帯を出す。保存には入れない */
     partialFailure: boolean;
-    /** 車両の前後の運用（運番が変わるつながり）。入出庫の端が乗り移りなら □ で描く。取れなければ空 */
+    /** 車両の前後の運用（運番が変わるつながり）。入出庫の端が運番変更なら □ で描く。取れなければ空 */
     itineraryLinks: OperationItineraryLinkDto[];
 };
 

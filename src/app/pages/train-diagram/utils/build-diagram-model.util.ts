@@ -73,7 +73,7 @@ export interface DiagramModelInput {
     selectedTripId: string | null;
     /** 線の座標の起点（railwayDayStart(now)）に使う */
     now: Date;
-    /** 車両の前後の運用（乗り移りの判定・つなぎ直しに使う） */
+    /** 車両の前後の運用（運番変更の判定・つなぎ直しに使う） */
     itineraryLinks: readonly OperationItineraryLinkDto[];
     /** 選んだ列車の充当編成の情報（運用番号ごと） */
     operationSightingTimeCrossSections: Readonly<

@@ -29,7 +29,7 @@ export type RowEdge = {
     up: boolean;
     down: boolean;
     depot: 'out' | 'in' | null;
-    /** 入出庫の端が別の運用への・からの乗り移り（□で描く）か */
+    /** 入出庫の端が別の運用への・からの運番変更（□で描く）か */
     transfer?: boolean;
     /** 端の線の SVG path（viewBox 0 0 16 16）。線が無ければ空文字。 */
     path: string;
@@ -101,7 +101,7 @@ const STATION_WIDTH = 3;
  * 下り（OUTBOUND）は右 → 左へ流す。地図と同じ向きで行ったり来たりが読める。
  * 行の端の線は、同じ駅で次の列車へ続く（折り返す）ことを表す。
  * 同じ向きへ続けて走るときは、つなぎの行を挟んで Z 字につなぐ。
- * 出庫は ◯、入庫は △ を、線の代わりに端へ置く。別の運用へ・からの乗り移りは □。
+ * 出庫は ◯、入庫は △ を、線の代わりに端へ置く。別の運用へ・からの運番変更は □。
  *
  * 線は本番の罫線文字（┏┗┓┛━）ではなく SVG で描く（字・種別チップ・リンクは HTML）。
  * 列車の行は、発時刻から着時刻へ伸びる種別色の矢印に種別・列番を載せ、余った幅は矢印線が吸う。
@@ -184,7 +184,7 @@ export class OperationTableCardComponent {
         };
 
         // 前の列車の終点から次の列車が出る（入庫・出庫で切れていない）
-        // 乗り移り（決まり 2 のつながり）は入出庫の値に頼らず、つながりで見分ける
+        // 運番変更（決まり 2 のつながり）は入出庫の値に頼らず、つながりで見分ける
         const transferAt = (index: number, side: 'in' | 'out'): boolean => {
             const item = trips[index];
             return (
@@ -197,7 +197,7 @@ export class OperationTableCardComponent {
                 })
             );
         };
-        // 入出庫と乗り移りは、どちらもそこで線を切る
+        // 入出庫と運番変更は、どちらもそこで線を切る
         const cutsAfter = (index: number): boolean =>
             !!trips[index]?.trip.depotIn || transferAt(index, 'in');
         const cutsBefore = (index: number): boolean =>

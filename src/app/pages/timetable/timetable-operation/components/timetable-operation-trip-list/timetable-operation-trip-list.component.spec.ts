@@ -128,7 +128,7 @@ describe('TimetableOperationTripListComponent', () => {
         );
     });
 
-    it('乗り移りの行に駅と 2 つの運用番号を出し、運用番号を見ている日の運用別時刻表へのリンクにする', () => {
+    it('運番変更の行に駅と 2 つの運用番号を出し、運用番号を見ている日の運用別時刻表へのリンクにする', () => {
         const f = create([
             trip('t1'),
             { kind: 'transfer', from: '29K', to: '30K', stationId: 'b' },
@@ -147,7 +147,7 @@ describe('TimetableOperationTripListComponent', () => {
         ]);
     });
 
-    it('ダイヤの形では、乗り移りの運用番号をそのダイヤの運用別時刻表へのリンクにする', () => {
+    it('ダイヤの形では、運番変更の運用番号をそのダイヤの運用別時刻表へのリンクにする', () => {
         const f = create([
             { kind: 'transfer', from: '29K', to: '30K', stationId: 'b' },
         ]);

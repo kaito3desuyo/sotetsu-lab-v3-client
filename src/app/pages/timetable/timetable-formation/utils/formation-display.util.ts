@@ -5,13 +5,13 @@ import { FormationDayBasis } from './formation-day.util';
 /** 運用の決め手の呼び名（R4） */
 export const formationBasisLabel: Record<FormationDayBasis, string> = {
     sighting: '目撃',
-    transfer: 'ダイヤの乗り移り',
+    transfer: 'ダイヤの運番変更',
     circulated: '順送り?',
     'carried-over': '同日引き継ぎ?',
     unknown: '不明',
 };
 
-/** 運用番号に「?」を付ける決め手か（目撃・ダイヤの乗り移りは確かなこと） */
+/** 運用番号に「?」を付ける決め手か（目撃・ダイヤの運番変更は確かなこと） */
 export const isInferredBasis = (basis: FormationDayBasis): boolean =>
     basis === 'circulated' || basis === 'carried-over';
 

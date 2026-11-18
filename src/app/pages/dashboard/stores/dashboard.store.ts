@@ -24,7 +24,7 @@ type StoreProps = {
     sightingCountToday: number;
     latestSightings: OperationSightingDetailsDto[];
     latestSightingPositions: Record<string, OperationCurrentPositionDto>;
-    /** 運用のつながり（目撃時の位置と走行本数で乗り移りの端を見分ける） */
+    /** 運用のつながり（目撃時の位置と走行本数で運番変更の端を見分ける） */
     itineraryLinks: OperationItineraryLinkDto[];
     /** 目撃時の位置に出す種別チップの名称・色の解決用 */
     tripClasses: TripClassDetailsDto[];

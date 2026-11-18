@@ -86,11 +86,11 @@ describe('TimetableFormationHeaderComponent', () => {
         expect(t).toContain('（順送り?）');
     });
 
-    it('乗り移りのある日は、運用を「16K → 15K」とチップで並べる', () => {
+    it('運番変更のある日は、運用を「16K → 15K」とチップで並べる', () => {
         const fixture = create({
             formation: { formationId: 'f' },
             currentOperationNumber: '15K',
-            currentBasisLabel: 'ダイヤの乗り移り',
+            currentBasisLabel: 'ダイヤの運番変更',
             operationChain: [
                 { operationNumber: '16K', inferred: false },
                 { operationNumber: '15K', inferred: false },

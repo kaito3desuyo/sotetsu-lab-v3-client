@@ -58,7 +58,7 @@ export class TimetableFormationService {
     readonly #store = inject(TimetableFormationStore);
 
     /**
-     * 編成の 1 日分（目撃・最初の運用・乗り移り・運用の列車）を取ってストアへ入れる。
+     * 編成の 1 日分（目撃・最初の運用・運番変更・運用の列車）を取ってストアへ入れる。
      * 編成やダイヤが無くてもエラーにせず、notFound / noCalendar で表す。
      * date は営業日 'yyyy-MM-dd'。今日・明日は呼び出し側が dateKind で決める。
      */

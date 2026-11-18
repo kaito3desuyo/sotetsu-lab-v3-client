@@ -60,7 +60,7 @@ export class TimetableOperationTripListComponent {
     /** 見ている日 'yyyy-MM-dd'。編成番号をその日の編成別時刻表へのリンクにする。ダイヤの形では null */
     readonly date = input<string | null>(null);
 
-    /** 乗り移りの運用番号のリンク先。日付の形はその日、ダイヤの形はそのダイヤの運用別時刻表 */
+    /** 運番変更の運用番号のリンク先。日付の形はその日、ダイヤの形はそのダイヤの運用別時刻表 */
     protected readonly operationLinkAt = computed<OperationTimetableLinkAt>(
         () => {
             const date = this.date();

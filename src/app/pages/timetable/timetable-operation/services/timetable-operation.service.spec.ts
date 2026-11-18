@@ -225,7 +225,7 @@ describe('Service: TimetableOperation', () => {
         );
     });
 
-    it('ダイヤの、運番が変わるつながりを取って乗り移りの行にする', async () => {
+    it('ダイヤの、運番が変わるつながりを取って運番変更の行にする', async () => {
         operationService.findManyItineraryLinks.mockReturnValue(
             of([
                 {

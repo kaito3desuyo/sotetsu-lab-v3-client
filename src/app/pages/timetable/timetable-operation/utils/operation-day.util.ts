@@ -35,7 +35,7 @@ export interface OperationDayInput {
     formationNumberById: Record<string, string>;
     /** 今日で、この運用に今日の目撃が無いときの time-cross-section の編成番号。それ以外は null */
     inferredFormationNumber: string | null;
-    /** そのダイヤの、運番が変わるつながり（区間ごと）。無ければ乗り移りの行を出さない */
+    /** そのダイヤの、運番が変わるつながり（区間ごと）。無ければ運番変更の行を出さない */
     links?: OperationItineraryLinkDto[];
 }
 

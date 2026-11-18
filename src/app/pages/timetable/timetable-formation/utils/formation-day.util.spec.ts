@@ -84,7 +84,7 @@ function sighting(
     } as OperationSightingDetailsDto;
 }
 
-/** 前=prevTol の運用の最後の列車、次=nextTol（別の運用の最初の列車）の乗り移り */
+/** 前=prevTol の運用の最後の列車、次=nextTol（別の運用の最初の列車）の運番変更 */
 function link(
     from: TripOperationListWithTimesDto,
     to: TripOperationListWithTimesDto,
@@ -255,7 +255,7 @@ describe('buildFormationDay', () => {
         });
     });
 
-    it('乗り移りで 16K から 15K に続け、transfer の帯を入れる', () => {
+    it('運番変更で 16K から 15K に続け、transfer の帯を入れる', () => {
         const rows = buildFormationDay(
             input({
                 firstOperationId: 'op16',
@@ -502,7 +502,7 @@ describe('buildFormationDay', () => {
         });
     });
 
-    it('乗り移りで同じ運用に戻っても止まる', () => {
+    it('運番変更で同じ運用に戻っても止まる', () => {
         // A(a1) -> B(b1) -> A(a1) の輪
         const x1 = tol('x1', 'opA', '08:00', '09:00');
         const y1 = tol('y1', 'opB', '09:30', '10:30');
@@ -539,7 +539,7 @@ describe('buildFormationDay', () => {
     });
 
     it('不明の行の運用番号は、追い出した目撃の運用にそろえる', () => {
-        // 16K で目撃 → ダイヤで 15K に乗り移り → 8711 が 15K で目撃
+        // 16K で目撃 → ダイヤで 15K に運番変更 → 8711 が 15K で目撃
         const rows = buildFormationDay(
             input({
                 sightings: [
@@ -702,7 +702,7 @@ describe('buildFormationDay', () => {
         });
     });
 
-    it('最初の目撃がその運用の最後の列車より後でも、昼の乗り移りより前は前の運用', () => {
+    it('最初の目撃がその運用の最後の列車より後でも、昼の運番変更より前は前の運用', () => {
         const c1 = tol('c1', 'op15', '11:00', '12:00');
         const c2 = tol('c2', 'op15', '12:30', '13:30');
         const c3 = tol('c3', 'op15', '14:00', '15:00');
@@ -761,7 +761,7 @@ describe('buildFormationDay', () => {
             ).toEqual([original, orphanCopy, hashedDirect]);
         });
 
-        it('前向き: 16K の目撃と 15K の写しがあっても、16K → 15K に乗り移るだけで swap は出ない', () => {
+        it('前向き: 16K の目撃と 15K の写しがあっても、16K → 15K に運番変更するだけで swap は出ない', () => {
             const original = sighting('s1', 'f1', 'op16', '09:00');
             const rows = buildFormationDay(
                 input({
@@ -822,7 +822,7 @@ describe('buildFormationDay', () => {
         });
     });
 
-    it('missingOperationIds は乗り移り先で trips の無い運用を返す', () => {
+    it('missingOperationIds は運番変更した先で trips の無い運用を返す', () => {
         const base = input({
             firstOperationId: 'op16',
             tripsByOperationId: { op16: trips.op16 },
@@ -869,7 +869,7 @@ describe('basisAt', () => {
         expect(basisAt([trip(), trip()], 1, 'circulated')).toBe('circulated');
         expect(basisAt([trip()], 0, 'sighting')).toBe('sighting');
     });
-    it('直前の決め手が乗り移りなら transfer', () => {
+    it('直前の決め手が運番変更なら transfer', () => {
         expect(basisAt([trip(), transfer, trip()], 2, 'circulated')).toBe(
             'transfer',
         );
@@ -882,7 +882,7 @@ describe('basisAt', () => {
             'carried-over',
         );
     });
-    it('直前の決め手が swap なら sighting（乗り移りより後の swap が勝つ）', () => {
+    it('直前の決め手が swap なら sighting（運番変更より後の swap が勝つ）', () => {
         expect(basisAt([trip(), transfer, swap, trip()], 3, 'circulated')).toBe(
             'sighting',
         );
