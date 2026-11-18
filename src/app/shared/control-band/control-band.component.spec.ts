@@ -194,10 +194,41 @@ describe('ControlBandComponent', () => {
             click('control-band-toggle');
             const inner = q('control-band-content')!.firstElementChild!;
             expect(inner).toHaveClass(
-                'tw-overflow-y-auto',
                 'tw-max-h-[calc(100dvh_-_88px)]',
                 'md:tw-max-h-[calc(100dvh_-_104px)]',
             );
+            fire(q('control-band-content')!, new Event('transitionend'));
+            expect(inner).toHaveClass('tw-overflow-y-auto');
+        });
+
+        it('伸びている途中はスクロールさせない（スクロールバーを出さない）', async () => {
+            await start();
+            click('control-band-toggle');
+            const inner = q('control-band-content')!.firstElementChild!;
+            expect(inner).toHaveClass('tw-overflow-hidden');
+            expect(inner).not.toHaveClass('tw-overflow-y-auto');
+            // 中の要素の transition の終わりでは、まだ伸び終えたことにしない
+            fire(inner, new Event('transitionend', { bubbles: true }));
+            expect(inner).toHaveClass('tw-overflow-hidden');
+        });
+
+        it('transitionend が来なくても（動きを減らす設定）、少したてばスクロールできる', async () => {
+            await start();
+            click('control-band-toggle');
+            await new Promise((r) => setTimeout(r, 300));
+            fixture.detectChanges();
+            const inner = q('control-band-content')!.firstElementChild!;
+            expect(inner).toHaveClass('tw-overflow-y-auto');
+        });
+
+        it('畳んでから開き直すと、また伸び終えるまでスクロールさせない', async () => {
+            await start();
+            click('control-band-toggle');
+            fire(q('control-band-content')!, new Event('transitionend'));
+            click('control-band-toggle');
+            click('control-band-toggle');
+            const inner = q('control-band-content')!.firstElementChild!;
+            expect(inner).toHaveClass('tw-overflow-hidden');
         });
 
         it('罫線: 要約の行の下はいつも引き、操作部は開いている間だけ自分の下に引く', async () => {
