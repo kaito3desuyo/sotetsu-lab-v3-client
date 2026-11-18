@@ -84,7 +84,7 @@ describe('AppUpdateService', () => {
         const { data } = confirmDialog.open.mock.calls[0][0];
         expect(data.goButtonText).toBe('今すぐ更新する');
         expect(data.cancelButtonText).toBe('あとで');
-        expect(data.html).toContain('次に画面を移るときに自動で更新します');
+        expect(data.html).toContain('次に画面を移動するときに自動で更新します');
     });
 
     it('「今すぐ更新する」なら、更新を当ててその場で再読み込みする', async () => {

@@ -117,7 +117,7 @@ export class AppUpdateService {
         const dialogRef = this.#confirmDialogService.open({
             data: {
                 title: '新しいバージョン',
-                html: '<p>アプリに新しいバージョンがあります。次に画面を移るときに自動で更新します。</p>',
+                html: '<p>アプリに新しいバージョンがあります。次に画面を移動するときに自動で更新します。</p>',
                 goButtonText: '今すぐ更新する',
                 goButtonColor: 'primary',
                 cancelButtonText: 'あとで',
