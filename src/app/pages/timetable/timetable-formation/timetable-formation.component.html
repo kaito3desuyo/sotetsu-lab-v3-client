@@ -44,6 +44,7 @@
     } @else {
         @if (showDay()) {
             <app-timetable-formation-header
+                [operationLinkAt]="operationLinkAt()"
                 [formationNumber]="formationNumber()"
                 [formation]="storeFormation()"
                 [annotation]="annotation()"
@@ -106,6 +107,7 @@
             }
             @case ('trips') {
                 <app-timetable-formation-trip-list
+                    [operationLinkAt]="operationLinkAt()"
                     [rows]="rows()"
                     [states]="progress().states"
                     [stationNames]="stationNames()"

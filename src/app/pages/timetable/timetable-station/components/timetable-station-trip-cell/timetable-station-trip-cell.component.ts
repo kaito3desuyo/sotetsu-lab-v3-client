@@ -1,3 +1,4 @@
+import { operationTimetableLink } from 'src/app/core/utils/operation-timetable-link';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -57,6 +58,8 @@ import { FormationNumberLinkComponent } from 'src/app/shared/formation-number-li
     ],
 })
 export class TimetableStationTripCellComponent {
+    /** 運用番号のチップから、見ているダイヤの運用別時刻表へ */
+    protected readonly operationTimetableLink = operationTimetableLink;
     readonly #operationPostDialog = inject(OperationPostDialogService);
 
     readonly trip = input.required<TripWithTimesDto>();

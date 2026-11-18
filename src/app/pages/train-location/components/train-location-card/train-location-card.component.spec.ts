@@ -108,7 +108,7 @@ describe('TrainLocationCardComponent', () => {
         fixture.detectChanges();
 
         const tag = fixture.nativeElement.querySelector(
-            '[data-operation-number] span',
+            '[data-operation-number] a',
         ) as HTMLElement;
         expect(tag.textContent?.trim()).toBe('54');
         expect(fixture.nativeElement).not.toHaveTextContent(/運用/);
@@ -214,7 +214,7 @@ describe('TrainLocationCardComponent', () => {
         expect(cover.className).toContain('tw-inset-0');
     });
 
-    it('運用番号は運用行路図へのリンク（カードの面のリンクより上に重ねる）', () => {
+    it('運用番号は今日の運用別時刻表へのリンク（カードの面のリンクより上に重ねる）', () => {
         fixture.componentRef.setInput(
             'card',
             card({ operationNumber: '54', operationId: 'op-1' }),
@@ -227,23 +227,20 @@ describe('TrainLocationCardComponent', () => {
         const tag = host.querySelector('a') as HTMLAnchorElement;
         expect(tag).toHaveAttribute(
             'href',
-            '/operation/route-diagram;operation_id=op-1',
+            '/timetable/operation;operation_number=54',
         );
         expect(host.className).toContain('tw-relative');
         // リンクの中にリンクを入れない
         expect(tag.closest('a[data-card-link]')).toBeNull();
     });
 
-    it('運用 ID が無ければ運用番号はリンクにしない', () => {
+    it('運用 ID が無くても、運用番号は番号で運用別時刻表へのリンクにする', () => {
         fixture.componentRef.setInput('card', card({ operationNumber: '54' }));
         fixture.detectChanges();
 
         expect(
             fixture.nativeElement.querySelector('[data-operation-number] a'),
-        ).toBeNull();
-        expect(
-            fixture.nativeElement.querySelector('[data-operation-number] span'),
-        ).not.toBeNull();
+        ).toHaveAttribute('href', '/timetable/operation;operation_number=54');
     });
 
     // 運用番号のチップは共通部品（docs/design.md 運用番号のチップ）。カードが狭いので字だけ 10px に上書きする

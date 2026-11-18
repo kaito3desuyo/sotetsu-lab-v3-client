@@ -17,6 +17,15 @@ describe('operationTimetableLink', () => {
         ]);
     });
 
+    it('今日の形は日付を付けず、ページが今日を補う（SSR の HTML に日付を焼き込まない）', () => {
+        expect(operationTimetableLink('63', 'today')).toEqual([
+            '/timetable',
+            'operation',
+            { operation_number: '63' },
+        ]);
+        expect(operationTimetableLink(null, 'today')).toBeUndefined();
+    });
+
     it('番号かダイヤが無ければリンクにしない', () => {
         expect(
             operationTimetableLink(null, { date: '2026-11-16' }),

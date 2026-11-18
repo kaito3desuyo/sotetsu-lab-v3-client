@@ -77,11 +77,11 @@
         @if ((trip().tripOperationLists?.length ?? 0) !== 0) {
             <app-operation-number-tag
                 [operationNumber]="operationNumber"
-                [link]="[
-                    '/operation',
-                    'route-diagram',
-                    { operation_id: trip().tripOperationLists[0].operationId },
-                ]"
+                [link]="
+                    operationTimetableLink(operationNumber, {
+                        calendarId: calendarId(),
+                    })
+                "
             ></app-operation-number-tag>
 
             @if (showCurrentFormation()) {

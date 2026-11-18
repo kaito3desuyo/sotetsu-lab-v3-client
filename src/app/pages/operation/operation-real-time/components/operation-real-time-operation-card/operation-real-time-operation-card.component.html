@@ -29,11 +29,9 @@
     >
         <app-operation-number-tag
             [operationNumber]="operation().operationNumber"
-            [link]="[
-                '/operation',
-                'route-diagram',
-                { operation_id: operation().operationId },
-            ]"
+            [link]="
+                operationTimetableLink(operation().operationNumber, 'today')
+            "
         ></app-operation-number-tag>
     </div>
 

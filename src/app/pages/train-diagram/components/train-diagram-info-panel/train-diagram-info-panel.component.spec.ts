@@ -44,7 +44,8 @@ describe('TrainDiagramInfoPanelComponent', () => {
         expect(component).toBeTruthy();
     });
 
-    it('運用番号は運用群の色で「運用」の字を付けず、行路図へのリンクにする', () => {
+    it('運用番号は運用群の色で「運用」の字を付けず、見ているダイヤの運用別時刻表へのリンクにする', () => {
+        fixture.componentRef.setInput('calendarId', 'cal-1');
         fixture.componentRef.setInput('info', {
             ...baseInfo,
             operationNumber: '71',
@@ -57,9 +58,7 @@ describe('TrainDiagramInfoPanelComponent', () => {
         expect(link.textContent?.trim()).toBe('71');
         expect(link).toHaveAttribute(
             'href',
-            expect.stringContaining(
-                '/operation/route-diagram;operation_id=op-71',
-            ),
+            '/timetable/operation;operation_number=71;calendar_id=cal-1',
         );
         // 色の値は問わず「付いている」ことだけを見る（toHaveStyle は特定の値しか比べられない）
         // eslint-disable-next-line jest-dom/prefer-to-have-style

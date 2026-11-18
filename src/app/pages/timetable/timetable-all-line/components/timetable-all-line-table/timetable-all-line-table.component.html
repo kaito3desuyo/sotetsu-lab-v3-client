@@ -87,15 +87,19 @@
                                                         .operation
                                                         .operationNumber
                                                 "
-                                                [link]="[
-                                                    '/operation/route-diagram',
-                                                    {
-                                                        operation_id:
-                                                            trip
-                                                                .tripOperationLists[0]
-                                                                .operationId,
-                                                    },
-                                                ]"
+                                                [link]="
+                                                    operationTimetableLink(
+                                                        trip
+                                                            .tripOperationLists[0]
+                                                            .operation
+                                                            .operationNumber,
+                                                        {
+                                                            calendarId:
+                                                                calendar()
+                                                                    ?.calendarId,
+                                                        }
+                                                    )
+                                                "
                                             ></app-operation-number-tag>
                                         } @else {
                                             <span>不明</span>

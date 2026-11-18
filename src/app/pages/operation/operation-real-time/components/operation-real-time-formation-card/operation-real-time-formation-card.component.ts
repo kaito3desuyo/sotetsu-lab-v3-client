@@ -1,3 +1,4 @@
+import { operationTimetableLink } from 'src/app/core/utils/operation-timetable-link';
 import { RouterLink } from '@angular/router';
 import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import {
@@ -54,6 +55,8 @@ import { OperationRealTimeDayCountPipe } from '../../pipes/operation-real-time-d
     ],
 })
 export class OperationRealTimeFormationCardComponent {
+    /** 運用番号のチップから今日の運用別時刻表へ */
+    protected readonly operationTimetableLink = operationTimetableLink;
     readonly #postDialog = inject(OperationPostDialogService);
 
     readonly formation = input.required<FormationDetailsDto>();

@@ -1,3 +1,4 @@
+import { operationTimetableLink } from 'src/app/core/utils/operation-timetable-link';
 import { NgTemplateOutlet } from '@angular/common';
 import {
     ChangeDetectionStrategy,
@@ -44,6 +45,8 @@ import { FormationNumberLinkComponent } from 'src/app/shared/formation-number-li
     host: { class: 'tw-block' },
 })
 export class TrainLocationStationPanelComponent {
+    /** 運用番号のチップから今日の運用別時刻表へ */
+    protected readonly operationTimetableLink = operationTimetableLink;
     readonly #operationPostDialog = inject(OperationPostDialogService);
 
     readonly stationId = input<string | null>(null);

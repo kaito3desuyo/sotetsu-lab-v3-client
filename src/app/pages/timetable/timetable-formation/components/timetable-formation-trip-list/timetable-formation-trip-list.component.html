@@ -77,7 +77,12 @@
                                 class="tw-col-start-3"
                                 [operationNumber]="row.operationNumber"
                                 [inferred]="true"
-                                [link]="routeDiagramLink(row.operationId)"
+                                [link]="
+                                    operationTimetableLink(
+                                        row.operationNumber,
+                                        operationLinkAt()
+                                    )
+                                "
                             ></app-operation-number-tag>
                         }
                         <mat-icon
@@ -119,13 +124,15 @@
                     <app-operation-number-tag
                         [operationNumber]="row.from"
                         [link]="
-                            routeDiagramLink(operationIdByNumber()[row.from])
+                            operationTimetableLink(row.from, operationLinkAt())
                         "
                     ></app-operation-number-tag>
                     <span>→</span>
                     <app-operation-number-tag
                         [operationNumber]="row.to"
-                        [link]="routeDiagramLink(operationIdByNumber()[row.to])"
+                        [link]="
+                            operationTimetableLink(row.to, operationLinkAt())
+                        "
                     ></app-operation-number-tag>
                 </li>
             }
@@ -137,8 +144,9 @@
                     <app-operation-number-tag
                         [operationNumber]="row.toOperationNumber"
                         [link]="
-                            routeDiagramLink(
-                                operationIdByNumber()[row.toOperationNumber]
+                            operationTimetableLink(
+                                row.toOperationNumber,
+                                operationLinkAt()
                             )
                         "
                     ></app-operation-number-tag>

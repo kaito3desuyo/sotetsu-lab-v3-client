@@ -1,3 +1,4 @@
+import { OperationTimetableLinkAt } from 'src/app/core/utils/operation-timetable-link';
 import { isPlatformServer } from '@angular/common';
 import {
     ChangeDetectionStrategy,
@@ -258,6 +259,14 @@ export class TimetableFormationComponent {
         const row = this.rows()[this.progress().runningIndex];
         return row?.kind === 'trip' && !row.estimated ? row.operationId : null;
     });
+
+    /** 運用番号のチップの飛び先。見ている日の運用別時刻表。明日の見込みは、明日のダイヤの形にする（運用別時刻表は先の日を選べない） */
+    protected readonly operationLinkAt = computed<OperationTimetableLinkAt>(
+        () =>
+            this.dateKind() === 'tomorrow'
+                ? { calendarId: this.calendarId() }
+                : { date: this.date() },
+    );
 
     protected readonly band = viewChild.required(ControlBandComponent);
 

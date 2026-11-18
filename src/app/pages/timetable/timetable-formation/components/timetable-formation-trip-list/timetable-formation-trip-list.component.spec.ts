@@ -244,7 +244,7 @@ describe('TimetableFormationTripListComponent', () => {
         expect(emitted).toEqual(['']);
     });
 
-    it('運用番号のチップは行路図へのリンク（列車の行は行の運用 ID、乗り移り・交換は番号から引く）', () => {
+    it('運用番号のチップは見ている日の運用別時刻表へのリンク（列車の行・乗り移り・交換）', () => {
         const fixture = create([
             trip({ carriedOver: true, operationId: 'op-55' }),
             { kind: 'transfer', from: '16K', to: '15K', stationId: 'b' },
@@ -254,9 +254,8 @@ describe('TimetableFormationTripListComponent', () => {
                 toOperationNumber: '59',
             },
         ]);
-        fixture.componentRef.setInput('operationIdByNumber', {
-            '16K': 'op-16K',
-            '15K': 'op-15K',
+        fixture.componentRef.setInput('operationLinkAt', {
+            date: '2026-11-11',
         });
         fixture.detectChanges();
         const hrefs = Array.from(
@@ -265,12 +264,26 @@ describe('TimetableFormationTripListComponent', () => {
             ),
         ).map((a) => a.getAttribute('href'));
 
-        // 59 は運用 ID が分からないのでリンクにしない
-        expect(hrefs).toEqual([
-            '/operation/route-diagram;operation_id=op-55',
-            '/operation/route-diagram;operation_id=op-16K',
-            '/operation/route-diagram;operation_id=op-15K',
-        ]);
+        expect(hrefs).toEqual(
+            ['55', '16K', '15K', '59'].map(
+                (n) =>
+                    `/timetable/operation;operation_number=${n};date=2026-11-11`,
+            ),
+        );
+    });
+
+    it('明日の見込みでは、明日のダイヤの形で開く', () => {
+        const fixture = create([trip({ carriedOver: true })]);
+        fixture.componentRef.setInput('operationLinkAt', { calendarId: 'c2' });
+        fixture.detectChanges();
+        expect(
+            (fixture.nativeElement as HTMLElement).querySelector(
+                'app-operation-number-tag a',
+            ),
+        ).toHaveAttribute(
+            'href',
+            '/timetable/operation;operation_number=55;calendar_id=c2',
+        );
     });
 
     it('unknown の行の、ほかの編成の番号はその日の編成別時刻表へのリンク', () => {

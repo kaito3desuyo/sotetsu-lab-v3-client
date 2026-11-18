@@ -1,4 +1,8 @@
 import {
+    OperationTimetableLinkAt,
+    operationTimetableLink,
+} from 'src/app/core/utils/operation-timetable-link';
+import {
     ChangeDetectionStrategy,
     Component,
     computed,
@@ -56,6 +60,9 @@ export class TimetableFormationHeaderComponent {
     /** 運用番号 → 運用 ID（チップを行路図へのリンクにする。ストアの operationIdByNumber） */
     readonly operationIdByNumber = input<Record<string, string>>({});
     protected readonly routeDiagramLink = routeDiagramLink;
+    /** 運用番号のチップの飛び先（運用別時刻表）。見ている日、明日の見込みならそのダイヤ */
+    readonly operationLinkAt = input<OperationTimetableLinkAt>('today');
+    protected readonly operationTimetableLink = operationTimetableLink;
     readonly dateKind = input<FormationDateKind>('today');
 
     protected readonly operationHeading = computed(() =>

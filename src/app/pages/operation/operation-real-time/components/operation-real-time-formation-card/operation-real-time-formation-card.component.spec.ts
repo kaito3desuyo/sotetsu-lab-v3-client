@@ -88,7 +88,7 @@ describe('OperationRealTimeFormationCardComponent', () => {
         expect(link?.classList).toContain('app-hit-area');
     });
 
-    it('運用番号は共通のチップで出し、本日中の目撃なら太字・「?」なし・行路図へのリンク', () => {
+    it('運用番号は共通のチップで出し、本日中の目撃なら太字・「?」なし・今日の運用別時刻表へのリンク', () => {
         fixture.componentRef.setInput('timeCrossSection', {
             latestSighting: {
                 operationSightingId: 's-1',
@@ -108,9 +108,9 @@ describe('OperationRealTimeFormationCardComponent', () => {
         expect(tag.properties['textStyle']).toBe('bold');
         expect(tag.properties['inferred']).toBe(false);
         expect(tag.properties['link']).toEqual([
-            '/operation',
-            'route-diagram',
-            { operation_id: 'op-12' },
+            '/timetable',
+            'operation',
+            { operation_number: '12' },
         ]);
     });
 

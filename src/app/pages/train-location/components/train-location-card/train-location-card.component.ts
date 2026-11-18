@@ -1,3 +1,4 @@
+import { operationTimetableLink } from 'src/app/core/utils/operation-timetable-link';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -28,6 +29,8 @@ import { TrainLocationCard } from '../../interfaces/train-location-card.interfac
     host: { class: 'tw-block tw-max-w-full' },
 })
 export class TrainLocationCardComponent {
+    /** 運用番号のチップから今日の運用別時刻表へ */
+    protected readonly operationTimetableLink = operationTimetableLink;
     readonly card = input.required<TrainLocationCard>();
     /** 停車中か駅間走行中か（矢印 or 「停車中」表示の切り替えに使う） */
     readonly status = input<'stopped' | 'between'>('between');
