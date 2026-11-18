@@ -22,7 +22,7 @@ const link = (
 });
 
 describe('isTransferEnd', () => {
-    it('終点側は next(決まり2) があれば乗り移り（depot の値は問わない）', () => {
+    it('終点側は next(決まり2) があれば運番変更（depot の値は問わない）', () => {
         const links = [link({ next: end(2) })];
         expect(
             isTransferEnd({ side: 'in', tripOperationListId: 'tol1', links }),
@@ -32,13 +32,13 @@ describe('isTransferEnd', () => {
         ).toBe(false);
     });
 
-    it('始点側は previous(決まり2) があれば乗り移り（depot の値は問わない）', () => {
+    it('始点側は previous(決まり2) があれば運番変更（depot の値は問わない）', () => {
         const links = [link({ previous: end(2) })];
         expect(isTransferEnd({ side: 'out', tripId: 't1', links })).toBe(true);
         expect(isTransferEnd({ side: 'in', tripId: 't1', links })).toBe(false);
     });
 
-    it('決まり 2 でないつながりは乗り移りにしない', () => {
+    it('決まり 2 でないつながりは運番変更にしない', () => {
         const links = [link({ next: end(1), previous: end(3) })];
         expect(isTransferEnd({ side: 'in', tripId: 't1', links })).toBe(false);
         expect(isTransferEnd({ side: 'out', tripId: 't1', links })).toBe(false);

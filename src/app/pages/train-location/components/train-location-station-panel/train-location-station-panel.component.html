@@ -168,16 +168,10 @@
                                     data-operation-number
                                     [operationNumber]="row.operationNumber"
                                     [link]="
-                                        row.operationId
-                                            ? [
-                                                  '/operation',
-                                                  'route-diagram',
-                                                  {
-                                                      operation_id:
-                                                          row.operationId,
-                                                  },
-                                              ]
-                                            : undefined
+                                        operationTimetableLink(
+                                            row.operationNumber,
+                                            operationLinkAt()
+                                        )
                                     "
                                 ></app-operation-number-tag>
                             </span>

@@ -25,6 +25,9 @@
 		<loc>https://v3.sotetsu-lab.com/timetable/formation</loc>
 	</url>
 	<url>
+		<loc>https://v3.sotetsu-lab.com/timetable/operation</loc>
+	</url>
+	<url>
 		<loc>https://v3.sotetsu-lab.com/train-diagram</loc>
 	</url>
 	<url>

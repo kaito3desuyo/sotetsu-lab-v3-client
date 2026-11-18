@@ -243,6 +243,15 @@ describe('TrainLocationComponent', () => {
         }
     });
 
+    it('operationLinkAt: 今日のダイヤなら today、ほかのダイヤならそのダイヤの形', () => {
+        store.setCalendarId('cal-today');
+        expect(component.operationLinkAt()).toBe('today');
+        store.setCalendarId('cal-other');
+        expect(component.operationLinkAt()).toEqual({
+            calendarId: 'cal-other',
+        });
+    });
+
     it('onStationSelect: 駅を URL に載せ、路線ごとに覚える', () => {
         const router = TestBed.inject(Router);
         const navigate = jest.spyOn(router, 'navigate').mockResolvedValue(true);

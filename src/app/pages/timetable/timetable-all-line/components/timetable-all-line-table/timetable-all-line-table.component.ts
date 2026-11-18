@@ -1,3 +1,4 @@
+import { operationTimetableLink } from 'src/app/core/utils/operation-timetable-link';
 import { NgTemplateOutlet } from '@angular/common';
 import {
     afterRenderEffect,
@@ -58,6 +59,8 @@ import { TripEndpoints } from '../../utils/trip-endpoints.util';
     ],
 })
 export class TimetableAllLineTableComponent {
+    /** 運用番号のチップから、見ているダイヤの運用別時刻表へ */
+    protected readonly operationTimetableLink = operationTimetableLink;
     readonly staitonViewModeEnum = ETimetableAllLineStationViewMode;
     readonly tripDirectionEnum = ETripDirection;
     readonly tripDirectionLabel = tripDirectionLabel;

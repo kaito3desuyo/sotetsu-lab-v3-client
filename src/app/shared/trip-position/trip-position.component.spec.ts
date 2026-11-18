@@ -145,7 +145,7 @@ describe('TripPositionComponent', () => {
         expect(text).toBe('海老名 08:23 → 入庫済△');
     });
 
-    describe('入出庫をともなわない乗り移り（depot=false）', () => {
+    describe('入出庫をともなわない運番変更（depot=false）', () => {
         const to = (rule: number, operationNumber = '15K') => ({
             tripOperationListId: 'x',
             tripId: 'x',
@@ -218,7 +218,7 @@ describe('TripPositionComponent', () => {
             expect(text).toBe('海老名 08:52 → 17K へ□');
         });
 
-        it('入庫も立つ乗り移りの間隙は「一時入庫」と移る先を △ で出す', () => {
+        it('入庫も立つ運番変更の間隙は「一時入庫」と移る先を △ で出す', () => {
             fixture.componentRef.setInput('links', [
                 link('p', { next: to(2, '15K') }),
             ]);
@@ -242,7 +242,7 @@ describe('TripPositionComponent', () => {
             expect(text).toBe('海老名 09:33 → 一時入庫 15K へ△');
         });
 
-        it('入庫も立つ乗り移りで続きが別の駅から始まっても「一時入庫」と移る先を出す', () => {
+        it('入庫も立つ運番変更で続きが別の駅から始まっても「一時入庫」と移る先を出す', () => {
             fixture.componentRef.setInput('links', [
                 link('p', { next: to(2, '15K') }),
             ]);
@@ -266,7 +266,7 @@ describe('TripPositionComponent', () => {
             expect(text).toBe('横浜 11:27 → 一時入庫 15K へ△');
         });
 
-        it('入出庫も立つ乗り移りの端は従来どおり「出庫前○」', () => {
+        it('入出庫も立つ運番変更の端は従来どおり「出庫前○」', () => {
             fixture.componentRef.setInput('links', [
                 link('n', { previous: to(2) }),
             ]);

@@ -1,3 +1,4 @@
+import { operationTimetableLink } from 'src/app/core/utils/operation-timetable-link';
 import { RouterLink } from '@angular/router';
 import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import {
@@ -54,6 +55,8 @@ import { OperationRealTimeDayCountPipe } from '../../pipes/operation-real-time-d
     ],
 })
 export class OperationRealTimeFormationCardComponent {
+    /** 運用番号のチップから今日の運用別時刻表へ */
+    protected readonly operationTimetableLink = operationTimetableLink;
     readonly #postDialog = inject(OperationPostDialogService);
 
     readonly formation = input.required<FormationDetailsDto>();
@@ -69,7 +72,7 @@ export class OperationRealTimeFormationCardComponent {
     readonly stations = input<StationDetailsDto[]>([]);
     readonly tripClasses = input<TripClassDetailsDto[]>([]);
     readonly calendarId = input<string | undefined>(undefined);
-    /** 運用のつながり。位置表示で乗り移りの端を見分ける */
+    /** 運用のつながり。位置表示で運番変更の端を見分ける */
     readonly links = input<OperationItineraryLinkDto[]>([]);
     readonly isVisibleSightingHistories = input<boolean>(false);
     readonly isVisibleCurrentPosition = input<boolean>(false);

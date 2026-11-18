@@ -24,6 +24,13 @@ export const TIMETABLE_ROUTES: Routes = [
             ),
     },
     {
+        path: 'operation',
+        loadChildren: () =>
+            import('./timetable-operation/timetable-operation.route').then(
+                (mod) => mod.TIMETABLE_OPERATION_ROUTES,
+            ),
+    },
+    {
         // calendar_id / trip_direction / trip_block_id は matrix param で受ける
         // （timetable-station 等アプリ全体の慣習に合わせる。path param にしない）。
         path: 'add',

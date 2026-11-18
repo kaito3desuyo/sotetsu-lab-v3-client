@@ -81,6 +81,7 @@
                     [interchangeRoutes]="selectedStationInterchangeRoutes()"
                     [arrivals]="arrivals()"
                     [canPost]="isTodaySelected()"
+                    [operationLinkAt]="operationLinkAt()"
                 ></app-train-location-station-panel>
 
                 <div
@@ -98,6 +99,7 @@
                     <app-train-location-line
                         [rows]="rows()"
                         [selectedStationId]="selectedStationId()"
+                        [operationLinkAt]="operationLinkAt()"
                         (stationSelect)="onStationSelect($event)"
                     ></app-train-location-line>
                 </div>

@@ -25,8 +25,9 @@
                     <app-operation-number-tag
                         [operationNumber]="s.operationNumber"
                         [link]="
-                            routeDiagramLink(
-                                operationIdByNumber()[s.operationNumber]
+                            operationTimetableLink(
+                                s.operationNumber,
+                                operationLinkAt()
                             )
                         "
                     ></app-operation-number-tag>
@@ -58,10 +59,9 @@
                             <app-operation-number-tag
                                 [operationNumber]="item.operationNumber"
                                 [link]="
-                                    routeDiagramLink(
-                                        operationIdByNumber()[
-                                            item.operationNumber
-                                        ]
+                                    operationTimetableLink(
+                                        item.operationNumber,
+                                        operationLinkAt()
                                     )
                                 "
                                 [inferred]="item.inferred"
@@ -74,7 +74,9 @@
                 } @else {
                     <app-operation-number-tag
                         [operationNumber]="number"
-                        [link]="routeDiagramLink(operationIdByNumber()[number])"
+                        [link]="
+                            operationTimetableLink(number, operationLinkAt())
+                        "
                         [inferred]="currentInferred()"
                     ></app-operation-number-tag>
                 }

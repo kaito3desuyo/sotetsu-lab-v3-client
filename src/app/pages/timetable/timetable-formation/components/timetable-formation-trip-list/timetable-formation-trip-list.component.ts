@@ -1,3 +1,7 @@
+import {
+    OperationTimetableLinkAt,
+    operationTimetableLink,
+} from 'src/app/core/utils/operation-timetable-link';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { NgTemplateOutlet } from '@angular/common';
 import {
@@ -19,7 +23,6 @@ import { FormationDayRow } from '../../utils/formation-day.util';
 import {
     formatClock,
     formatSightingClock,
-    routeDiagramLink,
 } from '../../utils/formation-display.util';
 import { FormationRowProgress } from '../../utils/formation-progress.util';
 import { isPassing } from '../../utils/formation-station-filter.util';
@@ -56,9 +59,11 @@ export class TimetableFormationTripListComponent {
     readonly calendarId = input<string | undefined>(undefined);
     /** 見ている日 'yyyy-MM-dd'。ほかの編成の番号をその日の編成別時刻表へのリンクにする */
     readonly date = input<string | null>(null);
-    /** 運用番号 → 運用 ID（乗り移り・交換の行のチップを行路図へのリンクにする。ストアの operationIdByNumber） */
+    /** 運用番号 → 運用 ID（運番変更・交換の行のチップを行路図へのリンクにする。ストアの operationIdByNumber） */
     readonly operationIdByNumber = input<Record<string, string>>({});
-    protected readonly routeDiagramLink = routeDiagramLink;
+    /** 運用番号のチップの飛び先（運用別時刻表）。見ている日、明日の見込みならそのダイヤ */
+    readonly operationLinkAt = input<OperationTimetableLinkAt>('today');
+    protected readonly operationTimetableLink = operationTimetableLink;
     /** 「不明」の行から投稿へ進む。最後に分かっている運用番号を渡す（途中の不明は空） */
     readonly postRequested = output<string>();
 

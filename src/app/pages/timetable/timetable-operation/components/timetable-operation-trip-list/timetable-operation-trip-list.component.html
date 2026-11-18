@@ -1,0 +1,214 @@
+<!-- 先頭の行の上の罫線は、角の丸みで両端が削れて短く見えるので消す（面の端が区切りになる） -->
+<!-- 一覧を 1 枚の格子にし、列車の行は subgrid で列を共有する。列車番号の列はいちばん長い列車番号の幅になり、駅と時刻の左端がそろう -->
+<ol
+    class="tw-m-0 tw-grid tw-list-none tw-grid-cols-[auto_minmax(0,1fr)_auto_auto] tw-gap-x-2 tw-overflow-hidden tw-rounded-card tw-bg-white tw-p-0 [&>li:first-child]:tw-border-t-0 [&>li]:tw-col-span-full"
+    data-testid="trip-list"
+>
+    @for (row of rows(); track $index; let i = $index) {
+        @switch (row.kind) {
+            @case ('trip') {
+                <!-- 過ぎた列車は字だけを muted にする。行を半透明にすると muted より薄くなり、種別の色も薄れた（Fable のレビュー A6） -->
+                <li
+                    class="tw-grid tw-grid-cols-subgrid tw-border-0 tw-border-t tw-border-solid tw-border-rule"
+                    [class.tw-text-muted]="states()[i] === 'past'"
+                    [class.tw-bg-accent-50]="states()[i] === 'running'"
+                    [class.tw-bg-paper-2]="
+                        wide() && isSelected(row) && states()[i] !== 'running'
+                    "
+                    [attr.data-state]="states()[i]"
+                >
+                    <div
+                        class="tw-col-span-full tw-grid tw-grid-cols-subgrid tw-items-center tw-px-3 tw-py-2"
+                    >
+                        <app-trip-label
+                            class="tw-col-start-1 tw-font-bold"
+                            chipSize="sm"
+                            [tripClassName]="
+                                row.trip.trip?.tripClass?.tripClassName
+                            "
+                            [tripClassColor]="
+                                row.trip.trip?.tripClass?.tripClassColor
+                            "
+                            [tripNumber]="row.trip.trip?.tripNumber"
+                            [link]="link(row)"
+                        ></app-trip-label>
+                        <button
+                            type="button"
+                            class="tw-col-start-2 tw-grid tw-min-w-0 tw-cursor-pointer tw-grid-cols-[auto_auto_auto_1fr] tw-items-center tw-gap-x-1.5 tw-border-0 tw-p-0 tw-text-left tw-text-[13px] tw-leading-snug [background-color:transparent] [color:inherit] [font-family:inherit] xl:tw-flex xl:tw-flex-row xl:tw-gap-x-1 xl:tw-text-sm"
+                            [attr.aria-expanded]="isOpen(row)"
+                            (click)="toggle(row)"
+                        >
+                            <!-- 狭い画面は 1 段目に発・着の駅名、2 段目にそれぞれの時刻。矢印と印は 2 段の真ん中に置く。広い画面は横 1 列に並べる -->
+                            <span class="tw-col-start-1 tw-row-start-1">{{
+                                name(row.trip.startStationId)
+                            }}</span>
+                            <span
+                                class="tw-col-start-1 tw-row-start-2 tw-tabular-nums"
+                                >{{ startClock(row) }}</span
+                            >
+                            <span
+                                class="tw-col-start-2 tw-row-span-2 tw-row-start-1"
+                                >→</span
+                            >
+                            <span class="tw-col-start-3 tw-row-start-1">{{
+                                name(row.trip.endStationId)
+                            }}</span>
+                            <span
+                                class="tw-col-start-3 tw-row-start-2 tw-tabular-nums"
+                                >{{ endClock(row) }}</span
+                            >
+                            <span
+                                class="tw-col-start-4 tw-row-span-2 tw-row-start-1 tw-flex tw-flex-col tw-items-end tw-text-xs tw-font-bold xl:tw-ml-auto xl:tw-flex-row xl:tw-gap-2"
+                            >
+                                @if (states()[i] === 'running') {
+                                    <span data-testid="running-label"
+                                        >走行中</span
+                                    >
+                                }
+                                @for (t of row.sightingTimes; track $index) {
+                                    <span data-testid="sighted-label"
+                                        >目撃 {{ sightingClock(t) }}</span
+                                    >
+                                }
+                            </span>
+                        </button>
+                        <span
+                            class="tw-col-start-3 tw-text-sm tw-tabular-nums"
+                            data-testid="trip-formation"
+                        >
+                            @if (row.formationNumber; as number) {
+                                <app-formation-number-link
+                                    [formationNumber]="number"
+                                    [date]="date()"
+                                    [inferred]="row.inferred"
+                                ></app-formation-number-link
+                                >{{ row.inferred ? '?' : '' }}
+                            }
+                        </span>
+                        <mat-icon
+                            class="tw-col-start-4 tw-text-muted"
+                            aria-hidden="true"
+                            >{{
+                                wide()
+                                    ? 'chevron_right'
+                                    : isExpanded(row)
+                                      ? 'expand_less'
+                                      : 'expand_more'
+                            }}</mat-icon
+                        >
+                    </div>
+                    @if (!wide() && isExpanded(row)) {
+                        <ng-container
+                            *ngTemplateOutlet="
+                                timesList;
+                                context: { $implicit: row }
+                            "
+                        ></ng-container>
+                    }
+                </li>
+            }
+            @case ('depot') {
+                <li
+                    class="tw-border-0 tw-border-t tw-border-solid tw-border-rule tw-px-3 tw-py-1 tw-text-xs tw-text-muted"
+                >
+                    {{ row.label === 'out' ? '○' : '△' }}
+                    {{ name(row.stationId) }} {{ row.time }}
+                    {{ row.label === 'out' ? '出庫' : '入庫' }}
+                </li>
+            }
+            @case ('transfer') {
+                <li
+                    class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-1 tw-border-0 tw-border-t tw-border-solid tw-border-rule tw-px-3 tw-py-1 tw-text-xs tw-text-muted"
+                    data-testid="transfer-row"
+                >
+                    <span>□ {{ name(row.stationId) }} で運番変更</span>
+                    <app-operation-number-tag
+                        [operationNumber]="row.from"
+                        [link]="
+                            operationTimetableLink(row.from, operationLinkAt())
+                        "
+                    ></app-operation-number-tag>
+                    <span>→</span>
+                    <app-operation-number-tag
+                        [operationNumber]="row.to"
+                        [link]="
+                            operationTimetableLink(row.to, operationLinkAt())
+                        "
+                    ></app-operation-number-tag>
+                </li>
+            }
+            @case ('swap') {
+                <li
+                    class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-1 tw-border-0 tw-border-t tw-border-solid tw-border-rule tw-px-3 tw-py-1 tw-text-xs tw-text-muted"
+                    data-testid="swap-row"
+                >
+                    <span
+                        >{{
+                            sightingClock(row.sightingTime)
+                        }}
+                        の目撃により</span
+                    >
+                    <app-formation-number-link
+                        [formationNumber]="row.toFormationNumber"
+                        [date]="date()"
+                    ></app-formation-number-link>
+                    <span>に差し替え</span>
+                </li>
+            }
+        }
+    }
+</ol>
+
+<!-- 広い画面は、押した列車の各駅の時刻を一覧の右に出す。一覧を下へ送っても画面に残す -->
+@if (wide()) {
+    <aside
+        class="tw-sticky tw-top-14 tw-rounded-card tw-bg-white tw-px-4 tw-py-3"
+        data-testid="trip-detail"
+    >
+        @if (selectedRow(); as row) {
+            <div
+                class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-x-2 tw-text-sm"
+            >
+                <app-trip-label
+                    class="tw-font-bold"
+                    chipSize="sm"
+                    [tripClassName]="row.trip.trip?.tripClass?.tripClassName"
+                    [tripClassColor]="row.trip.trip?.tripClass?.tripClassColor"
+                    [tripNumber]="row.trip.trip?.tripNumber"
+                    [link]="link(row)"
+                ></app-trip-label>
+                <span class="tw-tabular-nums"
+                    >{{ name(row.trip.startStationId) }} {{ startClock(row) }} →
+                    {{ name(row.trip.endStationId) }} {{ endClock(row) }}</span
+                >
+            </div>
+            <ng-container
+                *ngTemplateOutlet="timesList; context: { $implicit: row }"
+            ></ng-container>
+        } @else {
+            <p class="tw-m-0 tw-text-sm tw-text-muted">
+                列車を押すと、各駅の時刻をここに出します。
+            </p>
+        }
+    </aside>
+}
+
+<ng-template #timesList let-row>
+    <ul
+        class="tw-col-span-full tw-m-0 tw-list-none tw-px-3 tw-py-2 tw-text-xs xl:tw-px-0 xl:tw-text-[13px]"
+        data-testid="trip-times"
+    >
+        @for (time of times(row); track time.timeId) {
+            <li class="tw-flex tw-flex-row tw-gap-2 tw-py-0.5">
+                <span class="tw-min-w-0 tw-flex-1">{{
+                    name(time.stationId)
+                }}</span>
+                @if (passing(time)) {
+                    <span class="tw-text-muted">通過</span>
+                } @else {
+                    <span class="tw-tabular-nums">{{ clock(time) }}</span>
+                }
+            </li>
+        }
+    </ul>
+</ng-template>

@@ -1,3 +1,5 @@
+import { operationTimetableLink } from 'src/app/core/utils/operation-timetable-link';
+import { toRailwayDateKey } from 'src/app/core/utils/railway-day';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -41,6 +43,9 @@ import { FormationNumberLinkComponent } from 'src/app/shared/formation-number-li
     ],
 })
 export class DashboardLatestSightingsComponent {
+    /** 運用番号のチップから、目撃した日（4 時区切り）の運用別時刻表へ */
+    protected readonly operationTimetableLink = operationTimetableLink;
+    protected readonly railwayDateOf = toRailwayDateKey;
     readonly #routeStationListState = inject(RouteStationListState);
     readonly #agencyListState = inject(AgencyListState);
     readonly #todaysOperationListState = inject(TodaysOperationListState);

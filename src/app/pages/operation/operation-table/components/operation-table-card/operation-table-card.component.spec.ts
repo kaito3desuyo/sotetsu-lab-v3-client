@@ -239,7 +239,7 @@ describe('OperationTableCardComponent', () => {
         expect(badge?.textContent.trim()).toBe('G群（東横線）');
     });
 
-    describe('乗り移りは入出庫の値に頼らず、つながりで見分ける', () => {
+    describe('運番変更は入出庫の値に頼らず、つながりで見分ける', () => {
         const link = (
             tripOperationListId: string,
             tripId: string,
@@ -278,7 +278,7 @@ describe('OperationTableCardComponent', () => {
             fixture.detectChanges();
         };
 
-        it('depot が false でも、乗り移りの端で線を切る', () => {
+        it('depot が false でも、運番変更の端で線を切る', () => {
             setTransfer();
             const [first, second] = tripRows();
             // 上りの終点（右）と下りの始点（右）は同じ駅だが、折り返しの線を引かない
@@ -286,7 +286,7 @@ describe('OperationTableCardComponent', () => {
             expect(second.rightEdge).toMatchObject({ up: false, down: false });
         });
 
-        it('depot が false でも、乗り移りの端に □ だけを出す', () => {
+        it('depot が false でも、運番変更の端に □ だけを出す', () => {
             setTransfer();
             const el: HTMLElement = fixture.nativeElement;
             expect(
@@ -299,7 +299,7 @@ describe('OperationTableCardComponent', () => {
             expect(el.querySelector('svg[aria-label="出庫"]')).toBeNull();
         });
 
-        it('depot も立つ乗り移りの端は △○ だけで □ は出さず、線は切る', () => {
+        it('depot も立つ運番変更の端は △○ だけで □ は出さず、線は切る', () => {
             const base = operationTrip.trips;
             fixture.componentRef.setInput('operationTrip', {
                 ...operationTrip,

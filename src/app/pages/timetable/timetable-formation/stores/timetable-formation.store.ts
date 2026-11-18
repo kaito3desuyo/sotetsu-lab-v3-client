@@ -48,7 +48,7 @@ type StoreProps = {
     selectedStationId: string | null;
     /** 取得が一度終わったか（終わる前に「編成が無い」を出さないため） */
     loaded: boolean;
-    /** 取得（ダイヤ・編成・目撃・乗り移り・運用の列車）のどれかが失敗したか。「ダイヤ無し」「編成無し」と区別する */
+    /** 取得（ダイヤ・編成・目撃・運番変更・運用の列車）のどれかが失敗したか。「ダイヤ無し」「編成無し」と区別する */
     loadError: boolean;
     /** 最初の運用を何で決めたか（basisAt の firstBasis に渡す） */
     firstBasis: FormationDayBasis;
@@ -135,7 +135,7 @@ export const TimetableFormationStore = signalStore(
                 }),
                 todaysSightings,
                 /**
-                 * 運用番号 → 運用 ID（その日の列車と目撃から）。ヘッダーと乗り移りの行のチップは番号しか持たないので、
+                 * 運用番号 → 運用 ID（その日の列車と目撃から）。ヘッダーと運番変更の行のチップは番号しか持たないので、
                  * これで行路図へのリンクにする（docs/design.md 運用番号のチップ）
                  */
                 operationIdByNumber: computed(() => {

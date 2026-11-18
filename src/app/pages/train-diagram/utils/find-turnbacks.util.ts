@@ -65,7 +65,7 @@ export function findTurnbacks(params: {
     chainHeadOf: ReadonlyMap<string, string>;
     chainTailOf: ReadonlyMap<string, string>;
     axisStationIds: ReadonlySet<string>;
-    /** 乗り移り（決まり 2）の端を、入出庫と同じく折り返しにしないために使う。 */
+    /** 運番変更（決まり 2）の端を、入出庫と同じく折り返しにしないために使う。 */
     itineraryLinks?: readonly OperationItineraryLinkDto[];
 }): Turnback[] {
     const { trips, chainHeadOf, chainTailOf, axisStationIds } = params;

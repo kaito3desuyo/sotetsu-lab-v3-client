@@ -37,13 +37,10 @@
                 class="tw-relative tw-shrink-0 !tw-text-[10px]"
                 [operationNumber]="card().operationNumber"
                 [link]="
-                    card().operationId
-                        ? [
-                              '/operation',
-                              'route-diagram',
-                              { operation_id: card().operationId },
-                          ]
-                        : undefined
+                    operationTimetableLink(
+                        card().operationNumber,
+                        operationLinkAt()
+                    )
                 "
             ></app-operation-number-tag>
         }

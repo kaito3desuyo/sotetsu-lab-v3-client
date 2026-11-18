@@ -1,4 +1,8 @@
 import {
+    operationTimetableLink,
+    OperationTimetableLinkAt,
+} from 'src/app/core/utils/operation-timetable-link';
+import {
     ChangeDetectionStrategy,
     Component,
     computed,
@@ -28,9 +32,13 @@ import { TrainLocationCard } from '../../interfaces/train-location-card.interfac
     host: { class: 'tw-block tw-max-w-full' },
 })
 export class TrainLocationCardComponent {
+    /** 運用番号のチップから今日の運用別時刻表へ */
+    protected readonly operationTimetableLink = operationTimetableLink;
     readonly card = input.required<TrainLocationCard>();
     /** 停車中か駅間走行中か（矢印 or 「停車中」表示の切り替えに使う） */
     readonly status = input<'stopped' | 'between'>('between');
+    /** 運用番号のチップの開き方。今日のダイヤなら 'today'、ほかのダイヤを見ているならそのダイヤの形 */
+    readonly operationLinkAt = input<OperationTimetableLinkAt>('today');
     /** 停車時の文字。駅にいる理由があれば「折返し」「入庫中」「出庫中」、無ければ「停車中」 */
     readonly stoppedLabel = computed(() => {
         const reason = this.card().stoppedReason;

@@ -1,3 +1,4 @@
+import { OperationTimetableLinkAt } from 'src/app/core/utils/operation-timetable-link';
 import { isPlatformServer } from '@angular/common';
 import {
     ChangeDetectionStrategy,
@@ -134,6 +135,10 @@ export class TrainLocationComponent {
     readonly #calendars = this.#calendarListState.calendars;
     readonly isTodaySelected = computed(() =>
         this.todaysCalendarIds().includes(this.calendarId() ?? ''),
+    );
+    /** 運用番号のチップの開き方。今日のダイヤでなければ、見ているダイヤの形で開く */
+    readonly operationLinkAt = computed<OperationTimetableLinkAt>(() =>
+        this.isTodaySelected() ? 'today' : { calendarId: this.calendarId() },
     );
 
     /** 現在時刻モードの 10 秒周期追従用。時刻指定モードでは参照しない。 */

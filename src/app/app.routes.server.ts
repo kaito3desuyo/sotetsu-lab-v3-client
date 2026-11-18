@@ -63,6 +63,11 @@ export const serverRoutes: ServerRoute[] = [
         headers: LONG,
     },
     {
+        path: 'timetable/operation',
+        renderMode: RenderMode.Server,
+        headers: LONG,
+    },
+    {
         path: 'timetable/all-line',
         renderMode: RenderMode.Server,
         headers: LONG,

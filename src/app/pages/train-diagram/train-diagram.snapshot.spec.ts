@@ -91,7 +91,7 @@ describe('TrainDiagramComponent 図の組み立ての照合', () => {
         );
     }
 
-    it('fixture は線・折り返し・出入庫・乗り移りを含む（snapshot が空でない）', () => {
+    it('fixture は線・折り返し・出入庫・運番変更を含む（snapshot が空でない）', () => {
         expect(component.diagramLines().length).toBe(6);
         expect(component.turnbackLinks().length).toBe(2);
         expect(component.hasDepotOut()).toBe(true);

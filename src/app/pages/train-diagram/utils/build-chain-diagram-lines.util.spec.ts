@@ -245,7 +245,7 @@ describe('buildChainDiagramLines', () => {
         ]);
     });
 
-    it('depotOut/depotIn も true の乗り移りの端は △○ だけで transfer を付けない', () => {
+    it('depotOut/depotIn も true の運番変更の端は △○ だけで transfer を付けない', () => {
         const p = trip({
             tripId: 'trip-p',
             tripNumber: 'P',

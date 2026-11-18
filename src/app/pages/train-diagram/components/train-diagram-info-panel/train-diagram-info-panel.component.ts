@@ -1,3 +1,4 @@
+import { operationTimetableLink } from 'src/app/core/utils/operation-timetable-link';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -47,6 +48,9 @@ import { FormationNumberLinkComponent } from 'src/app/shared/formation-number-li
     },
 })
 export class TrainDiagramInfoPanelComponent {
+    /** 見ているダイヤ。運用番号のチップをそのダイヤの運用別時刻表へのリンクにする */
+    readonly calendarId = input<string | null | undefined>(undefined);
+    protected readonly operationTimetableLink = operationTimetableLink;
     readonly #elementRef = inject(ElementRef<HTMLElement>);
     readonly #destroyRef = inject(DestroyRef);
 

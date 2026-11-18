@@ -265,7 +265,7 @@ export const FIXTURE_TRIP_BLOCKS_BY_DIRECTION: Record<
     1: [D1, D2, D3].map(asBlock),
 };
 
-/** D2 の終点（s5）で別の運用 30B の U2 へ乗り移る（hasTransfer 用） */
+/** D2 の終点（s5）で別の運用 30B の U2 へ運番変更する（hasTransfer 用） */
 export const FIXTURE_ITINERARY_LINKS: OperationItineraryLinkDto[] = [
     {
         tripOperationListId: 'tol-D2',

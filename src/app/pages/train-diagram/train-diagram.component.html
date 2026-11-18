@@ -112,6 +112,7 @@
         @if (selectedTripInfo(); as info) {
             <app-train-diagram-info-panel
                 [info]="info"
+                [calendarId]="calendarId()"
                 [canPost]="showTodayParts()"
                 (closed)="onInfoPanelClosed()"
                 (heightChange)="onInfoPanelHeightChange($event)"

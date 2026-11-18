@@ -36,7 +36,7 @@ type StoreProps = {
     tripClasses: TripClassDetailsDto[];
     calendar: CalendarDetailsDto | null;
     operations: OperationDetailsDto[];
-    /** 運用のつながり（乗り移りの端の判定用）。永続化しない */
+    /** 運用のつながり（運番変更の端の判定用）。永続化しない */
     itineraryLinks: OperationItineraryLinkDto[];
     /**
      * 画面は出せたが、一部の取得（今は運用のつながり）に失敗したか。凡例の下に知らせを出す。

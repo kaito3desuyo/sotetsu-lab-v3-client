@@ -44,7 +44,7 @@ export interface OperationRouteDiagramBandViewModel {
      */
     depotOutMarker: boolean;
     depotInMarker: boolean;
-    /** 出庫・入庫の端が別の運用からの乗り移り・別の運用への乗り移りか（□で描く） */
+    /** 出庫・入庫の端が別の運用からの運番変更・別の運用への運番変更か（□で描く） */
     depotOutTransfer: boolean;
     depotInTransfer: boolean;
     /** 出庫ノードの駅 index（startTime 側） */
@@ -94,7 +94,7 @@ export function buildBandViewModels(
             : tripOperationList.startTime?.departureTime;
         const { startHiddenStationName, endHiddenStationName } =
             tripOperationList;
-        // 乗り移り（決まり 2 のつながり）は入出庫の値に頼らず、つながりで見分ける
+        // 運番変更（決まり 2 のつながり）は入出庫の値に頼らず、つながりで見分ける
         const isOutTransfer = isTransferEnd({
             side: 'out',
             tripOperationListId: tripOperationList.tripOperationListId,
@@ -107,10 +107,10 @@ export function buildBandViewModels(
             tripId: tripOperationList.trip?.tripId,
             links,
         });
-        // 入出庫と乗り移りは、どちらもそこで線を切る端
+        // 入出庫と運番変更は、どちらもそこで線を切る端
         const depotOut = !!tripOperationList.trip?.depotOut || isOutTransfer;
         const depotIn = !!tripOperationList.trip?.depotIn || isInTransfer;
-        // □ は入出庫をともなわない乗り移りだけ。depot も立つ端は △○ のまま
+        // □ は入出庫をともなわない運番変更だけ。depot も立つ端は △○ のまま
         const depotOutTransfer =
             isOutTransfer && !tripOperationList.trip?.depotOut;
         const depotInTransfer =

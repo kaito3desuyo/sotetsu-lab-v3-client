@@ -1,3 +1,4 @@
+import { operationTimetableLink } from 'src/app/core/utils/operation-timetable-link';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -43,6 +44,8 @@ const INVALIDATED_BORDER_COLOR = 'rgb(183, 28, 28)';
     ],
 })
 export class OperationPastTimeTableComponent {
+    /** 運用番号のチップから、その日の運用別時刻表へ */
+    protected readonly operationTimetableLink = operationTimetableLink;
     readonly #store = inject(OperationPastTimeStore);
     readonly #router = inject(Router);
     readonly #userState = inject(UserState);

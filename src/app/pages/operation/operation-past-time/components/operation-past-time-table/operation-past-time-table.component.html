@@ -174,14 +174,14 @@
                                                         [borderColor]="
                                                             invalidatedBorderColor
                                                         "
-                                                        [link]="[
-                                                            '/operation',
-                                                            'route-diagram',
-                                                            {
-                                                                operation_id:
-                                                                    sighting.operationId,
-                                                            },
-                                                        ]"
+                                                        [link]="
+                                                            operationTimetableLink(
+                                                                operationNumber,
+                                                                {
+                                                                    date: calendar.date,
+                                                                }
+                                                            )
+                                                        "
                                                         [contextMenus]="
                                                             withAuthorMenu(
                                                                 [

@@ -17,6 +17,7 @@
                     @for (card of row.leftCards; track card.tripId) {
                         <app-train-location-card
                             [card]="card"
+                            [operationLinkAt]="operationLinkAt()"
                             status="stopped"
                         ></app-train-location-card>
                     }
@@ -85,6 +86,7 @@
                     @for (card of row.rightCards; track card.tripId) {
                         <app-train-location-card
                             [card]="card"
+                            [operationLinkAt]="operationLinkAt()"
                             status="stopped"
                         ></app-train-location-card>
                     }
@@ -109,6 +111,7 @@
                         >
                             <app-train-location-card
                                 [card]="positioned.entry.card"
+                                [operationLinkAt]="operationLinkAt()"
                                 status="between"
                             ></app-train-location-card>
                         </div>
@@ -131,6 +134,7 @@
                         >
                             <app-train-location-card
                                 [card]="positioned.entry.card"
+                                [operationLinkAt]="operationLinkAt()"
                                 status="between"
                             ></app-train-location-card>
                         </div>

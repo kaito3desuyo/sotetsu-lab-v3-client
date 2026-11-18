@@ -172,7 +172,7 @@ export function buildChainDiagramLines(params: {
      * 線が切れる区間（分断）の途中にある時刻の空の通過駅を推測で埋めて描き直す。
      */
     standardRunMinutes?: ReadonlyMap<string, number>;
-    /** 車両の前後の運用。入出庫の端が乗り移りなら印を □ にする。省略は空 */
+    /** 車両の前後の運用。入出庫の端が運番変更なら印を □ にする。省略は空 */
     itineraryLinks?: readonly OperationItineraryLinkDto[];
 }): TripDiagramLine[] {
     const {
@@ -495,7 +495,7 @@ export function buildChainDiagramLines(params: {
         // なので、trip 自身の最初/最後の時刻のある停車が軸上に無ければ印は置かない
         // （軸の外の入出庫を、軸の切れ目の駅に誤って表示しないため）。
         const depotMarks: TripDiagramDepotMark[] = [];
-        // 入出庫と乗り移り（つながりで見分ける）は、どちらも端に印を置く
+        // 入出庫と運番変更（つながりで見分ける）は、どちらも端に印を置く
         const transferOut =
             index === 0 &&
             isTransferEnd({

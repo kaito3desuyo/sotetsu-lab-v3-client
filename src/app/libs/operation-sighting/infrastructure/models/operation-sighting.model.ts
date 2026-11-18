@@ -24,4 +24,7 @@ export interface OperationSightingModel {
     } | null;
     /** 同日引き継ぎの写しだけに付く、元の目撃の id */
     carriedFromSightingId?: string;
+
+    /** 同日引き継ぎの写しだけに付く、写した枠の始まり（鉄道日の 0 時からの秒）。どの枠の写しかを示す */
+    carriedRunStartSeconds?: number;
 }

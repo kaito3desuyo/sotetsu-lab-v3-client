@@ -1,3 +1,7 @@
+import {
+    operationTimetableLink,
+    OperationTimetableLinkAt,
+} from 'src/app/core/utils/operation-timetable-link';
 import { NgTemplateOutlet } from '@angular/common';
 import {
     ChangeDetectionStrategy,
@@ -44,6 +48,8 @@ import { FormationNumberLinkComponent } from 'src/app/shared/formation-number-li
     host: { class: 'tw-block' },
 })
 export class TrainLocationStationPanelComponent {
+    /** 運用番号のチップから今日の運用別時刻表へ */
+    protected readonly operationTimetableLink = operationTimetableLink;
     readonly #operationPostDialog = inject(OperationPostDialogService);
 
     readonly stationId = input<string | null>(null);
@@ -52,6 +58,8 @@ export class TrainLocationStationPanelComponent {
     readonly arrivals = input<StationArrivals>({ inbound: [], outbound: [] });
     /** 各行に投稿ボタンを出すか（今日のダイヤのときだけ。M30） */
     readonly canPost = input(false);
+    /** 運用番号のチップの開き方。今日のダイヤなら 'today'、ほかのダイヤを見ているならそのダイヤの形 */
+    readonly operationLinkAt = input<OperationTimetableLinkAt>('today');
 
     readonly isOpen = signal(readStationPanelOpen());
 

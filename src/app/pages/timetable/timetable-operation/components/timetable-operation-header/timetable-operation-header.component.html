@@ -1,0 +1,79 @@
+<section
+    class="tw-flex tw-flex-col tw-gap-3 tw-rounded-card tw-bg-white tw-p-4"
+    data-testid="operation-header"
+>
+    <p class="tw-m-0 tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-3">
+        <app-operation-number-tag
+            class="!tw-text-base"
+            [operationNumber]="operationNumber()"
+        ></app-operation-number-tag>
+        <span class="tw-text-sm tw-text-muted">{{ calendarLabel() }}</span>
+        @if (operationId(); as id) {
+            <a
+                class="tw-ml-auto tw-text-sm tw-text-accent-ink tw-underline"
+                data-testid="route-diagram-link"
+                [routerLink]="[
+                    '/operation',
+                    'route-diagram',
+                    { operation_id: id },
+                ]"
+                >運用行路図で見る</a
+            >
+        }
+    </p>
+
+    @if (viewKind() === 'today') {
+        <p
+            class="tw-m-0 tw-flex tw-flex-wrap tw-items-center tw-gap-2 tw-text-sm"
+            data-testid="current-formation"
+        >
+            <span class="tw-text-xs tw-text-muted">いまの編成</span>
+            @if (currentFormationNumber(); as number) {
+                <span
+                    ><app-formation-number-link
+                        [formationNumber]="number"
+                        [date]="date()"
+                        [inferred]="currentInferred()"
+                    ></app-formation-number-link
+                    >{{ currentInferred() ? '?' : '' }}</span
+                >
+            } @else {
+                <span>編成不明</span>
+            }
+        </p>
+    }
+
+    @if (viewKind() !== 'calendar' && sightings().length > 0) {
+        <p
+            class="tw-m-0 tw-flex tw-flex-wrap tw-items-center tw-gap-1 tw-text-sm"
+            data-testid="operation-sightings"
+        >
+            <span class="tw-text-xs tw-text-muted">{{
+                viewKind() === 'today' ? '今日の目撃' : 'この日の目撃'
+            }}</span>
+            @for (s of sightings(); track $index; let last = $last) {
+                <span class="tw-tabular-nums">{{ s.time }}</span>
+                <app-formation-number-link
+                    [formationNumber]="s.formationNumber"
+                    [date]="date()"
+                ></app-formation-number-link>
+                <span>で目撃</span>
+                @if (!last) {
+                    <span class="tw-text-muted">→</span>
+                }
+            }
+        </p>
+    }
+
+    @if (position(); as pos) {
+        <div class="tw-text-sm" data-testid="current-position">
+            <span class="tw-text-xs tw-text-muted">いま</span>
+            <app-trip-position
+                [position]="pos"
+                [stations]="positionStations()"
+                [tripClasses]="positionTripClasses()"
+                [calendarId]="calendarId()"
+            ></app-trip-position>
+        </div>
+    }
+</section>

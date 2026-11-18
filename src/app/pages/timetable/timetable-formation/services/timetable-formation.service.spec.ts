@@ -146,7 +146,7 @@ describe('Service: TimetableFormation', () => {
         expect(store.canSelectTomorrow()).toBe(true);
     });
 
-    it('乗り移り先の運用の列車を取り終えるまで findOneWithTrips を呼ぶ', async () => {
+    it('運番変更した先の運用の列車を取り終えるまで findOneWithTrips を呼ぶ', async () => {
         sightingService.findOneTimeCrossSectionByFormationNumber.mockReturnValue(
             of({ expectedSighting: { operation: { operationId: 'op-a' } } }),
         );
@@ -361,7 +361,7 @@ describe('Service: TimetableFormation', () => {
         expect(store.loadError()).toBe(true);
     });
 
-    it('編成・乗り移り・運用の列車の取得に失敗しても loadError', async () => {
+    it('編成・運番変更・運用の列車の取得に失敗しても loadError', async () => {
         formationService.findManyBySpecificDate.mockReturnValue(
             throwError(() => new Error('x')),
         );

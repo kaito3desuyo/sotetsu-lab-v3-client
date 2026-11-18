@@ -34,11 +34,13 @@
                     @if (item.operationNumber) {
                         <app-operation-number-tag
                             [operationNumber]="item.operationNumber"
-                            [link]="[
-                                '/operation',
-                                'route-diagram',
-                                { operation_id: item.sighting.operationId },
-                            ]"
+                            [link]="
+                                operationTimetableLink(item.operationNumber, {
+                                    date: railwayDateOf(
+                                        item.sighting.sightingTime
+                                    ),
+                                })
+                            "
                         ></app-operation-number-tag>
                     } @else {
                         <span class="tw-text-sm tw-text-muted">不明</span>

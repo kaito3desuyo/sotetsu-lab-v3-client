@@ -3,11 +3,11 @@ import {
     OperationItineraryLinkDto,
 } from './dtos/operation-itinerary-link.dto';
 
-/** 端が「別の運用へ・から」の乗り移りか（□）。それ以外の入出庫は車庫の △○。 */
+/** 端が「別の運用へ・から」の運番変更か（□）。それ以外の入出庫は車庫の △○。 */
 export type DepotEndKind = 'transfer' | 'depot';
 
 /**
- * 端が別の運用への乗り移りかを、つながりだけで返す（決まり 2）。depot の値は見ない。
+ * 端が別の運用への運番変更かを、つながりだけで返す（決まり 2）。depot の値は見ない。
  * - 終点側（in）: その区間に next（決まり 2）がある → 別の運用へ
  * - 始点側（out）: その区間に previous（決まり 2）がある → 別の運用から
  * 列車とは tripOperationListId、なければ tripId で結ぶ。

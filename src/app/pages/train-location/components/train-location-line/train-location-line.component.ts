@@ -14,6 +14,7 @@ import {
     BetweenRowLayout,
     resolveBetweenRowLayout,
 } from '../../utils/resolve-between-row-layout.util';
+import { OperationTimetableLinkAt } from 'src/app/core/utils/operation-timetable-link';
 import { TrainLocationCardComponent } from '../train-location-card/train-location-card.component';
 
 /** 在線の無い駅間の高さ（spec: 空は 30px。18 駅で約 1,300px） */
@@ -36,6 +37,8 @@ export const EMPTY_BETWEEN_ROW_HEIGHT_PX = 30;
 export class TrainLocationLineComponent {
     readonly rows = input.required<TrainLocationRow[]>();
     readonly selectedStationId = input<string | null>(null);
+    /** 運用番号のチップの開き方（カードへそのまま渡す） */
+    readonly operationLinkAt = input<OperationTimetableLinkAt>('today');
     readonly stationSelect = output<string>();
 
     /**

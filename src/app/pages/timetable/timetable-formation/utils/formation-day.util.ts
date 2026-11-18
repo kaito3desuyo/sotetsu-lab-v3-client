@@ -172,8 +172,8 @@ function build(
 
     /**
      * operationId の anchorIdx 番目の列車に着いた編成が、その運用の中でどこから入ったかを、
-     * 乗り移りの previous をさかのぼって求める。
-     * 戻り値の startIdx はその運用での開始位置、prefix はそれより前に走った列車と乗り移りの帯。
+     * 運番変更の previous をさかのぼって求める。
+     * 戻り値の startIdx はその運用での開始位置、prefix はそれより前に走った列車と運番変更の帯。
      */
     const lead = (
         operationId: string,
@@ -220,7 +220,7 @@ function build(
         };
     };
 
-    /** operationId の startIdx 番目から、日の終わりまで乗り移りをたどって path に足す */
+    /** operationId の startIdx 番目から、日の終わりまで運番変更をたどって path に足す */
     const walk = (
         path: PathEntry[],
         operationId: string,
@@ -275,7 +275,7 @@ function build(
         }
     };
 
-    /** path の末尾に残った乗り移りの帯（行き先の列車を切り落としたあとのもの）を外す */
+    /** path の末尾に残った運番変更の帯（行き先の列車を切り落としたあとのもの）を外す */
     const trimTrailingTransfers = (path: PathEntry[]): void => {
         while (path.length > 0 && path[path.length - 1].type === 'transfer') {
             path.pop();
@@ -300,7 +300,7 @@ function build(
     const unknownOf = (
         evictor: OperationSightingDetailsDto,
     ): Extract<PathEntry, { type: 'unknown' }> => {
-        // 追い出した目撃は、その時刻にこの編成がたどっている運用で見ている（乗り移りの先もある）
+        // 追い出した目撃は、その時刻にこの編成がたどっている運用で見ている（運番変更の先もある）
         const evictedOpId = effectiveOperationId(evictor);
         return {
             type: 'unknown',
@@ -536,7 +536,7 @@ export function missingOperationIds(input: FormationDayInput): string[] {
 
 /**
  * rows[index] の列車の運用を何で決めたか。index から前へたどり、いちばん近い決め手で決める。
- * 手前に unknown の行があり、そのあとに目撃で差し替えた（swap）行が無ければ unknown、引き継ぎの列車なら carried-over、乗り移りなら transfer、
+ * 手前に unknown の行があり、そのあとに目撃で差し替えた（swap）行が無ければ unknown、引き継ぎの列車なら carried-over、運番変更なら transfer、
  * 目撃で差し替えた（swap）なら sighting。決め手が無ければ最初の運用の決め方（firstBasis）。
  */
 export function basisAt(

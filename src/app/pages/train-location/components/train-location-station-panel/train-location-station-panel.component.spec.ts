@@ -127,7 +127,7 @@ describe('TrainLocationStationPanelComponent', () => {
         expect(tag).toHaveStyle({ backgroundColor: 'rgba(183, 28, 28, 0.12)' });
     });
 
-    it('運用番号は運用行路図へのリンク（運用 ID が無ければリンクにしない）', () => {
+    it('運用番号は今日の運用別時刻表へのリンク（運用番号が無ければチップを出さない）', () => {
         fixture.componentRef.setInput('stationId', 'C');
         fixture.componentRef.setInput('stationName', '二俣川');
         fixture.componentRef.setInput('arrivals', {
@@ -136,7 +136,7 @@ describe('TrainLocationStationPanelComponent', () => {
                 arrival({
                     tripId: 'b',
                     direction: 'outbound',
-                    operationId: undefined,
+                    operationNumber: undefined,
                 }),
             ],
         });
@@ -146,11 +146,26 @@ describe('TrainLocationStationPanelComponent', () => {
         expect(links).toHaveLength(1);
         expect(links[0]).toHaveAttribute(
             'href',
-            '/operation/route-diagram;operation_id=op-30k',
+            '/timetable/operation;operation_number=30K',
         );
-        expect(
-            el().querySelectorAll('[data-operation-number] > span'),
-        ).toHaveLength(1);
+    });
+
+    it('今日でないダイヤを見ているときは、運用番号をそのダイヤの形で開く', () => {
+        fixture.componentRef.setInput('stationId', 'C');
+        fixture.componentRef.setInput('stationName', '二俣川');
+        fixture.componentRef.setInput('operationLinkAt', {
+            calendarId: 'cal-x',
+        });
+        fixture.componentRef.setInput('arrivals', {
+            inbound: [arrival({ tripId: 'a' })],
+            outbound: [],
+        });
+        fixture.detectChanges();
+
+        expect(el().querySelector('[data-operation-number] a')).toHaveAttribute(
+            'href',
+            '/timetable/operation;operation_number=30K;calendar_id=cal-x',
+        );
     });
 
     it('編成番号は編成別時刻表へのリンク（今の見込みなので日付は付けない）', () => {
