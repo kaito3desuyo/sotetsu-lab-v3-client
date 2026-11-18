@@ -96,7 +96,7 @@ describe('TimetableFormationTripListComponent', () => {
             const fixture = create([trip()], ['future'], true);
             const detail = () =>
                 el(fixture).querySelector('[data-testid="trip-detail"]');
-            expect(detail()?.textContent).toContain('列車を押すと');
+            expect(detail()?.textContent).toContain('列車を選択すると');
             click(fixture);
             expect(
                 detail()?.querySelector('[data-testid="trip-times"]'),

@@ -42,6 +42,6 @@ describe('formatFormationBandSummary', () => {
                 dateKind: 'today',
                 stationName: null,
             }),
-        ).toBe('編成番号を入れてください');
+        ).toBe('編成番号を入力してください');
     });
 });
