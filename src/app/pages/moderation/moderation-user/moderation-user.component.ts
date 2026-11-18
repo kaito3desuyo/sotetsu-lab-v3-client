@@ -203,7 +203,7 @@ export class ModerationUserComponent {
             title: 'まとめて無効にする',
             lines: [
                 `${summary.username} の目撃 ${ids.length} 件を無効にします。`,
-                '選んだ目撃は、一覧で「無効」になります。',
+                '選択した目撃は、一覧で「無効」になります。',
             ],
             reasonRequired: true,
             confirmLabel: '無効にする',

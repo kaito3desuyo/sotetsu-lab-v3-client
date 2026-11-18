@@ -370,7 +370,7 @@ describe('ModerationUserComponent', () => {
         });
         expect(byId('bulk-invalidate-button')).toBeDisabled();
         expect(byId('bulk-invalidate-button')).toHaveTextContent(
-            '選んだ 0 件を無効にする',
+            '選択した 0 件を無効にする',
         );
         expect(checkbox('select-row-s3').disabled).toBe(true);
 
@@ -378,7 +378,7 @@ describe('ModerationUserComponent', () => {
 
         expect(byId('bulk-invalidate-button')).toBeEnabled();
         expect(byId('bulk-invalidate-button')).toHaveTextContent(
-            '選んだ 2 件を無効にする',
+            '選択した 2 件を無効にする',
         );
         expect(checkbox('select-row-s1').checked).toBe(true);
         expect(checkbox('select-row-s3').checked).toBe(false);
@@ -414,9 +414,9 @@ describe('ModerationUserComponent', () => {
         const message = notificationOpen.mock.calls.at(-1)[0] as string;
         expect(message).toContain('2 件を無効にしました');
         expect(message).toContain(
-            '1 件は飛ばしました（すでに無効・見つからない）',
+            '1 件は対象外としました（すでに無効・見つからない）',
         );
-        expect(message).toContain('26K で止まりました: 保存に失敗しました');
+        expect(message).toContain('26K で中断しました: 保存に失敗しました');
         expect(message).toContain('残り 3 件は無効にできていません');
         expect(userApi.findSummary).toHaveBeenCalledTimes(2);
         expect(sightingApi.findManyByUserId).toHaveBeenCalledTimes(2);

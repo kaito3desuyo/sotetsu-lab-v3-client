@@ -12,12 +12,12 @@ export function buildInvalidateResultMessage(
     const parts = [`${result.invalidated.length} 件を無効にしました`];
     if (result.skipped.length > 0) {
         parts.push(
-            `${result.skipped.length} 件は飛ばしました（すでに無効・見つからない）`,
+            `${result.skipped.length} 件は対象外としました（すでに無効・見つからない）`,
         );
     }
     if (result.failed) {
         const label = failedLabel ?? result.failed.id.slice(0, 8);
-        parts.push(`${label} で止まりました: ${result.failed.message}`);
+        parts.push(`${label} で中断しました: ${result.failed.message}`);
     }
     if (result.pending.length > 0) {
         parts.push(`残り ${result.pending.length} 件は無効にできていません`);
