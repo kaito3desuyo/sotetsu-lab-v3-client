@@ -135,7 +135,7 @@ describe('TimetableOperationTripListComponent', () => {
         ]);
         const row = el(f).querySelector('[data-testid="transfer-row"]');
         expect(row?.textContent?.replace(/\s+/g, '')).toBe(
-            '□湘南台で乗り移り29K→30K',
+            '□湘南台で運番変更29K→30K',
         );
         expect(
             Array.from(row?.querySelectorAll('a') ?? []).map((a) =>

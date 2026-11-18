@@ -323,7 +323,7 @@ describe('TimetableFormationTripListComponent', () => {
         ]);
         const t = text(fixture).replace(/\s+/g, ' ');
         expect(t).toContain('○ いずみ野 07:07 出庫');
-        expect(t).toContain('湘南台 で乗り移り');
+        expect(t).toContain('湘南台 で運番変更');
         expect(t.replace(/\s+/g, '')).toContain('15:40の目撃により59に変更');
         expect(t).toContain('△ 湘南台 21:17 入庫');
     });
