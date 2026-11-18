@@ -109,7 +109,7 @@ describe('TrainPickerComponent', () => {
         await fixture.whenStable();
         fixture.detectChanges();
 
-        expect(fixture.nativeElement).toHaveTextContent(/駅を選んでください/);
+        expect(fixture.nativeElement).toHaveTextContent(/駅を選択してください/);
         expect(
             fixture.nativeElement.querySelector('[data-train-row]'),
         ).toBeNull();
@@ -177,7 +177,7 @@ describe('TrainPickerComponent', () => {
         fixture.detectChanges();
 
         expect(fixture.nativeElement).toHaveTextContent(
-            /この時間帯に選べる列車がありません/,
+            /この時間帯に選択できる列車がありません/,
         );
         fixture.nativeElement.querySelector('[data-widen-before]').click();
         expect(store.minutesBefore()).toBe(20);
@@ -312,13 +312,13 @@ describe('TrainPickerComponent', () => {
         fixture.detectChanges();
         // 戻し終える前（getItem は未解決のまま）
         expect(fixture.nativeElement).not.toHaveTextContent(
-            /駅を選んでください/,
+            /駅を選択してください/,
         );
 
         await fixture.whenStable();
         fixture.detectChanges();
 
-        expect(fixture.nativeElement).toHaveTextContent(/駅を選んでください/);
+        expect(fixture.nativeElement).toHaveTextContent(/駅を選択してください/);
     });
 
     describe('一覧のスクロール', () => {

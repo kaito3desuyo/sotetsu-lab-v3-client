@@ -16,6 +16,6 @@ describe('PartialFailureNoticeComponent', () => {
         const note = (fixture.nativeElement as HTMLElement).querySelector(
             'p[role="status"]',
         );
-        expect(note?.textContent).toContain('一部の情報を取れませんでした');
+        expect(note?.textContent).toContain('一部の情報を取得できませんでした');
     });
 });

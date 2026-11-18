@@ -119,7 +119,11 @@
             [disabled]="!selectedCalendarId()"
             (buttonClick)="submit()"
         >
-            {{ selectedOperationId() ? '運用行路図に移る' : '運用表に移る' }}
+            {{
+                selectedOperationId()
+                    ? '運用行路図へ移動する'
+                    : '運用表へ移動する'
+            }}
         </app-button>
     </footer>
 </app-panel-card>
