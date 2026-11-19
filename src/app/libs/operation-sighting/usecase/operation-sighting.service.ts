@@ -32,6 +32,7 @@ export class OperationSightingService {
         to: string;
         includeInvalidated?: boolean;
         includeCarriedOver?: boolean;
+        formationNumber?: string;
         forceReload?: boolean;
     }): Observable<OperationSightingDetailsDto[]> {
         return this.#operationSightingQuery.findManyBySpecificPeriod(params);
