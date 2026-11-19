@@ -61,4 +61,82 @@ describe('RecordsFormationSummaryComponent', () => {
             '目撃の記録はありません',
         );
     });
+
+    it('同日の引き継ぎで推定した運番は、元の目撃でなく推定した今の運番に「?」を付けて出す', () => {
+        // api の実際の形: latestSighting は元の目撃（運番 41）、推定した今の運番は expectedSighting（運番 73）
+        const fixture = create({
+            formationNumber: '10701',
+            summary: {
+                latestSighting: {
+                    operationSightingId: 's1',
+                    sightingTime: '2026-11-19T01:00:00Z',
+                    operation: { operationId: 'op-41', operationNumber: '41' },
+                    formation: { formationNumber: '10701' },
+                },
+                expectedSighting: {
+                    operation: { operationId: 'op-73', operationNumber: '73' },
+                    formation: { formationNumber: '10701' },
+                },
+                sightedAsOperation: {
+                    operationId: 'op-41',
+                    operationNumber: '41',
+                },
+            },
+            today: '2026-11-19',
+        });
+        const tag = fixture.nativeElement.querySelector(
+            'app-operation-number-tag',
+        );
+        expect(tag).toHaveTextContent('73');
+        expect(tag).not.toHaveTextContent('41');
+        expect(tag).toHaveTextContent('?');
+    });
+
+    it('引き継ぎで推定できる運番が無ければ運番は不明と出す', () => {
+        const fixture = create({
+            formationNumber: '10701',
+            summary: {
+                latestSighting: {
+                    sightingTime: '2026-11-19T01:00:00Z',
+                    operation: { operationId: 'op-41', operationNumber: '41' },
+                },
+                expectedSighting: null,
+                sightedAsOperation: {
+                    operationId: 'op-41',
+                    operationNumber: '41',
+                },
+            },
+            today: '2026-11-19',
+        });
+        expect(fixture.nativeElement).toHaveTextContent('不明');
+        expect(fixture.nativeElement).not.toHaveTextContent('41');
+    });
+
+    it('その月の記録へのリンクを出す（引退した編成の 2019 年の目撃なら 2019-03）', () => {
+        const fixture = create({
+            formationNumber: '8701',
+            summary: summary('2019-03-10T01:00:00Z', '12'),
+            today: '2026-11-19',
+        });
+        expect(
+            fixture.nativeElement.querySelector('[data-testid="month-link"]'),
+        ).toHaveAttribute(
+            'href',
+            '/records/formation;formation_number=8701;month=2019-03',
+        );
+    });
+
+    it('日本時間 4 時前の目撃は前の日の月のリンクになる（4/1 の 2 時は 3 月）', () => {
+        const fixture = create({
+            formationNumber: '8701',
+            summary: summary('2019-03-31T17:00:00Z', '12'),
+            today: '2026-11-19',
+        });
+        expect(
+            fixture.nativeElement.querySelector('[data-testid="month-link"]'),
+        ).toHaveAttribute(
+            'href',
+            '/records/formation;formation_number=8701;month=2019-03',
+        );
+    });
 });

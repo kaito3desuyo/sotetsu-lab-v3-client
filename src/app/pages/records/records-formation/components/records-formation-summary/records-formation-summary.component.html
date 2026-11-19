@@ -7,11 +7,21 @@
             class="tw-m-0 tw-flex tw-flex-wrap tw-items-center tw-gap-x-2 tw-gap-y-1"
         >
             <span data-testid="summary-label">{{ latest.label }}</span>
-            <app-operation-number-tag
-                [operationNumber]="latest.operationNumber"
-                [inferred]="latest.inferred"
-            ></app-operation-number-tag>
-            <span>運用</span>
+            @if (latest.operationNumber; as operationNumber) {
+                <app-operation-number-tag
+                    [operationNumber]="operationNumber"
+                    [inferred]="latest.inferred"
+                ></app-operation-number-tag>
+                <span>運用</span>
+            } @else {
+                <span>運用は不明です</span>
+            }
+            <a
+                class="app-hit-area tw-underline tw-underline-offset-2 [color:inherit]"
+                data-testid="month-link"
+                [routerLink]="latest.monthLink"
+                >この月の記録</a
+            >
             <a
                 class="app-hit-area tw-underline tw-underline-offset-2 [color:inherit]"
                 data-testid="summary-link"

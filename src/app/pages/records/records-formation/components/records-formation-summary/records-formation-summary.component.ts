@@ -28,21 +28,39 @@ export class RecordsFormationSummaryComponent {
     /** 'yyyy-MM-dd'。今日（4 時区切り）の鉄道日 */
     readonly today = input.required<string>();
 
-    /** 最後の目撃がある日と運番。一度も目撃が無ければ null */
+    /**
+     * 最後の目撃がある日と運番。一度も目撃が無ければ null。
+     * 同日の引き継ぎ（sightedAsOperation あり）のとき latestSighting は元の目撃なので、
+     * 運番は推定した今の運用（expectedSighting.operation）を出す（real-time の編成カードと同じ規則）。
+     * 推定できなければ運番は null（「不明」と出す）。
+     */
     protected readonly latest = computed(() => {
-        const sighting = this.summary()?.latestSighting;
-        const operationNumber = sighting?.operation?.operationNumber;
-        if (!sighting || !operationNumber) return null;
+        const summary = this.summary();
+        const sighting = summary?.latestSighting;
+        if (!sighting) return null;
+        const inferred = !!summary.sightedAsOperation;
+        const operationNumber =
+            (inferred
+                ? summary.expectedSighting?.operation?.operationNumber
+                : sighting.operation?.operationNumber) ?? null;
         const date = toRailwayDateKey(sighting.sightingTime);
         return {
             date,
             operationNumber,
-            inferred: !!this.summary()?.sightedAsOperation,
+            inferred,
             label: `${date === this.today() ? '今日' : '最後に見た日'} ${format(parse(date, 'yyyy-MM-dd', new Date()), 'M/d')}`,
             link: [
                 '/timetable',
                 'formation',
                 { formation_number: this.formationNumber(), date },
+            ],
+            monthLink: [
+                '/records',
+                'formation',
+                {
+                    formation_number: this.formationNumber(),
+                    month: date.slice(0, 7),
+                },
             ],
         };
     });
