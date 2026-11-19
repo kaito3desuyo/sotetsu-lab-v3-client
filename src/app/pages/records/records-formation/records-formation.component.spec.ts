@@ -11,7 +11,7 @@ import {
 import { patchState } from '@ngrx/signals';
 import { setAllEntities } from '@ngrx/signals/entities';
 import { unprotected } from '@ngrx/signals/testing';
-import { BehaviorSubject, Observable, of, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, of, Subject, throwError } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { TodaysFormationListState } from 'src/app/global-states/todays-formation-list.state';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
@@ -70,6 +70,7 @@ function setup(options: {
     formations?: unknown[];
     server?: boolean;
     findMany?: () => Observable<unknown[]>;
+    summaryFails?: boolean;
 }) {
     jest.useFakeTimers({
         now: options.now ?? at(11, 19),
@@ -81,7 +82,9 @@ function setup(options: {
             options.findMany ?? (() => of(options.sightings ?? [])),
         ),
         findOneTimeCrossSectionByFormationNumber: jest.fn(() =>
-            of({ latestSighting: null, expectedSighting: null }),
+            options.summaryFails
+                ? throwError(() => new Error('summary failed'))
+                : of({ latestSighting: null, expectedSighting: null }),
         ),
     };
     TestBed.configureTestingModule({
@@ -319,6 +322,17 @@ describe('RecordsFormationComponent', () => {
             params: { formation_number: '10701', month: '2026-11' },
         });
         expect(el(fixture)).toHaveTextContent('目撃の記録はありません');
+    });
+
+    it('要約の取得に失敗したら「最新の目撃を読み込めませんでした」を出し、カレンダーは残す', () => {
+        const { fixture } = setup({
+            params: { formation_number: '10701', month: '2026-11' },
+            summaryFails: true,
+        });
+        expect(q(fixture, '[data-testid="summary-error"]')).toHaveTextContent(
+            '最新の目撃を読み込めませんでした',
+        );
+        expect(q(fixture, '[data-testid="records-calendar"]')).not.toBeNull();
     });
 
     it('サーバーでは取得しない', () => {

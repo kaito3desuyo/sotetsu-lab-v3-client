@@ -96,6 +96,11 @@ export class RecordsFormationComponent {
             ? this.#store.summary()
             : null,
     );
+    protected readonly summaryError = computed(
+        () =>
+            this.#store.summaryFormationNumber() === this.formationNumber() &&
+            this.#store.summaryError(),
+    );
     protected readonly summaryReady = computed(
         () =>
             this.#store.summaryFormationNumber() === this.formationNumber() &&

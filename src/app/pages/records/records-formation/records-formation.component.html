@@ -47,6 +47,14 @@
         @default {
             @let number = formationNumber();
             @if (number) {
+                @if (summaryError()) {
+                    <p
+                        class="tw-m-0 tw-text-sm tw-text-muted"
+                        data-testid="summary-error"
+                    >
+                        最新の目撃を読み込めませんでした
+                    </p>
+                }
                 @if (summaryReady()) {
                     <app-records-formation-summary
                         [formationNumber]="number"
