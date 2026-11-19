@@ -1,0 +1,300 @@
+import { PLATFORM_ID } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import {
+    ActivatedRoute,
+    convertToParamMap,
+    provideRouter,
+    Router,
+} from '@angular/router';
+import { patchState } from '@ngrx/signals';
+import { setAllEntities } from '@ngrx/signals/entities';
+import { unprotected } from '@ngrx/signals/testing';
+import { BehaviorSubject, Observable, of, Subject } from 'rxjs';
+import { NotificationService } from 'src/app/core/services/notification.service';
+import { TodaysFormationListState } from 'src/app/global-states/todays-formation-list.state';
+import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
+import { RecordsFormationComponent } from './records-formation.component';
+import { RecordsFormationService } from './services/records-formation.service';
+import { RecordsFormationStore } from './stores/records-formation.store';
+
+/** 営業日は日本時間で 4 時区切りなので、日本時間（UTC+9）の時刻で組む */
+const at = (month: number, day: number, hour = 15): Date =>
+    new Date(Date.UTC(2026, month - 1, day, hour - 9));
+
+const ONLY_DATE = [
+    'hrtime',
+    'nextTick',
+    'performance',
+    'queueMicrotask',
+    'requestAnimationFrame',
+    'cancelAnimationFrame',
+    'requestIdleCallback',
+    'cancelIdleCallback',
+    'setImmediate',
+    'clearImmediate',
+    'setInterval',
+    'clearInterval',
+    'setTimeout',
+    'clearTimeout',
+] as const;
+
+const FORMATIONS = [
+    {
+        formationId: 'f1',
+        formationNumber: '10701',
+        agencyId: 's',
+        vehicleType: '10000',
+    },
+];
+
+const sighting = (
+    id: string,
+    sightingTime: string,
+    operationNumber: string,
+    extra: Record<string, unknown> = {},
+) => ({
+    operationSightingId: id,
+    formationId: 'f1',
+    sightingTime,
+    operation: { operationNumber },
+    ...extra,
+});
+
+function setup(options: {
+    params: Record<string, string>;
+    now?: Date;
+    sightings?: unknown[];
+    formations?: unknown[];
+    server?: boolean;
+    findMany?: () => Observable<unknown[]>;
+}) {
+    jest.useFakeTimers({
+        now: options.now ?? at(11, 19),
+        doNotFake: [...ONLY_DATE],
+    });
+    const paramMap$ = new BehaviorSubject(convertToParamMap(options.params));
+    const api = {
+        findManyBySpecificPeriod: jest.fn(
+            options.findMany ?? (() => of(options.sightings ?? [])),
+        ),
+        findOneTimeCrossSectionByFormationNumber: jest.fn(() =>
+            of({ latestSighting: null, expectedSighting: null }),
+        ),
+    };
+    TestBed.configureTestingModule({
+        imports: [RecordsFormationComponent],
+        providers: [
+            provideHttpClient(),
+            provideHttpClientTesting(),
+            provideRouter([]),
+            { provide: ActivatedRoute, useValue: { paramMap: paramMap$ } },
+            { provide: OperationSightingService, useValue: api },
+            { provide: NotificationService, useValue: { open: jest.fn() } },
+            ...(options.server
+                ? [{ provide: PLATFORM_ID, useValue: 'server' }]
+                : []),
+        ],
+    });
+    TestBed.overrideComponent(RecordsFormationComponent, {
+        add: { providers: [RecordsFormationService] },
+    });
+    patchState(
+        unprotected(TestBed.inject(TodaysFormationListState)),
+        setAllEntities(
+            (options.formations ?? FORMATIONS) as never[],
+            {
+                selectId: (f: { formationId: string }) => f.formationId,
+            } as never,
+        ),
+    );
+    const navigate = jest
+        .spyOn(TestBed.inject(Router), 'navigate')
+        .mockResolvedValue(true);
+    const fixture: ComponentFixture<RecordsFormationComponent> =
+        TestBed.createComponent(RecordsFormationComponent);
+    fixture.detectChanges();
+    return {
+        fixture,
+        api,
+        navigate,
+        paramMap$,
+        store: TestBed.inject(RecordsFormationStore),
+    };
+}
+
+const el = (f: ComponentFixture<unknown>): HTMLElement => f.nativeElement;
+const q = (f: ComponentFixture<unknown>, selector: string) =>
+    el(f).querySelector<HTMLElement>(selector);
+
+describe('RecordsFormationComponent', () => {
+    afterEach(() => jest.useRealTimers());
+
+    it('month が無ければ今の月を取る', () => {
+        const { api } = setup({ params: { formation_number: '10701' } });
+        expect(api.findManyBySpecificPeriod).toHaveBeenCalledWith({
+            from: '2026-11-01',
+            to: '2026-11-30',
+            formationNumber: '10701',
+            includeCarriedOver: true,
+        });
+    });
+
+    it('壊れた month（2026-13）は今の月として取る', () => {
+        const { api } = setup({
+            params: { formation_number: '10701', month: '2026-13' },
+        });
+        expect(api.findManyBySpecificPeriod).toHaveBeenCalledWith(
+            expect.objectContaining({ from: '2026-11-01', to: '2026-11-30' }),
+        );
+    });
+
+    it('前の月のボタンで URL の month が 2026-10 になる', () => {
+        const { fixture, navigate } = setup({
+            params: { formation_number: '10701', month: '2026-11' },
+        });
+        q(fixture, '[data-testid="prev-month"]')!.click();
+        expect(navigate).toHaveBeenCalledWith([
+            'records',
+            'formation',
+            { formation_number: '10701', month: '2026-10' },
+        ]);
+    });
+
+    it('今の月なら次の月のボタンは無効', () => {
+        const { fixture } = setup({
+            params: { formation_number: '10701', month: '2026-11' },
+        });
+        expect(
+            (q(fixture, '[data-testid="next-month"]') as HTMLButtonElement)
+                .disabled,
+        ).toBe(true);
+    });
+
+    it('前の月なら次の月のボタンで今の月へ進める', () => {
+        const { fixture, navigate } = setup({
+            params: { formation_number: '10701', month: '2026-10' },
+        });
+        q(fixture, '[data-testid="next-month"]')!.click();
+        expect(navigate).toHaveBeenCalledWith([
+            'records',
+            'formation',
+            { formation_number: '10701', month: '2026-11' },
+        ]);
+    });
+
+    it('目撃のある日のマスはその日の編成別時刻表へのリンクになり、無い日はリンクにならない', () => {
+        const { fixture } = setup({
+            params: { formation_number: '10701', month: '2026-11' },
+            // 日本時間 11/05 10:00
+            sightings: [sighting('a', '2026-11-05T01:00:00Z', '71')],
+        });
+        const linked = q(fixture, '[data-date="2026-11-05"]')!;
+        expect(linked).toHaveAttribute(
+            'href',
+            '/timetable/formation;formation_number=10701;date=2026-11-05',
+        );
+        expect(q(fixture, '[data-date="2026-11-06"]')!).not.toHaveAttribute(
+            'href',
+        );
+    });
+
+    it('推定の目撃（carriedFromSightingId 付き）の運番には「?」が付く', () => {
+        const { fixture } = setup({
+            params: { formation_number: '10701', month: '2026-11' },
+            sightings: [
+                sighting('a', '2026-11-05T01:00:00Z', '73', {
+                    carriedFromSightingId: 'x',
+                }),
+            ],
+        });
+        expect(q(fixture, '[data-date="2026-11-05"]')).toHaveTextContent(
+            /73\?/,
+        );
+    });
+
+    it('遅れて届いた前の月の結果で表示を上書きしない', () => {
+        const old$ = new Subject<unknown[]>();
+        const latest$ = new Subject<unknown[]>();
+        const queue = [old$, latest$];
+        const { fixture, paramMap$, api } = setup({
+            params: { formation_number: '10701', month: '2026-10' },
+            findMany: () => queue.shift()!,
+        });
+        paramMap$.next(
+            convertToParamMap({ formation_number: '10701', month: '2026-11' }),
+        );
+        latest$.next([sighting('new', '2026-11-05T01:00:00Z', '71')]);
+        latest$.complete();
+        old$.next([sighting('old', '2026-10-05T01:00:00Z', '99')]);
+        old$.complete();
+        fixture.detectChanges();
+        expect(api.findManyBySpecificPeriod).toHaveBeenCalledTimes(2);
+        expect(el(fixture)).toHaveTextContent('71');
+        expect(el(fixture)).not.toHaveTextContent('99');
+    });
+
+    it('編成番号が無ければ案内だけを出す', () => {
+        const { fixture, api } = setup({ params: {} });
+        expect(el(fixture)).toHaveTextContent('編成番号を入力してください');
+        expect(q(fixture, '[data-testid="records-calendar"]')).toBeNull();
+        expect(api.findManyBySpecificPeriod).not.toHaveBeenCalled();
+    });
+
+    it('無い編成番号なら「編成が見つかりません」を出し、取得しない', () => {
+        const { fixture, api } = setup({
+            params: { formation_number: '99999' },
+        });
+        expect(el(fixture)).toHaveTextContent('編成が見つかりません');
+        expect(q(fixture, '[data-testid="records-calendar"]')).toBeNull();
+        expect(api.findManyBySpecificPeriod).not.toHaveBeenCalled();
+    });
+
+    it('目撃 0 の月は空のカレンダーに「この月の目撃はありません」を添える', () => {
+        const { fixture } = setup({
+            params: { formation_number: '10701', month: '2026-11' },
+            sightings: [],
+        });
+        expect(el(fixture)).toHaveTextContent('この月の目撃はありません');
+        expect(q(fixture, '[data-testid="records-calendar"]')).not.toBeNull();
+    });
+
+    it('要約は月を替えても取り直さない', () => {
+        const { api, paramMap$ } = setup({
+            params: { formation_number: '10701', month: '2026-11' },
+        });
+        paramMap$.next(
+            convertToParamMap({ formation_number: '10701', month: '2026-10' }),
+        );
+        expect(api.findManyBySpecificPeriod).toHaveBeenCalledTimes(2);
+        expect(
+            api.findOneTimeCrossSectionByFormationNumber,
+        ).toHaveBeenCalledTimes(1);
+    });
+
+    it('要約で一度も目撃が無ければ「目撃の記録はありません」を出す', () => {
+        const { fixture } = setup({
+            params: { formation_number: '10701', month: '2026-11' },
+        });
+        expect(el(fixture)).toHaveTextContent('目撃の記録はありません');
+    });
+
+    it('サーバーでは取得しない', () => {
+        const { api } = setup({
+            params: { formation_number: '10701' },
+            server: true,
+        });
+        expect(api.findManyBySpecificPeriod).not.toHaveBeenCalled();
+    });
+
+    it('4 時前は前の日の月として扱う（11/1 の 2 時は 10 月）', () => {
+        const { api } = setup({
+            params: { formation_number: '10701' },
+            now: at(11, 1, 2),
+        });
+        expect(api.findManyBySpecificPeriod).toHaveBeenCalledWith(
+            expect.objectContaining({ from: '2026-10-01', to: '2026-10-31' }),
+        );
+    });
+});

@@ -111,6 +111,13 @@ export const APP_ROUTES: Routes = [
             ),
     },
     {
+        path: 'records',
+        loadChildren: () =>
+            import('./pages/records/records.route').then(
+                (mod) => mod.RECORDS_ROUTES,
+            ),
+    },
+    {
         path: 'privacy-policy',
         loadChildren: () =>
             import('./pages/privacy-policy/privacy-policy.route').then(

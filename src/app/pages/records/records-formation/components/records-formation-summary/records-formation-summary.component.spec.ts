@@ -44,9 +44,11 @@ describe('RecordsFormationSummaryComponent', () => {
         expect(fixture.nativeElement).toHaveTextContent('最後に見た日 11/10');
         expect(fixture.nativeElement).toHaveTextContent('41');
         expect(
-            fixture.nativeElement
-                .querySelector('[data-testid="summary-link"]'),
-        ).toHaveAttribute('href', '/timetable/formation;formation_number=10701;date=2026-11-10');
+            fixture.nativeElement.querySelector('[data-testid="summary-link"]'),
+        ).toHaveAttribute(
+            'href',
+            '/timetable/formation;formation_number=10701;date=2026-11-10',
+        );
     });
 
     it('一度も目撃が無ければ「目撃の記録はありません」', () => {

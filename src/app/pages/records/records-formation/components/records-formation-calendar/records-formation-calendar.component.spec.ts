@@ -38,7 +38,8 @@ describe('RecordsFormationCalendarComponent', () => {
         const withSighting = cell(fixture, '2026-11-05');
         expect(withSighting.tagName).toBe('A');
         expect(withSighting).toHaveAttribute(
-            'href', '/timetable/formation;formation_number=10701;date=2026-11-05',
+            'href',
+            '/timetable/formation;formation_number=10701;date=2026-11-05',
         );
         const without = cell(fixture, '2026-11-06');
         expect(without.tagName).not.toBe('A');
