@@ -105,4 +105,31 @@ describe('TimetableFormationHeaderComponent', () => {
         );
         expect(chain?.textContent?.replace(/\s+/g, ' ')).toContain('16K → 15K');
     });
+    it('その編成の記録へのリンクに、編成番号と見ている日の月を付ける', () => {
+        const fixture = create({
+            formationNumber: '8713',
+            formation: { formationId: 'f', formationNumber: '8713' },
+            operationLinkAt: { date: '2026-11-11' },
+        });
+        const link = (fixture.nativeElement as HTMLElement).querySelector(
+            '[data-testid="records-link"]',
+        );
+        expect(link?.textContent).toContain('この編成の記録');
+        expect(link).toHaveAttribute(
+            'href',
+            '/records/formation;formation_number=8713;month=2026-11',
+        );
+    });
+
+    it('日付が無いときは month を付けない', () => {
+        const fixture = create({
+            formationNumber: '8713',
+            formation: { formationId: 'f', formationNumber: '8713' },
+        });
+        expect(
+            (fixture.nativeElement as HTMLElement).querySelector(
+                '[data-testid="records-link"]',
+            ),
+        ).toHaveAttribute('href', '/records/formation;formation_number=8713');
+    });
 });
