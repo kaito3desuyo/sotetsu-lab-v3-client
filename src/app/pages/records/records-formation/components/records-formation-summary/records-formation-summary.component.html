@@ -1,0 +1,28 @@
+<section class="tw-flex tw-flex-col tw-gap-1" data-testid="records-summary">
+    <h2 class="tw-m-0 tw-text-base tw-font-medium">
+        {{ formationNumber() }} 編成
+    </h2>
+    @if (latest(); as latest) {
+        <p
+            class="tw-m-0 tw-flex tw-flex-wrap tw-items-center tw-gap-x-2 tw-gap-y-1"
+        >
+            <span data-testid="summary-label">{{ latest.label }}</span>
+            <app-operation-number-tag
+                [operationNumber]="latest.operationNumber"
+                [inferred]="latest.inferred"
+            ></app-operation-number-tag>
+            <span>運用</span>
+            <a
+                class="app-hit-area tw-underline tw-underline-offset-2 [color:inherit]"
+                data-testid="summary-link"
+                [routerLink]="latest.link"
+                >編成別時刻表</a
+            >
+        </p>
+    } @else {
+        <app-empty-state
+            icon="info"
+            message="目撃の記録はありません"
+        ></app-empty-state>
+    }
+</section>
