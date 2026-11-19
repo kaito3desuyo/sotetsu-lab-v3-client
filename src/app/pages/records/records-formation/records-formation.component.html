@@ -34,13 +34,6 @@
                 (actionClick)="band().open.set(true)"
             ></app-empty-state>
         }
-        @case ('notFound') {
-            <app-empty-state
-                icon="search_off"
-                headingLevel="h2"
-                message="編成が見つかりません"
-            ></app-empty-state>
-        }
         @case ('error') {
             <app-empty-state
                 icon="error_outline"

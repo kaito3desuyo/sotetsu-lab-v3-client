@@ -2,11 +2,22 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RecordsFormationCalendarComponent } from './records-formation-calendar.component';
 
+// api が返す形（運用 ID と運用を持つ）
 const sighting = (
     id: string,
     operationNumber: string,
     extra: Record<string, unknown> = {},
-) => ({ operationSightingId: id, operation: { operationNumber }, ...extra });
+) => ({
+    operationSightingId: id,
+    operationId: `op-${operationNumber}`,
+    operation: { operationId: `op-${operationNumber}`, operationNumber },
+    ...extra,
+});
+// 運用が付いていない目撃
+const sightingWithoutOperation = (id: string) => ({
+    operationSightingId: id,
+    operationId: 'op-x',
+});
 
 function create(sightingsByDate: Record<string, unknown[]>) {
     TestBed.configureTestingModule({
@@ -57,11 +68,27 @@ describe('RecordsFormationCalendarComponent', () => {
         expect(text).toBe('5' + '71' + '›' + '72');
     });
 
-    it('推定の目撃（carriedFromSightingId 付き）の運番には「?」が付き、直接の目撃には付かない', () => {
+    it('運用が付いていない目撃は「不明」と出し、マスはリンクのままにする（空のリンクにしない）', () => {
+        const fixture = create({
+            '2026-11-05': [sightingWithoutOperation('a')],
+        });
+        const day = cell(fixture, '2026-11-05');
+        expect(day.tagName).toBe('A');
+        expect(day).toHaveTextContent('不明');
+        expect(day.querySelector('app-operation-number-tag')).toBeNull();
+    });
+
+    it('推定の目撃（sightedAsOperation 付き）の運番には「?」が付き、直接の目撃には付かない', () => {
         const fixture = create({
             '2026-11-05': [
                 sighting('a', '71'),
-                sighting('b', '73', { carriedFromSightingId: 'a' }),
+                sighting('b', '73', {
+                    carriedFromSightingId: 'a',
+                    sightedAsOperation: {
+                        operationId: 'o',
+                        operationNumber: '71',
+                    },
+                }),
             ],
         });
         const tags = [

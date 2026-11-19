@@ -58,7 +58,8 @@ const sighting = (
     operationSightingId: id,
     formationId: 'f1',
     sightingTime,
-    operation: { operationNumber },
+    operationId: `op-${operationNumber}`,
+    operation: { operationId: `op-${operationNumber}`, operationNumber },
     ...extra,
 });
 
@@ -200,12 +201,16 @@ describe('RecordsFormationComponent', () => {
         );
     });
 
-    it('推定の目撃（carriedFromSightingId 付き）の運番には「?」が付く', () => {
+    it('推定の目撃（同日引き継ぎの写し）の運番には「?」が付く', () => {
         const { fixture } = setup({
             params: { formation_number: '10701', month: '2026-11' },
             sightings: [
                 sighting('a', '2026-11-05T01:00:00Z', '73', {
                     carriedFromSightingId: 'x',
+                    sightedAsOperation: {
+                        operationId: 'o',
+                        operationNumber: '71',
+                    },
                 }),
             ],
         });
@@ -242,13 +247,49 @@ describe('RecordsFormationComponent', () => {
         expect(api.findManyBySpecificPeriod).not.toHaveBeenCalled();
     });
 
-    it('無い編成番号なら「編成が見つかりません」を出し、取得しない', () => {
+    it('今日の編成に無い番号（引退した編成）でも取得してカレンダーを出す', () => {
         const { fixture, api } = setup({
-            params: { formation_number: '99999' },
+            params: { formation_number: '7710', month: '2026-11' },
+            sightings: [sighting('a', '2026-11-05T01:00:00Z', '71')],
         });
-        expect(el(fixture)).toHaveTextContent('編成が見つかりません');
-        expect(q(fixture, '[data-testid="records-calendar"]')).toBeNull();
-        expect(api.findManyBySpecificPeriod).not.toHaveBeenCalled();
+        expect(api.findManyBySpecificPeriod).toHaveBeenCalledWith(
+            expect.objectContaining({ formationNumber: '7710' }),
+        );
+        expect(q(fixture, '[data-testid="records-calendar"]')).not.toBeNull();
+        expect(el(fixture)).not.toHaveTextContent('編成が見つかりません');
+    });
+
+    it('編成の一覧が空でも、番号があれば取得する', () => {
+        const { api } = setup({
+            params: { formation_number: '10701' },
+            formations: [],
+        });
+        expect(api.findManyBySpecificPeriod).toHaveBeenCalledTimes(1);
+    });
+
+    it('欄に打った今日の編成に無い番号で、その番号のページへ移動して取得する', () => {
+        const { fixture, navigate, paramMap$, api } = setup({
+            params: { formation_number: '10701', month: '2026-11' },
+        });
+        const input = q(
+            fixture,
+            '[data-testid="formation-number-input"]',
+        ) as HTMLInputElement;
+        input.dispatchEvent(new Event('focusin'));
+        input.value = '7710';
+        input.dispatchEvent(new Event('input'));
+        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+        expect(navigate).toHaveBeenCalledWith([
+            'records',
+            'formation',
+            { formation_number: '7710', month: '2026-11' },
+        ]);
+        paramMap$.next(
+            convertToParamMap({ formation_number: '7710', month: '2026-11' }),
+        );
+        expect(api.findManyBySpecificPeriod).toHaveBeenLastCalledWith(
+            expect.objectContaining({ formationNumber: '7710' }),
+        );
     });
 
     it('目撃 0 の月は空のカレンダーに「この月の目撃はありません」を添える', () => {

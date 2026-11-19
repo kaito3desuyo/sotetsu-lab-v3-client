@@ -74,10 +74,18 @@
                         >›</span
                     >
                 }
-                <app-operation-number-tag
-                    [operationNumber]="entry.operationNumber"
-                    [inferred]="entry.inferred"
-                ></app-operation-number-tag>
+                @if (entry.operationNumber; as operationNumber) {
+                    <app-operation-number-tag
+                        [operationNumber]="operationNumber"
+                        [inferred]="entry.inferred"
+                    ></app-operation-number-tag>
+                } @else {
+                    <span
+                        class="tw-text-sm tw-text-muted"
+                        data-testid="unknown-operation"
+                        >不明</span
+                    >
+                }
             </span>
         }
     </span>

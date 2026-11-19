@@ -75,17 +75,6 @@ export class RecordsFormationComponent {
 
     protected readonly band = viewChild.required(ControlBandComponent);
 
-    /** 編成一覧に無い番号か（一覧を持っているときだけ判定する） */
-    protected readonly unknownFormation = computed(() => {
-        const number = this.formationNumber();
-        const formations = this.#formations.todaysFormations();
-        return (
-            !!number &&
-            formations.length > 0 &&
-            !formations.some((f) => f.formationNumber === number)
-        );
-    });
-
     /** ストアの中身が、いま URL で見ている編成・月のものか（前の訪問の残りを出さない） */
     protected readonly ready = computed(
         () =>
@@ -115,7 +104,6 @@ export class RecordsFormationComponent {
 
     protected readonly view = computed(() => {
         if (!this.formationNumber()) return 'noNumber';
-        if (this.unknownFormation()) return 'notFound';
         if (this.ready() && this.#store.loadError()) return 'error';
         return 'content';
     });
@@ -141,7 +129,6 @@ export class RecordsFormationComponent {
                 this.month.set(month);
                 // サーバーは今日を知らないので、取得しない
                 if (this.#isServer || !formationNumber) return;
-                if (this.unknownFormation()) return;
                 this.#fetch(formationNumber, month, false);
             });
 

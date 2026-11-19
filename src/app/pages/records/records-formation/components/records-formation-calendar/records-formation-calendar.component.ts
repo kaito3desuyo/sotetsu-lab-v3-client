@@ -14,7 +14,8 @@ const WEEKDAYS = ['月', '火', '水', '木', '金', '土', '日'];
 
 interface CalendarEntry {
     id: string;
-    operationNumber: string;
+    /** null は運用が付いていない目撃 */
+    operationNumber: string | null;
     /** 推定の運用（同日引き継ぎで写したもの）。「?」を付ける */
     inferred: boolean;
 }
@@ -58,26 +59,19 @@ export class RecordsFormationCalendarComponent {
         return buildMonthWeeks(this.month()).map((week) =>
             week.map((date) => {
                 if (!date) return null;
-                const entries = (byDate[date] ?? []).flatMap((s) =>
-                    s.operation?.operationNumber
-                        ? [
-                              {
-                                  id: s.operationSightingId,
-                                  operationNumber: s.operation.operationNumber,
-                                  inferred:
-                                      !!s.sightedAsOperation ||
-                                      !!s.carriedFromSightingId,
-                              },
-                          ]
-                        : [],
-                );
+                const entries = (byDate[date] ?? []).map((s) => ({
+                    id: s.operationSightingId,
+                    // 運用が付いていない目撃は、番号を出さず「不明」と書く
+                    operationNumber: s.operation?.operationNumber ?? null,
+                    inferred: !!s.sightedAsOperation,
+                }));
                 return {
                     date,
                     day: Number(date.slice(8)),
                     isToday: date === this.today(),
                     entries,
                     link:
-                        (byDate[date] ?? []).length > 0
+                        entries.length > 0
                             ? [
                                   '/timetable',
                                   'formation',
