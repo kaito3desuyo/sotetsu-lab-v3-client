@@ -18,13 +18,13 @@
         <div class="tw-contents" role="row">
             @for (cell of week; track $index) {
                 <div
-                    class="tw-min-w-0 tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-black/10"
+                    class="tw-flex tw-min-w-0 tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-black/10"
                     role="cell"
                 >
                     @if (cell; as cell) {
                         @if (cell.link) {
                             <a
-                                class="tw-flex tw-h-full tw-min-h-[4.5rem] tw-flex-col tw-gap-1 tw-p-1 tw-no-underline [color:inherit]"
+                                class="tw-flex tw-min-h-[4.5rem] tw-w-full tw-min-w-0 tw-flex-col tw-gap-1 tw-p-1 tw-no-underline [color:inherit]"
                                 data-testid="day-link"
                                 [routerLink]="cell.link"
                                 [attr.data-date]="cell.date"
@@ -39,7 +39,7 @@
                             </a>
                         } @else {
                             <div
-                                class="tw-flex tw-h-full tw-min-h-[4.5rem] tw-flex-col tw-gap-1 tw-p-1"
+                                class="tw-flex tw-min-h-[4.5rem] tw-w-full tw-min-w-0 tw-flex-col tw-gap-1 tw-p-1"
                                 data-testid="day-plain"
                                 [attr.data-date]="cell.date"
                                 [class]="cell.isToday ? 'tw-bg-black/5' : ''"
