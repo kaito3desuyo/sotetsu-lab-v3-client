@@ -1,5 +1,5 @@
 <div
-    class="tw-grid tw-grid-cols-7 tw-border-0 tw-border-l tw-border-t tw-border-solid tw-border-black/10"
+    class="tw-grid tw-grid-cols-7"
     role="table"
     aria-label="運番のカレンダー"
     data-testid="records-calendar"
@@ -7,18 +7,19 @@
     <div class="tw-contents" role="row">
         @for (weekday of weekdays; track weekday) {
             <div
-                class="tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-black/10 tw-py-1 tw-text-center tw-text-xs tw-text-muted"
+                class="tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-black/10 tw-py-1 tw-text-center tw-text-xs tw-text-muted last:tw-border-r-0"
                 role="columnheader"
             >
                 {{ weekday }}
             </div>
         }
     </div>
-    @for (week of weeks(); track $index) {
+    @for (week of weeks(); track $index; let lastWeek = $last) {
         <div class="tw-contents" role="row">
             @for (cell of week; track $index) {
                 <div
-                    class="tw-flex tw-min-w-0 tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-black/10"
+                    class="tw-flex tw-min-w-0 tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-black/10 last:tw-border-r-0"
+                    [class.tw-border-b-0]="lastWeek"
                     role="cell"
                 >
                     @if (cell; as cell) {

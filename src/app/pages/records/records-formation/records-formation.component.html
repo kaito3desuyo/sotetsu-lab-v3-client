@@ -48,12 +48,17 @@
             @let number = formationNumber();
             @if (number) {
                 @if (summaryError()) {
-                    <p
-                        class="tw-m-0 tw-text-sm tw-text-muted"
-                        data-testid="summary-error"
+                    <section
+                        class="tw-rounded-card tw-bg-white tw-p-4"
+                        data-testid="summary-error-card"
                     >
-                        最新の目撃を読み込めませんでした
-                    </p>
+                        <p
+                            class="tw-m-0 tw-text-sm tw-text-muted"
+                            data-testid="summary-error"
+                        >
+                            最新の目撃を読み込めませんでした
+                        </p>
+                    </section>
                 }
                 @if (summaryReady()) {
                     <app-records-formation-summary
@@ -62,20 +67,22 @@
                         [today]="today()"
                     ></app-records-formation-summary>
                 }
-                @if (isMonthEmpty()) {
-                    <p
-                        class="tw-m-0 tw-text-sm tw-text-muted"
-                        data-testid="month-empty"
-                    >
-                        この月の目撃はありません
-                    </p>
-                }
-                <app-records-formation-calendar
-                    [formationNumber]="number"
-                    [month]="month()"
-                    [sightingsByDate]="sightingsByDate()"
-                    [today]="today()"
-                ></app-records-formation-calendar>
+                <article class="tw-overflow-clip tw-rounded-card tw-bg-white">
+                    @if (isMonthEmpty()) {
+                        <p
+                            class="tw-m-0 tw-p-4 tw-text-sm tw-text-muted"
+                            data-testid="month-empty"
+                        >
+                            この月の目撃はありません
+                        </p>
+                    }
+                    <app-records-formation-calendar
+                        [formationNumber]="number"
+                        [month]="month()"
+                        [sightingsByDate]="sightingsByDate()"
+                        [today]="today()"
+                    ></app-records-formation-calendar>
+                </article>
             }
         }
     }
