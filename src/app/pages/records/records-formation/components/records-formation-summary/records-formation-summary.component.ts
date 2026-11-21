@@ -44,11 +44,14 @@ export class RecordsFormationSummaryComponent {
                 ? summary.expectedSighting?.operation?.operationNumber
                 : sighting.operation?.operationNumber) ?? null;
         const date = toRailwayDateKey(sighting.sightingTime);
+        // 今年（4 時区切りの鉄道日で数える）でない日は、今年の日と読み違えないよう年を付ける
+        const dateFormat =
+            date.slice(0, 4) === this.today().slice(0, 4) ? 'M/d' : 'yyyy/M/d';
         return {
             date,
             operationNumber,
             inferred,
-            label: `${date === this.today() ? '今日' : '最後に見た日'} ${format(parse(date, 'yyyy-MM-dd', new Date()), 'M/d')}`,
+            label: `${date === this.today() ? '今日' : '最後に見た日'} ${format(parse(date, 'yyyy-MM-dd', new Date()), dateFormat)}`,
             link: [
                 '/timetable',
                 'formation',

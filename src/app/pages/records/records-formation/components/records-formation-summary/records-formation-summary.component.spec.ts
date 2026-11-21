@@ -139,4 +139,37 @@ describe('RecordsFormationSummaryComponent', () => {
             '/records/formation;formation_number=8701;month=2019-03',
         );
     });
+
+    it('今年の日には年を付けない（今は 2026-11-19、最後の目撃は 2026-01-05）', () => {
+        const fixture = create({
+            formationNumber: '10701',
+            summary: summary('2026-01-05T01:00:00Z'),
+            today: '2026-11-19',
+        });
+        expect(fixture.nativeElement).toHaveTextContent('最後に見た日 1/5');
+        expect(fixture.nativeElement).not.toHaveTextContent('2026/1/5');
+    });
+
+    it('今年でない日には年を付ける', () => {
+        const fixture = create({
+            formationNumber: '7710',
+            summary: summary('2019-10-19T01:00:00Z', '41'),
+            today: '2026-11-19',
+        });
+        expect(fixture.nativeElement).toHaveTextContent(
+            '最後に見た日 2019/10/19',
+        );
+    });
+
+    it('年の境目は 4 時区切りの鉄道日で数える（日本時間 1/1 の 2 時の目撃は前の年）', () => {
+        const fixture = create({
+            formationNumber: '10701',
+            // 日本時間 2026-01-01 02:00 → 鉄道日は 2025-12-31
+            summary: summary('2025-12-31T17:00:00Z'),
+            today: '2026-11-19',
+        });
+        expect(fixture.nativeElement).toHaveTextContent(
+            '最後に見た日 2025/12/31',
+        );
+    });
 });
