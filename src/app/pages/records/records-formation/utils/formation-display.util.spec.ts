@@ -94,6 +94,15 @@ describe('formation-display.util', () => {
         ).toBe('ホームドア対応');
         expect(
             toModificationRow({
+                modifiedOn: '2022-12-14',
+                kind: 'exterior',
+                value: null,
+                description: '前灯を移設',
+                vehicles: 'all',
+            }),
+        ).toMatchObject({ kind: '外観の変更', content: '前灯を移設' });
+        expect(
+            toModificationRow({
                 modifiedOn: '2020-01-01',
                 kind: 'other',
                 value: null,

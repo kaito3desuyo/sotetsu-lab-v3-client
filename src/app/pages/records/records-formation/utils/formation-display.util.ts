@@ -16,6 +16,7 @@ export const formatPeriodRange = (period: FormationPeriod): string => {
 
 const KIND_LABELS: Readonly<Record<string, string>> = {
     livery: '塗り替え',
+    exterior: '外観の変更',
     renewal: 'リニューアル',
     equipment: '機器更新',
     'platform-door': 'ホームドア対応',
