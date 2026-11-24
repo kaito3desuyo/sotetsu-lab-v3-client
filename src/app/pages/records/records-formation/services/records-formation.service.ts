@@ -81,22 +81,19 @@ export class RecordsFormationService {
     }
 
     /**
-     * 編成の全期間（号車・車両・車両の改造の記録つき）を取る。編成が変わったときだけ呼ぶ。
-     * 取れなければ空にする（編成の情報のカードを出さない）。
+     * 編成の全期間（号車・車両・車両の改造の記録つき）を、編成番号ごとの口で取る。編成が変わったときだけ呼ぶ。
+     * 取れなければ（番号の形が違う 422 も）空にする（編成の情報のカードを出さない）。
      */
     fetchFormationPeriods(params: {
         formationNumber: string;
-        /** 今日（4 時区切りの鉄道日）。取る範囲の終わり */
-        today: string;
         forceReload?: boolean;
     }): Observable<void> {
-        const { formationNumber, today, forceReload } = params;
+        const { formationNumber, forceReload } = params;
         const isCurrent = (): boolean =>
             this.#store.formationNumber() === formationNumber;
         return this.#formationService
-            .findManyBySpecificPeriod({
-                startDate: '2000-01-01',
-                endDate: today,
+            .findManyByFormationNumber({
+                formationNumber,
                 include: 'vehicleFormations.vehicle.modifications,agency',
                 ...(forceReload ? { forceReload: true } : {}),
             })

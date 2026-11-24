@@ -67,17 +67,49 @@ describe('FormationQuery', () => {
     });
 
     describe('findManyBySpecificPeriod', () => {
-        const match = (r: { url: string }) =>
-            r.url === `${url}/from/2000-01-01/to/2026-11-20`;
-
-        it('include を渡さなければ今までどおり引数なしで取る', () => {
+        it('期間を引数なしで取る', () => {
             const { query, controller } = setup();
 
             query
                 .findManyBySpecificPeriod({
-                    startDate: '2000-01-01',
+                    startDate: '2026-11-01',
                     endDate: '2026-11-20',
                 })
+                .subscribe();
+            const req = controller.expectOne(
+                (r) => r.url === `${url}/from/2026-11-01/to/2026-11-20`,
+            );
+
+            expect(req.request.params.keys()).toEqual([]);
+            req.flush([]);
+        });
+    });
+
+    describe('findManyByFormationNumber', () => {
+        const match = (r: { url: string }) => r.url === `${url}/number/10701`;
+
+        it('編成番号の口へ、渡した include つきで取る', () => {
+            const { query, controller } = setup();
+            const include = 'vehicleFormations.vehicle.modifications,agency';
+
+            query
+                .findManyByFormationNumber({
+                    formationNumber: '10701',
+                    include,
+                })
+                .subscribe();
+            const req = controller.expectOne(match);
+
+            expect(req.request.method).toBe('GET');
+            expect(req.request.params.get('include')).toBe(include);
+            req.flush([]);
+        });
+
+        it('include を渡さなければ引数なしで取る', () => {
+            const { query, controller } = setup();
+
+            query
+                .findManyByFormationNumber({ formationNumber: '10701' })
                 .subscribe();
             const req = controller.expectOne(match);
 
@@ -85,18 +117,24 @@ describe('FormationQuery', () => {
             req.flush([]);
         });
 
-        it('include を渡せば送り、include ごとに別に取る', () => {
+        it('編成番号と include ごとに 1 回だけ取り、forceReload で取り直す', () => {
             const { query, controller } = setup();
-            const include = 'vehicleFormations.vehicle.modifications,agency';
-            const base = { startDate: '2000-01-01', endDate: '2026-11-20' };
+            const params = { formationNumber: '10701', include: 'agency' };
 
-            query.findManyBySpecificPeriod(base).subscribe();
+            query.findManyByFormationNumber(params).subscribe();
             controller.expectOne(match).flush([]);
-            query.findManyBySpecificPeriod({ ...base, include }).subscribe();
-            const req = controller.expectOne(match);
+            query.findManyByFormationNumber(params).subscribe();
+            controller.verify();
 
-            expect(req.request.params.get('include')).toBe(include);
-            req.flush([]);
+            query
+                .findManyByFormationNumber({ ...params, include: '' })
+                .subscribe();
+            controller.expectOne(match).flush([]);
+
+            query
+                .findManyByFormationNumber({ ...params, forceReload: true })
+                .subscribe();
+            controller.expectOne(match).flush([]);
         });
     });
 });

@@ -74,6 +74,7 @@ function setup(options: {
     findMany?: () => Observable<unknown[]>;
     summaryFails?: boolean;
     formationRows?: unknown[];
+    formationFails?: boolean;
     calendarDates?: unknown[];
 }) {
     jest.useFakeTimers({
@@ -92,8 +93,10 @@ function setup(options: {
         ),
     };
     const formationApi = {
-        findManyBySpecificPeriod: jest.fn(() =>
-            of(options.formationRows ?? []),
+        findManyByFormationNumber: jest.fn(() =>
+            options.formationFails
+                ? throwError(() => new Error('422'))
+                : of(options.formationRows ?? []),
         ),
     };
     const calendarApi = {
@@ -398,9 +401,8 @@ describe('RecordsFormationComponent', () => {
                 },
             ],
         });
-        expect(formationApi.findManyBySpecificPeriod).toHaveBeenCalledWith({
-            startDate: '2000-01-01',
-            endDate: '2026-11-19',
+        expect(formationApi.findManyByFormationNumber).toHaveBeenCalledWith({
+            formationNumber: '10701',
             include: 'vehicleFormations.vehicle.modifications,agency',
         });
         expect(q(fixture, '[data-testid="records-info"]')).toHaveTextContent(
@@ -423,6 +425,16 @@ describe('RecordsFormationComponent', () => {
         expect(q(fixture, '[data-testid="records-info"]')).toBeNull();
     });
 
+    it('編成番号の形が違って取れなくても、ページは壊れず編成の情報のカードだけ出さない', () => {
+        jest.spyOn(console, 'error').mockImplementation(() => undefined);
+        const { fixture } = setup({
+            params: { formation_number: '10701', month: '2026-11' },
+            formationFails: true,
+        });
+        expect(q(fixture, '[data-testid="records-info"]')).toBeNull();
+        expect(q(fixture, '[data-date="2026-11-03"]')).not.toBeNull();
+    });
+
     it('月を替えると祝日だけ取り直し、編成の期間は取り直さない', () => {
         const { formationApi, calendarApi, paramMap$ } = setup({
             params: { formation_number: '10701', month: '2026-11' },
@@ -439,7 +451,7 @@ describe('RecordsFormationComponent', () => {
             from: '2026-10-01',
             to: '2026-10-31',
         });
-        expect(formationApi.findManyBySpecificPeriod).toHaveBeenCalledTimes(1);
+        expect(formationApi.findManyByFormationNumber).toHaveBeenCalledTimes(1);
     });
 
     it('編成番号が変わったら編成の期間を取り直す', () => {
@@ -449,7 +461,7 @@ describe('RecordsFormationComponent', () => {
         paramMap$.next(
             convertToParamMap({ formation_number: '7710', month: '2026-11' }),
         );
-        expect(formationApi.findManyBySpecificPeriod).toHaveBeenCalledTimes(2);
+        expect(formationApi.findManyByFormationNumber).toHaveBeenCalledTimes(2);
     });
 
     it('祝日がカレンダーに赤で出る（11/3 は文化の日）', () => {
@@ -481,7 +493,7 @@ describe('RecordsFormationComponent', () => {
             params: { formation_number: '10701' },
             server: true,
         });
-        expect(formationApi.findManyBySpecificPeriod).not.toHaveBeenCalled();
+        expect(formationApi.findManyByFormationNumber).not.toHaveBeenCalled();
         expect(calendarApi.findMany).not.toHaveBeenCalled();
     });
 });

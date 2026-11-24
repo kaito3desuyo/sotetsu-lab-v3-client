@@ -200,7 +200,6 @@ export class RecordsFormationComponent {
             this.#service
                 .fetchFormationPeriods({
                     formationNumber,
-                    today: this.today(),
                     ...(forceReload ? { forceReload: true } : {}),
                 })
                 .subscribe();

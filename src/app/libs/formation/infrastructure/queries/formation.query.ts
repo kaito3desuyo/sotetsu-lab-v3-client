@@ -54,18 +54,43 @@ export class FormationQuery {
     findManyBySpecificPeriod(params: {
         startDate: string;
         endDate: string;
-        include?: string;
         forceReload?: boolean;
     }): Observable<FormationDetailsDto[]> {
-        const { startDate, endDate, include, forceReload } = params;
+        const { startDate, endDate, forceReload } = params;
 
         return this.#cache
             .get({
                 name: 'findManyBySpecificPeriod',
-                params: { startDate, endDate, include },
+                params: { startDate, endDate },
                 fetch: () =>
                     this.#http.get<FormationModel[]>(
                         `${this.#v3ApiUrl}/from/${startDate}/to/${endDate}`,
+                        { observe: 'response' },
+                    ),
+                forceReload,
+            })
+            .pipe(
+                map((res) =>
+                    FormationDtoBuilder.buildFromModels(requireBody(res)),
+                ),
+            );
+    }
+
+    /** 編成番号の期間の行すべて（始まりの日の古い順）。include は agency・vehicleFormations.vehicle.modifications */
+    findManyByFormationNumber(params: {
+        formationNumber: string;
+        include?: string;
+        forceReload?: boolean;
+    }): Observable<FormationDetailsDto[]> {
+        const { formationNumber, include, forceReload } = params;
+
+        return this.#cache
+            .get({
+                name: 'findManyByFormationNumber',
+                params: { formationNumber, include },
+                fetch: () =>
+                    this.#http.get<FormationModel[]>(
+                        `${this.#v3ApiUrl}/number/${encodeURIComponent(formationNumber)}`,
                         {
                             params:
                                 include === undefined
