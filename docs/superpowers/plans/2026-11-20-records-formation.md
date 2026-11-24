@@ -211,6 +211,21 @@ Task 1〜6 は済んでいる（client は 016ce5b7 まで）。ユーザーが�
 
 ---
 
+### Task 7b: api に編成番号ごとの全期間の取得を足す（sotetsu-lab-v3-api）
+
+作業場所：`origin/master`（#220 を含む）から worktree（`../wt-api-formation-number`、ブランチ `feat/formation-by-number`）。spec の「api の変更 › 車両の改造の記録」の `GET /v3/formations/number/:formationNumber` の節が要件。
+
+**Files:**
+- Modify: `src/libs/formation/presentation/formation.v3.controller.ts`・`usecase/formation.v3.service.ts`・`infrastructure/queries/formation.query.ts`・`usecase/formation-selection.ts`（選べる範囲は期間の取得と同じ木を使う）
+- Create: `src/libs/formation/usecase/params/formation-number.param.ts`（編成番号の検証）
+- Test: controller・service・query・発行する SQL の spec
+
+- [ ] **Step 1: 落ちる spec**：`その編成番号の期間の行をすべて返す`、`並びは始まりの日の古い順で空が先`、`include=vehicleFormations.vehicle.modifications,agency が効く`、`無い番号は空の配列`、`形の違う番号は 422`
+- [ ] **Step 2〜4:** 落ちる → 実装 → `npx vitest run` 全体・`npm run lint`・`npx tsc --noEmit` が通る。手元で起動し、`/v3/formations/number/7710?include=vehicleFormations.vehicle.modifications` が期間の行を返すのを確かめる
+- [ ] **Step 5: コミット**　`feat: :sparkles: 編成番号ごとに全期間の編成を取れるようにする`
+
+---
+
 ### Task 8: client の編成の取得と、期間の組み立て（純粋な関数）
 
 **Files:**
@@ -275,7 +290,7 @@ Task 1〜6 は済んでいる（client は 016ce5b7 まで）。ユーザーが�
 ## 順番と出し方
 
 1. Task 1 → api の PR → CI → merge・版上げ・デプロイ（済み・v4.9.0）
-2. Task 7 → api の PR → CI → merge・版上げ・デプロイ・本番の migration（それぞれユーザーの許可。migration はユーザーが流す）。2026-11-23 に作った `feat/formation-livery`（編成の列の案）は使わない
+2. Task 7・7b → api の PR（それぞれ） → CI → merge・版上げ・デプロイ・本番の migration（それぞれユーザーの許可。migration はユーザーが流す）。2026-11-23 に作った `feat/formation-livery`（編成の列の案）は使わない
 3. Task 2〜6・8〜10 → client の PR → CI → merge・版上げ・デプロイ（それぞれユーザーの許可）
 4. ユーザーが本番の 3121〜3123 の 2099 年の行を消し、塗装の SQL を流す
 5. client の roadmap.md の M14 の行と memory を、段 1 済みに直す。改造の記録の管理画面を次の段として roadmap に載せる

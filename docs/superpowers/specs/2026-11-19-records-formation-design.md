@@ -178,8 +178,12 @@ M31 の共有画像（編成と今日の運番が入ったカード）も、段 
 - migration は generate で作る。本番への適用はユーザーが行う
 - 段 1 では書き込みの api は作らない。値はユーザーが SQL で入れる。書き込みの api は次の段の管理画面で作り、上の保存単位に従う
 - 編成の取得の `include` に `vehicleFormations.vehicle.modifications` を足し、車両ごとの記録を返す。並びは `modified_on` の古い順（NULL を先）にする
-- client は `GET /v3/formations/from/2000-01-01/to/<今日>?include=vehicleFormations.vehicle.modifications` のように全期間を取り、編成番号で絞って使う（150 行ほど）。編成番号で絞る引数は足さない
-- この変更は、期間の目撃の絞り込み（下）とは別の api の PR にする。client の PR より先に出してデプロイする
+- 期間の取得（`from/:startDate/to/:endDate`）は 31 日までしか取れない（`PERIOD_MAX_DAYS`。2026-11-14 の入力検証の見直しで入った）。そこで、編成番号ごとに全期間を返す取得 `GET /v3/formations/number/:formationNumber` を足す（2026-11-24 ユーザー了承。始めは全期間を期間の取得で取って client で絞る案だったが、この制限で取れなかった）
+  - 返すのは、その編成番号の期間の行すべて。並びは始まりの日の古い順で、空の始まりの日が先
+  - `include`（`agency`・`vehicleFormations.vehicle.modifications`）と `fields` は期間の取得と同じものを使える
+  - 無い編成番号なら空の配列を返す。編成番号の形（数字と英字だけ、長さの上限）は検証する
+  - client はこれを編成番号が変わったときに 1 回だけ呼ぶ
+- 表と include は api PR #220（merge 済み）。編成番号ごとの取得は別の api の PR にする。どちらも client の PR より先にデプロイする
 
 ### 期間の目撃の絞り込み
 
