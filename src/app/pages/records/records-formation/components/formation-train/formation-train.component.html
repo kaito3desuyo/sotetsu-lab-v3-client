@@ -1,0 +1,79 @@
+<ul [class]="listClass()" data-testid="formation-train">
+    @for (slot of slots(); track $index) {
+        <li
+            class="tw-box-border tw-flex tw-min-w-0 tw-basis-1/5 tw-flex-col tw-items-center tw-gap-px tw-px-[1.5px] md:tw-basis-[10%]"
+            data-testid="formation-car"
+        >
+            <svg
+                class="tw-block tw-h-auto tw-w-full"
+                aria-hidden="true"
+                [attr.viewBox]="slot.art.viewBox"
+            >
+                <defs>
+                    <clipPath [attr.id]="idPrefix + '-' + $index">
+                        <path [attr.d]="slot.art.bodyPath" />
+                    </clipPath>
+                </defs>
+                @let roof = slot.art.roof;
+                <rect
+                    [attr.x]="roof.x"
+                    [attr.y]="roof.y"
+                    [attr.width]="roof.width"
+                    [attr.height]="roof.height"
+                    [attr.rx]="roof.rx"
+                    [attr.fill]="roof.fill"
+                />
+                <path
+                    [attr.d]="slot.art.bodyPath"
+                    [attr.fill]="slot.art.bodyFill"
+                />
+                <g [attr.clip-path]="'url(#' + idPrefix + '-' + $index + ')'">
+                    @for (shape of slot.art.clipped; track $index) {
+                        @if (shape.type === 'rect') {
+                            <rect
+                                [attr.x]="shape.x"
+                                [attr.y]="shape.y"
+                                [attr.width]="shape.width"
+                                [attr.height]="shape.height"
+                                [attr.fill]="shape.fill"
+                                [attr.transform]="shape.transform ?? null"
+                            />
+                        } @else {
+                            <path
+                                [attr.d]="shape.d"
+                                [attr.fill]="shape.fill ?? 'none'"
+                                [attr.stroke]="shape.stroke ?? null"
+                                [attr.stroke-width]="shape.strokeWidth ?? null"
+                                [attr.transform]="shape.transform ?? null"
+                            />
+                        }
+                    }
+                </g>
+                @for (bogie of slot.art.bogies; track $index) {
+                    <rect
+                        [attr.x]="bogie.x"
+                        [attr.y]="bogie.y"
+                        [attr.width]="bogie.width"
+                        [attr.height]="bogie.height"
+                        [attr.rx]="bogie.rx"
+                        [attr.fill]="bogie.fill"
+                    />
+                }
+            </svg>
+            <span
+                [class]="
+                    (slot.changed ? 'tw-font-bold tw-text-accent-deep ' : '') +
+                    numberClass()
+                "
+                [attr.data-changed]="slot.changed ? 'true' : null"
+                data-testid="vehicle-number"
+                >{{ slot.vehicleNumber }}</span
+            >
+            @if (showCarNumber()) {
+                <span class="tw-text-[10px] tw-text-muted">{{
+                    slot.carNumber
+                }}</span>
+            }
+        </li>
+    }
+</ul>
