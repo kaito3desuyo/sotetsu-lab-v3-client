@@ -3,12 +3,14 @@ import {
     Component,
     computed,
     input,
+    output,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
 import { RouterLink } from '@angular/router';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
-import { buildMonthWeeks } from '../../utils/records-month.util';
+import { buildMonthWeeks, shiftMonth } from '../../utils/records-month.util';
 
 const WEEKDAYS = ['月', '火', '水', '木', '金', '土', '日'];
 
@@ -24,6 +26,10 @@ interface CalendarCell {
     date: string;
     day: number;
     isToday: boolean;
+    /** 土曜・日曜・祝日 */
+    isRed: boolean;
+    /** 祝日名。祝日でなければ null */
+    holidayName: string | null;
     entries: CalendarEntry[];
     /** 目撃のある日だけリンクにする */
     link: readonly unknown[] | null;
@@ -37,7 +43,12 @@ interface CalendarCell {
     selector: 'app-records-formation-calendar',
     templateUrl: './records-formation-calendar.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [NgTemplateOutlet, OperationNumberTagComponent, RouterLink],
+    imports: [
+        MatButtonModule,
+        NgTemplateOutlet,
+        OperationNumberTagComponent,
+        RouterLink,
+    ],
     host: { class: 'tw-block' },
 })
 export class RecordsFormationCalendarComponent {
@@ -50,14 +61,32 @@ export class RecordsFormationCalendarComponent {
     >({});
     /** 今日（4 時区切り）の鉄道日 */
     readonly today = input<string | null>(null);
+    /** 日（'YYYY-MM-DD'）ごとの祝日名 */
+    readonly holidays = input<Readonly<Record<string, string>>>({});
+    /** 今の月より先へは進めない */
+    readonly canGoNext = input(false);
 
-    protected readonly weekdays = WEEKDAYS;
+    readonly shift = output<-1 | 1>();
+
+    protected readonly weekdays = WEEKDAYS.map((label, index) => ({
+        label,
+        isRed: index >= 5,
+    }));
+
+    protected readonly monthLabels = computed(() => {
+        const [year, month] = this.month().split('-');
+        return {
+            prev: `${Number(shiftMonth(this.month(), -1).slice(5))}月`,
+            current: `${year}年${Number(month)}月`,
+            next: `${Number(shiftMonth(this.month(), 1).slice(5))}月`,
+        };
+    });
 
     protected readonly weeks = computed((): (CalendarCell | null)[][] => {
         const byDate = this.sightingsByDate();
         const formationNumber = this.formationNumber();
         return buildMonthWeeks(this.month()).map((week) =>
-            week.map((date) => {
+            week.map((date, column) => {
                 if (!date) return null;
                 const entries = (byDate[date] ?? []).map((s) => ({
                     id: s.operationSightingId,
@@ -65,8 +94,12 @@ export class RecordsFormationCalendarComponent {
                     operationNumber: s.operation?.operationNumber ?? null,
                     inferred: !!s.sightedAsOperation,
                 }));
+                const holidayName = this.holidays()[date] ?? null;
                 return {
                     date,
+                    // 月曜始まりなので、右の 2 列が土曜・日曜
+                    isRed: column >= 5 || holidayName !== null,
+                    holidayName,
                     day: Number(date.slice(8)),
                     isToday: date === this.today(),
                     entries,

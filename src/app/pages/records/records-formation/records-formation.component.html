@@ -65,9 +65,27 @@
                         [formationNumber]="number"
                         [summary]="summary()"
                         [today]="today()"
+                        [month]="month()"
+                        [latestPeriod]="periods()[0] ?? null"
                     ></app-records-formation-summary>
                 }
+                @if (periods().length > 0) {
+                    <app-records-formation-info
+                        [periods]="periods()"
+                        [modifications]="modifications()"
+                        [referenceDate]="referenceDate()"
+                    ></app-records-formation-info>
+                }
                 <article class="tw-overflow-clip tw-rounded-card tw-bg-white">
+                    <app-records-formation-calendar
+                        [formationNumber]="number"
+                        [month]="month()"
+                        [sightingsByDate]="sightingsByDate()"
+                        [today]="today()"
+                        [holidays]="holidays()"
+                        [canGoNext]="canGoNext()"
+                        (shift)="onShift($event)"
+                    ></app-records-formation-calendar>
                     @if (isMonthEmpty()) {
                         <p
                             class="tw-m-0 tw-p-4 tw-text-sm tw-text-muted"
@@ -76,12 +94,6 @@
                             この月の目撃はありません
                         </p>
                     }
-                    <app-records-formation-calendar
-                        [formationNumber]="number"
-                        [month]="month()"
-                        [sightingsByDate]="sightingsByDate()"
-                        [today]="today()"
-                    ></app-records-formation-calendar>
                 </article>
             }
         }

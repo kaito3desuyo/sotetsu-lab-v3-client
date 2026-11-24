@@ -31,7 +31,9 @@ describe('RecordsFormationSummaryComponent', () => {
             summary: summary('2026-11-19T01:00:00Z'),
             today: '2026-11-19',
         });
-        expect(fixture.nativeElement).toHaveTextContent('今日 11/19');
+        expect(fixture.nativeElement).toHaveTextContent('10701');
+        expect(fixture.nativeElement).toHaveTextContent('今日の目撃');
+        expect(fixture.nativeElement).toHaveTextContent('10:00');
         expect(fixture.nativeElement).toHaveTextContent('73');
     });
 
@@ -41,7 +43,8 @@ describe('RecordsFormationSummaryComponent', () => {
             summary: summary('2026-11-10T01:00:00Z', '41'),
             today: '2026-11-19',
         });
-        expect(fixture.nativeElement).toHaveTextContent('最後に見た日 11/10');
+        expect(fixture.nativeElement).toHaveTextContent('最後の目撃');
+        expect(fixture.nativeElement).toHaveTextContent('11/10 10:00');
         expect(fixture.nativeElement).toHaveTextContent('41');
         expect(
             fixture.nativeElement.querySelector('[data-testid="summary-link"]'),
@@ -112,6 +115,67 @@ describe('RecordsFormationSummaryComponent', () => {
         expect(fixture.nativeElement).not.toHaveTextContent('41');
     });
 
+    it('形式・会社を番号の横に出し、解かれた日があれば「まで」を続ける', () => {
+        const fixture = create({
+            formationNumber: '7710',
+            summary: summary('2019-10-19T01:00:00Z', '41'),
+            today: '2026-11-19',
+            latestPeriod: {
+                startDate: '2019-05-13',
+                endDate: '2019-10-14',
+                vehicleType: '7000',
+                agencyName: '相鉄',
+                cars: [],
+            },
+        });
+        expect(
+            fixture.nativeElement.querySelector('[data-testid="annotation"]'),
+        ).toHaveTextContent('7000・相鉄・2019/10/14 まで');
+    });
+
+    it('今も続く編成には「まで」を付けない', () => {
+        const fixture = create({
+            formationNumber: '10701',
+            summary: summary('2026-11-19T01:00:00Z'),
+            today: '2026-11-19',
+            latestPeriod: {
+                startDate: null,
+                endDate: null,
+                vehicleType: '10000',
+                agencyName: '相鉄',
+                cars: [],
+            },
+        });
+        const annotation = fixture.nativeElement.querySelector(
+            '[data-testid="annotation"]',
+        );
+        expect(annotation).toHaveTextContent('10000・相鉄');
+        expect(annotation).not.toHaveTextContent('まで');
+    });
+
+    it('期間が取れなければ番号だけを出す', () => {
+        const bare = create({
+            formationNumber: '10701',
+            summary: summary('2026-11-19T01:00:00Z'),
+            today: '2026-11-19',
+        });
+        expect(
+            bare.nativeElement.querySelector('[data-testid="annotation"]'),
+        ).toBeNull();
+    });
+
+    it('「この月の記録」は、最後に見た日の月と今見ている月が同じなら出さない', () => {
+        const same = create({
+            formationNumber: '10701',
+            summary: summary('2026-11-10T01:00:00Z'),
+            today: '2026-11-19',
+            month: '2026-11',
+        });
+        expect(
+            same.nativeElement.querySelector('[data-testid="month-link"]'),
+        ).toBeNull();
+    });
+
     it('その月の記録へのリンクを出す（引退した編成の 2019 年の目撃なら 2019-03）', () => {
         const fixture = create({
             formationNumber: '8701',
@@ -146,7 +210,7 @@ describe('RecordsFormationSummaryComponent', () => {
             summary: summary('2026-01-05T01:00:00Z'),
             today: '2026-11-19',
         });
-        expect(fixture.nativeElement).toHaveTextContent('最後に見た日 1/5');
+        expect(fixture.nativeElement).toHaveTextContent('1/5 10:00');
         expect(fixture.nativeElement).not.toHaveTextContent('2026/1/5');
     });
 
@@ -156,9 +220,7 @@ describe('RecordsFormationSummaryComponent', () => {
             summary: summary('2019-10-19T01:00:00Z', '41'),
             today: '2026-11-19',
         });
-        expect(fixture.nativeElement).toHaveTextContent(
-            '最後に見た日 2019/10/19',
-        );
+        expect(fixture.nativeElement).toHaveTextContent('2019/10/19 10:00');
     });
 
     it('年の境目は 4 時区切りの鉄道日で数える（日本時間 1/1 の 2 時の目撃は前の年）', () => {
@@ -168,8 +230,6 @@ describe('RecordsFormationSummaryComponent', () => {
             summary: summary('2025-12-31T17:00:00Z'),
             today: '2026-11-19',
         });
-        expect(fixture.nativeElement).toHaveTextContent(
-            '最後に見た日 2025/12/31',
-        );
+        expect(fixture.nativeElement).toHaveTextContent('2025/12/31 02:00');
     });
 });

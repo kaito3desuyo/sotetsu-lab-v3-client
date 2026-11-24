@@ -1,15 +1,20 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { catchError, finalize, map } from 'rxjs/operators';
+import { CalendarDateService } from 'src/app/libs/calendar/usecase/calendar-date.service';
+import { FormationService } from 'src/app/libs/formation/usecase/formation.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { RecordsFormationStore } from '../stores/records-formation.store';
+import { buildHolidayNames } from '../utils/holiday-names.util';
 import { monthPeriod } from '../utils/records-month.util';
 
-/** 編成の記録の取得。カレンダー（月ごと）と要約（編成ごと）は別々に取る。 */
+/** 編成の記録の取得。カレンダー（月ごと）・祝日（月ごと）・要約と編成の期間（編成ごと）は別々に取る。 */
 @Injectable()
 export class RecordsFormationService {
     readonly #store = inject(RecordsFormationStore);
     readonly #operationSightingService = inject(OperationSightingService);
+    readonly #formationService = inject(FormationService);
+    readonly #calendarDateService = inject(CalendarDateService);
 
     /** 月の目撃を取る。取っている間に新しい取得が始まったら、古い結果は捨てる */
     fetchMonth(params: {
@@ -70,6 +75,73 @@ export class RecordsFormationService {
                     console.error(error);
                     if (isCurrent())
                         this.#store.setSummaryError(formationNumber);
+                    return of(undefined);
+                }),
+            );
+    }
+
+    /**
+     * 編成の全期間（号車・車両・車両の改造の記録つき）を取る。編成が変わったときだけ呼ぶ。
+     * 取れなければ空にする（編成の情報のカードを出さない）。
+     */
+    fetchFormationPeriods(params: {
+        formationNumber: string;
+        /** 今日（4 時区切りの鉄道日）。取る範囲の終わり */
+        today: string;
+        forceReload?: boolean;
+    }): Observable<void> {
+        const { formationNumber, today, forceReload } = params;
+        const isCurrent = (): boolean =>
+            this.#store.formationNumber() === formationNumber;
+        return this.#formationService
+            .findManyBySpecificPeriod({
+                startDate: '2000-01-01',
+                endDate: today,
+                include: 'vehicleFormations.vehicle.modifications,agency',
+                ...(forceReload ? { forceReload: true } : {}),
+            })
+            .pipe(
+                map((rows) => {
+                    if (isCurrent()) {
+                        this.#store.setFormationRows(formationNumber, rows);
+                    }
+                }),
+                catchError((error: unknown) => {
+                    console.error(error);
+                    if (isCurrent()) {
+                        this.#store.setFormationRows(formationNumber, []);
+                    }
+                    return of(undefined);
+                }),
+            );
+    }
+
+    /** 月の祝日名を取る。月を替えたら取り直す。取れなければ祝日名なしで出す */
+    fetchHolidays(params: {
+        month: string;
+        forceReload?: boolean;
+    }): Observable<void> {
+        const { month, forceReload } = params;
+        const seq = this.#store.nextHolidaySeq();
+        return this.#calendarDateService
+            .findMany({
+                ...monthPeriod(month),
+                ...(forceReload ? { forceReload: true } : {}),
+            })
+            .pipe(
+                map((calendarDates) => {
+                    if (this.#store.isLatestHolidayFetch(seq)) {
+                        this.#store.setHolidays(
+                            month,
+                            buildHolidayNames(calendarDates),
+                        );
+                    }
+                }),
+                catchError((error: unknown) => {
+                    console.error(error);
+                    if (this.#store.isLatestHolidayFetch(seq)) {
+                        this.#store.setHolidays(month, {});
+                    }
                     return of(undefined);
                 }),
             );

@@ -14,6 +14,8 @@ import { unprotected } from '@ngrx/signals/testing';
 import { BehaviorSubject, Observable, of, Subject, throwError } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { TodaysFormationListState } from 'src/app/global-states/todays-formation-list.state';
+import { CalendarDateService } from 'src/app/libs/calendar/usecase/calendar-date.service';
+import { FormationService } from 'src/app/libs/formation/usecase/formation.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { RecordsFormationComponent } from './records-formation.component';
 import { RecordsFormationService } from './services/records-formation.service';
@@ -71,6 +73,8 @@ function setup(options: {
     server?: boolean;
     findMany?: () => Observable<unknown[]>;
     summaryFails?: boolean;
+    formationRows?: unknown[];
+    calendarDates?: unknown[];
 }) {
     jest.useFakeTimers({
         now: options.now ?? at(11, 19),
@@ -87,6 +91,14 @@ function setup(options: {
                 : of({ latestSighting: null, expectedSighting: null }),
         ),
     };
+    const formationApi = {
+        findManyBySpecificPeriod: jest.fn(() =>
+            of(options.formationRows ?? []),
+        ),
+    };
+    const calendarApi = {
+        findMany: jest.fn(() => of(options.calendarDates ?? [])),
+    };
     TestBed.configureTestingModule({
         imports: [RecordsFormationComponent],
         providers: [
@@ -95,6 +107,8 @@ function setup(options: {
             provideRouter([]),
             { provide: ActivatedRoute, useValue: { paramMap: paramMap$ } },
             { provide: OperationSightingService, useValue: api },
+            { provide: FormationService, useValue: formationApi },
+            { provide: CalendarDateService, useValue: calendarApi },
             { provide: NotificationService, useValue: { open: jest.fn() } },
             ...(options.server
                 ? [{ provide: PLATFORM_ID, useValue: 'server' }]
@@ -122,6 +136,8 @@ function setup(options: {
     return {
         fixture,
         api,
+        formationApi,
+        calendarApi,
         navigate,
         paramMap$,
         store: TestBed.inject(RecordsFormationStore),
@@ -351,5 +367,121 @@ describe('RecordsFormationComponent', () => {
         expect(api.findManyBySpecificPeriod).toHaveBeenCalledWith(
             expect.objectContaining({ from: '2026-10-01', to: '2026-10-31' }),
         );
+    });
+
+    it('編成の全期間を include 付きで取り、編成の情報のカードを出す', () => {
+        const { fixture, formationApi } = setup({
+            params: { formation_number: '10701', month: '2026-11' },
+            formationRows: [
+                {
+                    formationNumber: '10701',
+                    vehicleType: '10000',
+                    startDate: null,
+                    endDate: null,
+                    agency: { agencyName: '相鉄' },
+                    vehicleFormations: [
+                        {
+                            carNumber: 1,
+                            vehicle: {
+                                vehicleNumber: '10701',
+                                modifications: [
+                                    {
+                                        modifiedOn: null,
+                                        kind: 'livery',
+                                        value: '10000-ynb',
+                                        description: null,
+                                    },
+                                ],
+                            },
+                        },
+                    ],
+                },
+            ],
+        });
+        expect(formationApi.findManyBySpecificPeriod).toHaveBeenCalledWith({
+            startDate: '2000-01-01',
+            endDate: '2026-11-19',
+            include: 'vehicleFormations.vehicle.modifications,agency',
+        });
+        expect(q(fixture, '[data-testid="records-info"]')).toHaveTextContent(
+            '10701',
+        );
+        expect(q(fixture, '[data-testid="annotation"]')).toHaveTextContent(
+            '10000・相鉄',
+        );
+        expect(q(fixture, '[data-testid="info-history"]')).toBeNull();
+        expect(
+            q(fixture, '[data-testid="info-modifications"]'),
+        ).toHaveTextContent('10000 の YNB');
+    });
+
+    it('編成の期間が取れなければ編成の情報のカードを出さない', () => {
+        const { fixture } = setup({
+            params: { formation_number: '10701', month: '2026-11' },
+            formationRows: [],
+        });
+        expect(q(fixture, '[data-testid="records-info"]')).toBeNull();
+    });
+
+    it('月を替えると祝日だけ取り直し、編成の期間は取り直さない', () => {
+        const { formationApi, calendarApi, paramMap$ } = setup({
+            params: { formation_number: '10701', month: '2026-11' },
+        });
+        expect(calendarApi.findMany).toHaveBeenCalledWith({
+            from: '2026-11-01',
+            to: '2026-11-30',
+        });
+        paramMap$.next(
+            convertToParamMap({ formation_number: '10701', month: '2026-10' }),
+        );
+        expect(calendarApi.findMany).toHaveBeenCalledTimes(2);
+        expect(calendarApi.findMany).toHaveBeenLastCalledWith({
+            from: '2026-10-01',
+            to: '2026-10-31',
+        });
+        expect(formationApi.findManyBySpecificPeriod).toHaveBeenCalledTimes(1);
+    });
+
+    it('編成番号が変わったら編成の期間を取り直す', () => {
+        const { formationApi, paramMap$ } = setup({
+            params: { formation_number: '10701', month: '2026-11' },
+        });
+        paramMap$.next(
+            convertToParamMap({ formation_number: '7710', month: '2026-11' }),
+        );
+        expect(formationApi.findManyBySpecificPeriod).toHaveBeenCalledTimes(2);
+    });
+
+    it('祝日がカレンダーに赤で出る（11/3 は文化の日）', () => {
+        const { fixture } = setup({
+            params: { formation_number: '10701', month: '2026-11' },
+            calendarDates: [
+                { calendarDateId: 'c', date: '2026-11-03', memo: '文化の日' },
+            ],
+        });
+        expect(q(fixture, '[data-date="2026-11-03"]')).toHaveTextContent(
+            '文化の日',
+        );
+    });
+
+    it('カレンダーの上端の送りで前の月へ移動する', () => {
+        const { fixture, navigate } = setup({
+            params: { formation_number: '10701', month: '2026-11' },
+        });
+        q(fixture, '[data-testid="calendar-prev"]')!.click();
+        expect(navigate).toHaveBeenCalledWith([
+            'records',
+            'formation',
+            { formation_number: '10701', month: '2026-10' },
+        ]);
+    });
+
+    it('サーバーでは編成の期間と祝日も取らない', () => {
+        const { formationApi, calendarApi } = setup({
+            params: { formation_number: '10701' },
+            server: true,
+        });
+        expect(formationApi.findManyBySpecificPeriod).not.toHaveBeenCalled();
+        expect(calendarApi.findMany).not.toHaveBeenCalled();
     });
 });

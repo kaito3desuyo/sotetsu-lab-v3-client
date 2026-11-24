@@ -19,7 +19,10 @@ const sightingWithoutOperation = (id: string) => ({
     operationId: 'op-x',
 });
 
-function create(sightingsByDate: Record<string, unknown[]>) {
+function create(
+    sightingsByDate: Record<string, unknown[]>,
+    extra: Record<string, unknown> = {},
+) {
     TestBed.configureTestingModule({
         imports: [RecordsFormationCalendarComponent],
         providers: [provideRouter([])],
@@ -29,6 +32,9 @@ function create(sightingsByDate: Record<string, unknown[]>) {
     fixture.componentRef.setInput('month', '2026-11');
     fixture.componentRef.setInput('today', '2026-11-19');
     fixture.componentRef.setInput('sightingsByDate', sightingsByDate);
+    for (const [k, v] of Object.entries(extra)) {
+        fixture.componentRef.setInput(k, v);
+    }
     fixture.detectChanges();
     return fixture;
 }
@@ -104,5 +110,72 @@ describe('RecordsFormationCalendarComponent', () => {
         expect(
             fixture.nativeElement.querySelectorAll('[data-date]').length,
         ).toBe(30);
+    });
+
+    it('土曜・日曜・祝日の数字に赤の印を付け、祝日名を添える（11/3 は文化の日・火曜）', () => {
+        const fixture = create({}, { holidays: { '2026-11-03': '文化の日' } });
+        const red = (date: string) =>
+            cell(fixture, date)
+                .querySelector('[data-testid="day-number"]')!
+                .getAttribute('data-red');
+        expect(red('2026-11-03')).toBe('true');
+        expect(red('2026-11-07')).toBe('true');
+        expect(red('2026-11-08')).toBe('true');
+        expect(red('2026-11-04')).toBeNull();
+        expect(cell(fixture, '2026-11-03')).toHaveTextContent('文化の日');
+        expect(cell(fixture, '2026-11-04')).not.toHaveTextContent('文化の日');
+    });
+
+    it('土曜・日曜の見出しも赤にする', () => {
+        const fixture = create({});
+        const headers = [
+            ...fixture.nativeElement.querySelectorAll('[role="columnheader"]'),
+        ] as HTMLElement[];
+        expect(
+            headers.map((h) => h.className.includes('tw-text-accent-deep')),
+        ).toEqual([false, false, false, false, false, true, true]);
+    });
+
+    it('今日のマスに今日の印を付ける', () => {
+        const fixture = create({});
+        expect(
+            cell(fixture, '2026-11-19').querySelector(
+                '[data-testid="day-number"]',
+            )!,
+        ).toHaveAttribute('data-today', 'true');
+        expect(
+            cell(fixture, '2026-11-18').querySelector(
+                '[data-testid="day-number"]',
+            )!,
+        ).not.toHaveAttribute('data-today');
+    });
+
+    it('上端に前の月・今の月・次の月を出し、‹ › で shift を出す', () => {
+        const fixture = create({}, { canGoNext: true });
+        const nav = fixture.nativeElement.querySelector(
+            '[data-testid="calendar-nav"]',
+        );
+        expect(nav).toHaveTextContent('10月');
+        expect(nav).toHaveTextContent('2026年11月');
+        expect(nav).toHaveTextContent('12月');
+        const emitted: number[] = [];
+        fixture.componentInstance.shift.subscribe((d: number) =>
+            emitted.push(d),
+        );
+        fixture.nativeElement
+            .querySelector('[data-testid="calendar-prev"]')
+            .click();
+        fixture.nativeElement
+            .querySelector('[data-testid="calendar-next"]')
+            .click();
+        expect(emitted).toEqual([-1, 1]);
+    });
+
+    it('今の月より先へは進めない（canGoNext が false なら次の月のボタンは無効）', () => {
+        const fixture = create({}, { canGoNext: false });
+        expect(
+            fixture.nativeElement.querySelector('[data-testid="calendar-next"]')
+                .disabled,
+        ).toBe(true);
     });
 });

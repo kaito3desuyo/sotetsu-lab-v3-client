@@ -19,16 +19,25 @@ import { notifyNavigationFailure } from 'src/app/core/utils/notify-navigation-fa
 import { railwayDateKey } from 'src/app/core/utils/railway-day';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
+import { RecordsFormationInfoComponent } from './components/records-formation-info/records-formation-info.component';
 import { RecordsFormationCalendarComponent } from './components/records-formation-calendar/records-formation-calendar.component';
 import { RecordsFormationControlsComponent } from './components/records-formation-controls/records-formation-controls.component';
 import { RecordsFormationSummaryComponent } from './components/records-formation-summary/records-formation-summary.component';
 import { RecordsFormationService } from './services/records-formation.service';
 import { RecordsFormationStore } from './stores/records-formation.store';
-import { parseMonthParam, shiftMonth } from './utils/records-month.util';
+import {
+    buildFormationPeriods,
+    collectVehicleModifications,
+} from './utils/formation-periods.util';
+import {
+    monthPeriod,
+    parseMonthParam,
+    shiftMonth,
+} from './utils/records-month.util';
 
 /**
- * 編成の記録。編成番号と月（マトリクスパラメータ）から、その編成の月の運番カレンダーと、
- * 今日（無ければ最後に見た日）の運番の要約を出す。
+ * 編成の記録。編成番号と月（マトリクスパラメータ）から、見出し（今日、無ければ最後に見た日の運番）・
+ * 編成の情報（組成・組み換えの履歴・改造の経歴）・その編成の月の運番カレンダーを出す。
  * 今日・今の月はブラウザの時計で決める。サーバーは今日を知らないので、枠だけ返して取得しない。
  */
 @Component({
@@ -41,6 +50,7 @@ import { parseMonthParam, shiftMonth } from './utils/records-month.util';
         EmptyStateComponent,
         RecordsFormationCalendarComponent,
         RecordsFormationControlsComponent,
+        RecordsFormationInfoComponent,
         RecordsFormationSummaryComponent,
     ],
 })
@@ -53,7 +63,7 @@ export class RecordsFormationComponent {
     readonly #service = inject(RecordsFormationService);
     readonly #isServer = isPlatformServer(inject(PLATFORM_ID));
     readonly #formations = inject(TodaysFormationListState);
-    /** 要約を取った編成。月を替えても取り直さない */
+    /** 要約と編成の期間を取った編成。月を替えても取り直さない */
     #summaryRequestedFor: string | null = null;
 
     protected readonly agencies = inject(AgencyListState).agencies;
@@ -107,6 +117,35 @@ export class RecordsFormationComponent {
             !this.#store.summaryError(),
     );
 
+    /** 編成の期間（新しい順）。いま見ている編成のものだけ */
+    protected readonly periods = computed(() => {
+        const number = this.formationNumber();
+        return number && this.#store.formationRowsFor() === number
+            ? buildFormationPeriods(
+                  this.#store.formationRows(),
+                  number,
+                  this.today(),
+              )
+            : [];
+    });
+    protected readonly modifications = computed(() => {
+        const number = this.formationNumber();
+        return number && this.#store.formationRowsFor() === number
+            ? collectVehicleModifications(this.#store.formationRows(), number)
+            : {};
+    });
+    /** 組成を決める日。今見ている月の最終日、今の月なら今日 */
+    protected readonly referenceDate = computed(() =>
+        this.month() === this.currentMonth()
+            ? this.today()
+            : monthPeriod(this.month()).to,
+    );
+    protected readonly holidays = computed(() =>
+        this.#store.holidaysMonth() === this.month()
+            ? this.#store.holidays()
+            : {},
+    );
+
     protected readonly view = computed(() => {
         if (!this.formationNumber()) return 'noNumber';
         if (this.ready() && this.#store.loadError()) return 'error';
@@ -150,8 +189,21 @@ export class RecordsFormationComponent {
                 ...(forceReload ? { forceReload: true } : {}),
             })
             .subscribe();
+        this.#service
+            .fetchHolidays({
+                month,
+                ...(forceReload ? { forceReload: true } : {}),
+            })
+            .subscribe();
         if (forceReload || this.#summaryRequestedFor !== formationNumber) {
             this.#summaryRequestedFor = formationNumber;
+            this.#service
+                .fetchFormationPeriods({
+                    formationNumber,
+                    today: this.today(),
+                    ...(forceReload ? { forceReload: true } : {}),
+                })
+                .subscribe();
             this.#service
                 .fetchSummary({
                     formationNumber,

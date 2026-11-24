@@ -9,6 +9,7 @@ import {
 import { groupBy } from 'es-toolkit';
 import { withAppDevtools } from 'src/app/core/store-features/with-app-devtools';
 import { toRailwayDateKey } from 'src/app/core/utils/railway-day';
+import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 
@@ -26,6 +27,14 @@ type StoreProps = {
     /** summary がどの編成のものか。null なら未取得 */
     summaryFormationNumber: string | null;
     summaryError: boolean;
+    /** 編成の全期間の行（api が返した全編成ぶん）。編成が変わったときだけ取り直す */
+    formationRows: FormationDetailsDto[];
+    /** formationRows がどの編成のために取ったものか。null なら未取得 */
+    formationRowsFor: string | null;
+    /** 月の祝日名（日 'YYYY-MM-DD' → 名前） */
+    holidays: Record<string, string>;
+    /** holidays がどの月のものか */
+    holidaysMonth: string | null;
     loadingQueue: boolean[];
 };
 
@@ -38,6 +47,10 @@ const initialState: StoreProps = {
     summary: null,
     summaryFormationNumber: null,
     summaryError: false,
+    formationRows: [],
+    formationRowsFor: null,
+    holidays: {},
+    holidaysMonth: null,
     loadingQueue: [],
 };
 
@@ -58,7 +71,26 @@ export const RecordsFormationStore = signalStore(
     withMethods((store) => {
         // 取得の世代番号。時間で変わる値なので computed でなくクロージャに持つ
         let fetchSeq = 0;
+        let holidaySeq = 0;
         return {
+            nextHolidaySeq(): number {
+                return ++holidaySeq;
+            },
+            isLatestHolidayFetch(seq: number): boolean {
+                return seq === holidaySeq;
+            },
+            setFormationRows(
+                formationNumber: string,
+                formationRows: FormationDetailsDto[],
+            ): void {
+                patchState(store, {
+                    formationRows,
+                    formationRowsFor: formationNumber,
+                });
+            },
+            setHolidays(month: string, holidays: Record<string, string>): void {
+                patchState(store, { holidays, holidaysMonth: month });
+            },
             nextFetchSeq(): number {
                 return ++fetchSeq;
             },
