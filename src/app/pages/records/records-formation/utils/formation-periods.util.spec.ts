@@ -209,6 +209,26 @@ describe('formation-periods.util', () => {
                 'A',
             ]);
         });
+
+        it('api が省いた始まりの日・終わりの日は null にそろえ、今日を含む期間として引ける', () => {
+            const {
+                startDate: _s,
+                endDate: _e,
+                ...current
+            } = row('1', null, null, cars(['A']));
+            const periods = buildFormationPeriods(
+                [current as FormationDetailsDto],
+                '1',
+                '2026-11-20',
+            );
+            expect(periods[0]).toMatchObject({
+                startDate: null,
+                endDate: null,
+            });
+            expect(periodAt(periods, '2026-11-20')?.cars[0].vehicleNumber).toBe(
+                'A',
+            );
+        });
     });
 
     describe('changedCars', () => {

@@ -71,4 +71,36 @@ describe('FormationDtoBuilder', () => {
             { carNumber: 1, vehicle: undefined },
         ]);
     });
+
+    it('api が省いた NULL の項目（include で取った応答）は null にそろえる', () => {
+        const dto = FormationDtoBuilder.buildFromModel({
+            id: 'f-1',
+            vehicleFormations: [
+                {
+                    carNumber: 1,
+                    vehicle: {
+                        vehicleNumber: '9701',
+                        modifications: [
+                            {
+                                id: 'm-1',
+                                vehicleId: 'v-1',
+                                kind: 'renewal',
+                                createdAt: 'c',
+                                updatedAt: 'u',
+                            },
+                        ],
+                    },
+                },
+            ],
+        } as FormationModel);
+
+        expect(dto.vehicleFormations?.[0].vehicle?.modifications).toEqual([
+            {
+                modifiedOn: null,
+                kind: 'renewal',
+                value: null,
+                description: null,
+            },
+        ]);
+    });
 });

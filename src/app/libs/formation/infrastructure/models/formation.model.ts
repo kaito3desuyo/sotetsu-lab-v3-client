@@ -3,10 +3,11 @@ import { AgencyModel } from 'src/app/libs/agency/infrastructure/models/agency.mo
 export interface VehicleModificationModel {
     id: string;
     vehicleId: string;
-    modifiedOn: string | null;
+    // include で取った応答では、api が NULL の項目を省く（api の ADR-0010）
+    modifiedOn?: string | null;
     kind: string;
-    value: string | null;
-    description: string | null;
+    value?: string | null;
+    description?: string | null;
     createdAt: string;
     updatedAt: string;
 }

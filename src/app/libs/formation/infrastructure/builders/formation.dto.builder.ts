@@ -17,10 +17,10 @@ const buildVehicleFormation = ({
         vehicleNumber: vehicle.vehicleNumber,
         modifications: vehicle.modifications?.map(
             ({ modifiedOn, kind, value, description }) => ({
-                modifiedOn,
+                modifiedOn: modifiedOn ?? null,
                 kind,
-                value,
-                description,
+                value: value ?? null,
+                description: description ?? null,
             }),
         ),
     },
@@ -38,6 +38,7 @@ export const FormationDtoBuilder = {
         agency: agency && AgencyDtoBuilder.buildFromModel(agency),
         vehicleFormations: vehicleFormations?.map(buildVehicleFormation),
     }),
+    buildVehicleFormation,
     buildFromModels: (models: FormationModel[]): FormationDetailsDto[] =>
         models.map((model) => FormationDtoBuilder.buildFromModel(model)),
 } as const;

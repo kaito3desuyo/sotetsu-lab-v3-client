@@ -43,7 +43,9 @@ export const toModificationRow = (
             : '';
     const content =
         entry.kind === 'livery'
-            ? [name, entry.description].filter(Boolean).join(' ')
+            ? name && entry.description
+                ? `${name}（${entry.description}）`
+                : name || (entry.description ?? '')
             : (entry.description ?? '');
     return {
         date: entry.modifiedOn ? formatSlashDate(entry.modifiedOn) : '新製時',

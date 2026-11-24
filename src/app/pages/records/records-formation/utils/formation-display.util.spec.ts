@@ -42,7 +42,7 @@ describe('formation-display.util', () => {
         ).toEqual({
             date: '2024/3/1',
             kind: '塗り替え',
-            content: '10000 の YNB 月までしか分からない',
+            content: '10000 の YNB（月までしか分からない）',
             target: '全車',
         });
     });

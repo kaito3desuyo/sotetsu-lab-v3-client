@@ -1,4 +1,5 @@
 import { AgencyDtoBuilder } from 'src/app/libs/agency/infrastructure/builders/agency.dto.builder';
+import { FormationDtoBuilder } from 'src/app/libs/formation/infrastructure/builders/formation.dto.builder';
 import { CalendarDtoBuilder } from 'src/app/libs/calendar/infrastructure/builders/calendar.dto.builder';
 import { OperationSightingTimeCrossSectionDto } from '../../usecase/dtos/operation-sighting-time-cross-section.dto';
 import { OperationSightingTimeCrossSectionModel } from '../models/operation-sighting-time-cross-section.model';
@@ -33,6 +34,9 @@ const buildExpectedSighting = ({
         agency:
             formation.agency &&
             AgencyDtoBuilder.buildFromModel(formation.agency),
+        vehicleFormations: formation.vehicleFormations?.map(
+            FormationDtoBuilder.buildVehicleFormation,
+        ),
     },
 });
 

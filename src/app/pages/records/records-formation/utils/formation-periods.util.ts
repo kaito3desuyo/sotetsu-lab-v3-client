@@ -120,8 +120,9 @@ export const buildFormationPeriods = (
                         : [],
                 );
             return {
-                startDate: row.startDate,
-                endDate: row.endDate,
+                // 続く期間の終わりの日などは、api が NULL の項目ごと省いて返す（api の ADR-0010）
+                startDate: row.startDate ?? null,
+                endDate: row.endDate ?? null,
                 vehicleType: row.vehicleType,
                 agencyName: row.agency?.agencyName ?? null,
                 cars,
