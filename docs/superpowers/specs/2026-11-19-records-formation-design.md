@@ -165,7 +165,7 @@ M31 の共有画像（編成と今日の運番が入ったカード）も、段 
 | `id` | uuid | |
 | `vehicle_id` | uuid・`vehicles` への外部キー | 改造した車両。編成でなく車両に付けるので、組み換えても記録は車両と一緒に移る |
 | `modified_on` | date・NULL 可 | 改造した日。NULL は「新製のときから」（新製の日が分からない車両の最初の塗装など） |
-| `kind` | varchar | 改造の種類。`livery`（塗り替え）・`renewal`（リニューアル）・`equipment`（機器更新）・`platform-door`（ホームドア対応）から始め、要るときに足す |
+| `kind` | varchar | 改造の種類。`livery`（塗り替え）・`exterior`（外観の変更）・`renewal`（リニューアル）・`equipment`（機器更新）・`platform-door`（ホームドア対応）の 5 つにする。種類は増やしすぎない（2026-11-24 ユーザー）。`exterior` は前灯の移設・前面の作り替えのような、塗装以外で見た目が変わる改造。パンタグラフの統一のような機器の改造は `equipment` に入れる。細かい中身は `description` に書く。絵は前灯を描かないので、`exterior` は経歴に出るだけで絵は変えない |
 | `value` | varchar・NULL 可 | 種類ごとの値。`livery` では塗装の値（上の表）。ほかの種類では使わなくてよい |
 | `description` | text・NULL 可 | 中身の説明（「VVVF を SiC に更新」など）。日付が月までしか分からないときは、その旨もここに書く |
 | `created_at`・`updated_at` | timestamptz | |
