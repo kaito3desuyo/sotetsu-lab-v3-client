@@ -26,4 +26,49 @@ describe('FormationDtoBuilder', () => {
             ]),
         ).toEqual([{ formationId: 'f-1' }, { formationId: 'f-2' }]);
     });
+
+    it('号車と車両の改造の記録を DTO の項目だけにして渡す', () => {
+        const dto = FormationDtoBuilder.buildFromModel({
+            id: 'f-1',
+            vehicleFormations: [
+                {
+                    carNumber: 2,
+                    vehicle: {
+                        vehicleNumber: '7710',
+                        modifications: [
+                            {
+                                id: 'm-1',
+                                vehicleId: 'v-1',
+                                modifiedOn: null,
+                                kind: 'livery',
+                                value: '7000',
+                                description: null,
+                                createdAt: 'c',
+                                updatedAt: 'u',
+                            },
+                        ],
+                    },
+                },
+                { carNumber: 1 },
+            ],
+        } as FormationModel);
+
+        expect(dto.vehicleFormations).toEqual([
+            {
+                carNumber: 2,
+                vehicle: {
+                    vehicleNumber: '7710',
+                    modifications: [
+                        {
+                            modifiedOn: null,
+                            kind: 'livery',
+                            value: '7000',
+                            description: null,
+                        },
+                    ],
+                },
+            },
+            { carNumber: 1, vehicle: undefined },
+        ]);
+    });
 });

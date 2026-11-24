@@ -65,4 +65,38 @@ describe('FormationQuery', () => {
             controller.verify();
         });
     });
+
+    describe('findManyBySpecificPeriod', () => {
+        const match = (r: { url: string }) =>
+            r.url === `${url}/from/2000-01-01/to/2026-11-20`;
+
+        it('include を渡さなければ今までどおり引数なしで取る', () => {
+            const { query, controller } = setup();
+
+            query
+                .findManyBySpecificPeriod({
+                    startDate: '2000-01-01',
+                    endDate: '2026-11-20',
+                })
+                .subscribe();
+            const req = controller.expectOne(match);
+
+            expect(req.request.params.keys()).toEqual([]);
+            req.flush([]);
+        });
+
+        it('include を渡せば送り、include ごとに別に取る', () => {
+            const { query, controller } = setup();
+            const include = 'vehicleFormations.vehicle.modifications,agency';
+            const base = { startDate: '2000-01-01', endDate: '2026-11-20' };
+
+            query.findManyBySpecificPeriod(base).subscribe();
+            controller.expectOne(match).flush([]);
+            query.findManyBySpecificPeriod({ ...base, include }).subscribe();
+            const req = controller.expectOne(match);
+
+            expect(req.request.params.get('include')).toBe(include);
+            req.flush([]);
+        });
+    });
 });

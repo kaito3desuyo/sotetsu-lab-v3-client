@@ -54,18 +54,27 @@ export class FormationQuery {
     findManyBySpecificPeriod(params: {
         startDate: string;
         endDate: string;
+        include?: string;
         forceReload?: boolean;
     }): Observable<FormationDetailsDto[]> {
-        const { startDate, endDate, forceReload } = params;
+        const { startDate, endDate, include, forceReload } = params;
 
         return this.#cache
             .get({
                 name: 'findManyBySpecificPeriod',
-                params: { startDate, endDate },
+                params: { startDate, endDate, include },
                 fetch: () =>
                     this.#http.get<FormationModel[]>(
                         `${this.#v3ApiUrl}/from/${startDate}/to/${endDate}`,
-                        { observe: 'response' },
+                        {
+                            params:
+                                include === undefined
+                                    ? undefined
+                                    : new HttpParams({
+                                          fromObject: { include },
+                                      }),
+                            observe: 'response',
+                        },
                     ),
                 forceReload,
             })

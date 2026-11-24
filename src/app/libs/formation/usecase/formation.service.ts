@@ -17,6 +17,7 @@ export class FormationService {
     findManyBySpecificPeriod(params: {
         startDate: string;
         endDate: string;
+        include?: string;
         forceReload?: boolean;
     }): Observable<FormationDetailsDto[]> {
         return this.#formationQuery.findManyBySpecificPeriod(params);
