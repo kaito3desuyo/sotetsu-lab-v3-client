@@ -25,6 +25,7 @@ import {
 } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -76,6 +77,8 @@ type Form = FormGroup<{
     operationNumber: FormControl<string>;
     timeSetting: FormControl<'currentTime' | 'specifiedTime'>;
     sightingTime: FormControl<string>;
+    /** 推測の投稿をしない確認。送る値には入れない */
+    noGuessAgreed: FormControl<boolean>;
 }>;
 
 export interface OperationPostInitialValue {
@@ -96,6 +99,7 @@ export interface OperationPostInitialValue {
         MatSelectModule,
         MatSnackBarModule,
         MatButtonModule,
+        MatCheckboxModule,
         MatIconModule,
         MatAutocompleteModule,
         RouterLink,
@@ -155,6 +159,10 @@ export class OperationPostFormComponent {
     /** 投稿の失敗を読み上げる文（snackbar と同じ。次に送るときに空にする） */
     readonly errorAnnouncement = signal('');
 
+    readonly #cardStore = inject(OperationPostCardStore);
+    /** 端末に覚えた確認。起動のあとに遅れて戻ることがある */
+    readonly noGuessAgreed = this.#cardStore.noGuessAgreed;
+
     readonly sightingForm: Form = this.#fb.group({
         agencyId: this.#fb.control('', [Validators.required]),
         formationOrVehicleNumber: this.#fb.control('', [Validators.required]),
@@ -166,9 +174,12 @@ export class OperationPostFormComponent {
         sightingTime: this.#fb.control({ value: '', disabled: true }, [
             Validators.required,
         ]),
+        noGuessAgreed: this.#fb.control(this.#cardStore.noGuessAgreed(), [
+            Validators.requiredTrue,
+        ]),
     });
 
-    readonly #agencies = inject(OperationPostCardStore).agencies;
+    readonly #agencies = this.#cardStore.agencies;
     readonly #todaysFormations = inject(TodaysFormationListState)
         .todaysFormations;
     /** 所属は今日の編成を持つ会社だけ（相鉄・JR東日本・東急。2026-10-06） */
@@ -240,6 +251,17 @@ export class OperationPostFormComponent {
                 this.#formValue.set(this.sightingForm.getRawValue());
             });
         });
+        // 端末に覚えた値は起動のあとに戻る。emitEvent: false で写すので sighting_form_start は飛ばない
+        effect(() => {
+            const agreed = this.#cardStore.noGuessAgreed();
+            untracked(() => {
+                const control = this.sightingForm.controls.noGuessAgreed;
+                if (control.value !== agreed) {
+                    control.setValue(agreed, { emitEvent: false });
+                    this.#formValue.set(this.sightingForm.getRawValue());
+                }
+            });
+        });
     }
 
     async fetchData(): Promise<void> {
@@ -300,6 +322,11 @@ export class OperationPostFormComponent {
                 this.#formValue.set(this.sightingForm.getRawValue());
             });
 
+        // チェックの変化は端末に覚える（外したら覚えも外れる）
+        this.sightingForm.controls.noGuessAgreed.valueChanges
+            .pipe(takeUntilDestroyed(this.#destroyRef))
+            .subscribe((value) => this.#cardStore.setNoGuessAgreed(value));
+
         // 選んだ番号と違う値に打ち直したら、列車から選んだとは数えない
         this.sightingForm.controls.operationNumber.valueChanges
             .pipe(takeUntilDestroyed(this.#destroyRef))
@@ -338,9 +365,15 @@ export class OperationPostFormComponent {
         if (this.sightingForm.invalid) {
             this.errorAnnouncement.set('');
             this.sightingForm.markAllAsTouched();
-            this.#host.nativeElement
-                .querySelector<HTMLElement>('form .ng-invalid[formcontrolname]')
-                ?.focus();
+            const firstInvalid =
+                this.#host.nativeElement.querySelector<HTMLElement>(
+                    'form .ng-invalid[formcontrolname]',
+                );
+            // mat-checkbox のホストは focus できないので、中の input に移す
+            (firstInvalid?.matches('mat-checkbox')
+                ? firstInvalid.querySelector<HTMLElement>('input')
+                : firstInvalid
+            )?.focus();
             return;
         }
         this.errorAnnouncement.set('');
@@ -432,6 +465,8 @@ export class OperationPostFormComponent {
                 operationNumber: '',
                 timeSetting: 'currentTime',
                 sightingTime: '',
+                // 確認は端末に覚えた値のまま残す
+                noGuessAgreed: this.#cardStore.noGuessAgreed(),
             });
 
             this.#operationPostCardService.emitSubmitEvent();

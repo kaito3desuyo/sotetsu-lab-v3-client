@@ -24,6 +24,7 @@ import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operati
 import { PickableTrain } from '../train-picker/pickable-train.interface';
 import { LoadingService } from '../loading/loading.service';
 import { OperationPostCardService } from './operation-post-card.service';
+import { OperationPostCardStore } from './operation-post-card.store';
 import { OperationPostFormComponent } from './operation-post-form.component';
 
 describe('OperationPostFormComponent', () => {
@@ -105,6 +106,8 @@ describe('OperationPostFormComponent', () => {
             .compileComponents();
 
         patchState(unprotected(TestBed.inject(UserState)), { userId: 'u1' });
+        // 送る流れを見る spec は、確認を入れた状態で始める
+        TestBed.inject(OperationPostCardStore).setNoGuessAgreed(true);
         fixture = TestBed.createComponent(OperationPostFormComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
@@ -169,6 +172,7 @@ describe('OperationPostFormComponent', () => {
             operationNumber: '11',
             timeSetting: 'currentTime',
             sightingTime: '',
+            noGuessAgreed: true,
         });
         await submit();
         expect(submitted).toHaveBeenCalledTimes(1);
@@ -186,6 +190,7 @@ describe('OperationPostFormComponent', () => {
             operationNumber: '11',
             timeSetting: 'currentTime',
             sightingTime: '',
+            noGuessAgreed: true,
         });
         await submit();
         expect(submitted).not.toHaveBeenCalled();
@@ -221,9 +226,48 @@ describe('OperationPostFormComponent', () => {
             { duration: 3000 },
         );
         expect(resetForm).toHaveBeenCalledWith(
-            expect.objectContaining({ timeSetting: 'currentTime' }),
+            expect.objectContaining({
+                timeSetting: 'currentTime',
+                noGuessAgreed: true,
+            }),
         );
         expect(emitSubmitEvent).toHaveBeenCalled();
+    });
+
+    it('確認が入っていないと送らない。送る値に確認の値は混ざらない', async () => {
+        jest.useFakeTimers({ now: new Date(2026, 9, 8, 10, 0) });
+        fill();
+        component.sightingForm.controls.noGuessAgreed.setValue(false);
+        await submit();
+        expect(postOperationSighting).not.toHaveBeenCalled();
+
+        component.sightingForm.controls.noGuessAgreed.setValue(true);
+        await submit();
+        expect(postOperationSighting).toHaveBeenCalledWith({
+            agencyId: 'sotetsu',
+            formationOrVehicleNumber: '10701',
+            operationNumber: '12',
+            sightingTime: new Date(2026, 9, 8, 10, 0).toISOString(),
+        });
+    });
+
+    it('確認の変化は store に書き、store の値が後から変わると sighting_form_start を送らずに写す', () => {
+        const store = TestBed.inject(OperationPostCardStore);
+        const control = component.sightingForm.controls.noGuessAgreed;
+        expect(control.value).toBe(true);
+
+        store.setNoGuessAgreed(false);
+        TestBed.tick();
+        expect(control.value).toBe(false);
+        expect(sendEvent).not.toHaveBeenCalled();
+
+        store.setNoGuessAgreed(true);
+        TestBed.tick();
+        expect(control.value).toBe(true);
+        expect(sendEvent).not.toHaveBeenCalled();
+
+        control.setValue(false);
+        expect(store.noGuessAgreed()).toBe(false);
     });
 
     it('昼間に 4 時より前の時刻を指定したら、翌日の時刻になって未来なので送らない', async () => {

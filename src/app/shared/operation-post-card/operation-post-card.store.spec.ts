@@ -109,7 +109,46 @@ describe('OperationPostCardStore', () => {
         await jest.advanceTimersByTimeAsync(1);
         expect(setItem).toHaveBeenCalledWith({
             key: 'OperationPostCardStore',
-            value: { serviceAgencies: serviceAgencies(['相鉄']) },
+            value: {
+                serviceAgencies: serviceAgencies(['相鉄']),
+                noGuessAgreed: false,
+            },
         });
+    });
+
+    it('目撃した編成のみの確認は初め false で、setNoGuessAgreed で変わる', () => {
+        const store = TestBed.inject(OperationPostCardStore);
+        expect(store.noGuessAgreed()).toBe(false);
+
+        store.setNoGuessAgreed(true);
+        expect(store.noGuessAgreed()).toBe(true);
+    });
+
+    it('確認は端末に覚え、外したら覚えも外す', async () => {
+        const store = TestBed.inject(OperationPostCardStore);
+        await jest.advanceTimersByTimeAsync(0);
+
+        store.setNoGuessAgreed(true);
+        await jest.advanceTimersByTimeAsync(100);
+        expect(setItem).toHaveBeenLastCalledWith({
+            key: 'OperationPostCardStore',
+            value: { serviceAgencies: null, noGuessAgreed: true },
+        });
+
+        store.setNoGuessAgreed(false);
+        await jest.advanceTimersByTimeAsync(100);
+        expect(setItem).toHaveBeenLastCalledWith({
+            key: 'OperationPostCardStore',
+            value: { serviceAgencies: null, noGuessAgreed: false },
+        });
+    });
+
+    it('覚えた確認を起動のあとに戻す', async () => {
+        getItem.mockResolvedValue({ noGuessAgreed: true });
+        const store = TestBed.inject(OperationPostCardStore);
+
+        await jest.advanceTimersByTimeAsync(0);
+
+        expect(store.noGuessAgreed()).toBe(true);
     });
 });

@@ -177,11 +177,42 @@
                 }
             </div>
         </div>
+        <div class="tw-flex tw-flex-col tw-gap-2">
+            <div
+                class="tw-flex tw-items-start tw-gap-2 tw-rounded-card tw-border tw-border-solid tw-border-red-300 tw-bg-red-50 tw-p-3 tw-text-sm tw-text-red-900"
+            >
+                <mat-icon class="tw-shrink-0" aria-hidden="true"
+                    >error_outline</mat-icon
+                >
+                <p class="tw-m-0">
+                    実際に目撃した編成のみを投稿してください。順送りなどから推測した編成の投稿は禁止しています。繰り返される場合は、投稿権限を剥奪することがあります。
+                </p>
+            </div>
+            @let noGuessControl = sightingForm.controls.noGuessAgreed;
+            <mat-checkbox
+                formControlName="noGuessAgreed"
+                [attr.aria-describedby]="
+                    noGuessControl.touched && noGuessControl.invalid
+                        ? 'no-guess-error'
+                        : null
+                "
+            >
+                目撃した編成のみを投稿します
+            </mat-checkbox>
+            @if (noGuessControl.touched && noGuessControl.invalid) {
+                <mat-error id="no-guess-error" class="tw-text-xs">
+                    チェックを入れてください
+                </mat-error>
+            }
+        </div>
         <footer class="tw-flex tw-flex-col">
             <app-button
                 type="submit"
                 [ariaDisabled]="
-                    sightingForm.invalid || submitting() || refreshingLists()
+                    sightingForm.invalid ||
+                    !noGuessAgreed() ||
+                    submitting() ||
+                    refreshingLists()
                 "
             >
                 投稿する

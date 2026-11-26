@@ -21,6 +21,7 @@ import { LoadingService } from '../loading/loading.service';
 import { PickableTrain } from '../train-picker/pickable-train.interface';
 import { TrainPickerComponent } from '../train-picker/train-picker.component';
 import { OperationPostCardService } from './operation-post-card.service';
+import { OperationPostCardStore } from './operation-post-card.store';
 import { OperationPostFormComponent } from './operation-post-form.component';
 
 /** 列車を選ぶ画面の代わり（フォームとの入れ替えだけを見る） */
@@ -129,6 +130,8 @@ describe('OperationPostFormComponent（テンプレート）', () => {
             formationOrVehicleNumber: '10701',
             operationNumber: '99',
         });
+        TestBed.inject(OperationPostCardStore).setNoGuessAgreed(true);
+        fixture.detectChanges();
 
         await component.submit({
             resetForm: jest.fn(),
@@ -167,6 +170,8 @@ describe('OperationPostFormComponent（テンプレート）', () => {
             formationOrVehicleNumber: '10701',
             operationNumber: '99',
         });
+        TestBed.inject(OperationPostCardStore).setNoGuessAgreed(true);
+        fixture.detectChanges();
         await component.submit({
             resetForm: jest.fn(),
         } as unknown as Parameters<typeof component.submit>[0]);
@@ -201,6 +206,7 @@ describe('OperationPostFormComponent（テンプレート）', () => {
                 formationOrVehicleNumber: '10701',
                 operationNumber: '1',
             });
+            TestBed.inject(OperationPostCardStore).setNoGuessAgreed(true);
             fixture.detectChanges();
         };
 
@@ -262,7 +268,7 @@ describe('OperationPostFormComponent（テンプレート）', () => {
             expect(
                 form.querySelector('mat-select[formcontrolname="agencyId"]'),
             ).toHaveFocus();
-            expect(form.querySelectorAll('mat-error').length).toBe(3);
+            expect(form.querySelectorAll('mat-error').length).toBe(4);
         });
 
         it('所属だけ入っていれば、次の足りない欄（編成番号）にフォーカスが移る', async () => {
@@ -312,6 +318,118 @@ describe('OperationPostFormComponent（テンプレート）', () => {
             await new Promise((r) => setTimeout(r));
             fixture.detectChanges();
             expect(region()).toHaveTextContent('');
+        });
+    });
+
+    describe('推測の投稿の禁止', () => {
+        const checkbox = (): HTMLElement =>
+            fixture.nativeElement.querySelector(
+                'mat-checkbox[formcontrolname="noGuessAgreed"]',
+            );
+        const checkboxInput = (): HTMLInputElement =>
+            checkbox().querySelector('input')!;
+        const submitButton = (): HTMLButtonElement =>
+            fixture.nativeElement.querySelector(
+                'app-button[type="submit"] button',
+            );
+        const store = (): InstanceType<typeof OperationPostCardStore> =>
+            TestBed.inject(OperationPostCardStore);
+        const post = (): jest.Mock =>
+            TestBed.inject(OperationPostCardService)
+                .postOperationSighting as unknown as jest.Mock;
+        const fillOthers = (): void => {
+            patchState(
+                unprotected(TestBed.inject(TodaysOperationListState)),
+                setAllEntities(
+                    [
+                        { operationId: 'op1', operationNumber: '1' },
+                    ] as unknown as OperationDetailsDto[],
+                    { selectId: (o: OperationDetailsDto) => o.operationId },
+                ),
+            );
+            component.sightingForm.patchValue({
+                agencyId: 'sotetsu',
+                formationOrVehicleNumber: '10701',
+                operationNumber: '1',
+            });
+            fixture.detectChanges();
+        };
+
+        it('警告の文とチェックの文が出て、警告にはアイコンが付く', () => {
+            const form: HTMLElement = fixture.nativeElement;
+            expect(form).toHaveTextContent(
+                '実際に目撃した編成のみを投稿してください。順送りなどから推測した編成の投稿は禁止しています。繰り返される場合は、投稿権限を剥奪することがあります。',
+            );
+            expect(form).toHaveTextContent('error_outline');
+            expect(checkbox()).toHaveTextContent(
+                '目撃した編成のみを投稿します',
+            );
+        });
+
+        it('チェックが無いと、ほかが揃っていても「投稿する」に aria-disabled が付く', () => {
+            fillOthers();
+            expect(submitButton()).toHaveAttribute('aria-disabled', 'true');
+
+            checkboxInput().click();
+            fixture.detectChanges();
+            expect(submitButton()).not.toHaveAttribute('aria-disabled');
+        });
+
+        it('チェックが無いまま押すと送らず、「チェックを入れてください」が出てチェックにフォーカスが移る', async () => {
+            fillOthers();
+            submitButton().click();
+            await fixture.whenStable();
+            fixture.detectChanges();
+
+            expect(post()).not.toHaveBeenCalled();
+            expect(checkbox().parentElement).toHaveTextContent(
+                'チェックを入れてください',
+            );
+            expect(checkboxInput()).toHaveFocus();
+        });
+
+        it('チェックを入れると store に書き、外すと外れる', () => {
+            checkboxInput().click();
+            fixture.detectChanges();
+            expect(store().noGuessAgreed()).toBe(true);
+
+            checkboxInput().click();
+            fixture.detectChanges();
+            expect(store().noGuessAgreed()).toBe(false);
+        });
+
+        it('store が true なら、フォームを開いたときチェックが入っている', () => {
+            store().setNoGuessAgreed(true);
+            const opened = TestBed.createComponent(OperationPostFormComponent);
+            opened.detectChanges();
+
+            expect(
+                opened.nativeElement.querySelector(
+                    'mat-checkbox[formcontrolname="noGuessAgreed"] input',
+                ),
+            ).toBeChecked();
+        });
+
+        it('store の値が後から true に戻ると、チェックが入る', () => {
+            expect(checkboxInput()).not.toBeChecked();
+            store().setNoGuessAgreed(true);
+            fixture.detectChanges();
+            expect(checkboxInput()).toBeChecked();
+        });
+
+        it('投稿に成功したあとも、チェックは入ったまま', async () => {
+            store().setNoGuessAgreed(true);
+            fixture.detectChanges();
+            fillOthers();
+            fixture.nativeElement
+                .querySelector('form')
+                .dispatchEvent(new Event('submit'));
+            await fixture.whenStable();
+            fixture.detectChanges();
+
+            expect(post()).toHaveBeenCalled();
+            expect(checkboxInput()).toBeChecked();
+            expect(store().noGuessAgreed()).toBe(true);
         });
     });
 });
