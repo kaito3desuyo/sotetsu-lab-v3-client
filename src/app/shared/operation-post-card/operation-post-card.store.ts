@@ -12,10 +12,13 @@ import { ServiceAgenciesDto } from 'src/app/libs/service/usecase/dtos/service-ag
 
 type StoreProps = {
     serviceAgencies: ServiceAgenciesDto | null;
+    /** 「目撃した編成のみを投稿します」に端末で一度チェックを入れたか */
+    noGuessAgreed: boolean;
 };
 
 const initialState: StoreProps = {
     serviceAgencies: null,
+    noGuessAgreed: false,
 };
 
 export const OperationPostCardStore = signalStore(
@@ -59,10 +62,13 @@ export const OperationPostCardStore = signalStore(
         setServiceAgencies(serviceAgencies: ServiceAgenciesDto | null): void {
             patchState(store, { serviceAgencies });
         },
+        setNoGuessAgreed(noGuessAgreed: boolean): void {
+            patchState(store, { noGuessAgreed });
+        },
     })),
     withSettingsStorage<StoreProps>({
         key: 'OperationPostCardStore',
-        fields: ['serviceAgencies'],
+        fields: ['serviceAgencies', 'noGuessAgreed'],
         debounceMs: 100,
     }),
     withAppDevtools('OperationPostCardStore'),
