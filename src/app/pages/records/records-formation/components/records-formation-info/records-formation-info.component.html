@@ -8,7 +8,7 @@
             data-testid="info-composition"
         >
             <div class="tw-flex tw-flex-wrap tw-items-baseline tw-gap-x-3">
-                <h2 class="tw-m-0 tw-text-sm tw-font-bold">組成</h2>
+                <h2 class="tw-m-0 tw-text-lg tw-font-bold">組成</h2>
                 <span class="tw-text-xs tw-text-muted"
                     >{{ current.cars.length }}両・下の数字は号車</span
                 >
@@ -19,7 +19,7 @@
 
     @if (history().length > 0) {
         <div class="tw-flex tw-flex-col tw-gap-3" data-testid="info-history">
-            <h2 class="tw-m-0 tw-text-sm tw-font-bold">組み換えの履歴</h2>
+            <h2 class="tw-m-0 tw-text-lg tw-font-bold">組み換えの履歴</h2>
             @for (item of history(); track $index) {
                 <div
                     class="tw-flex tw-flex-col tw-gap-1"
@@ -48,7 +48,7 @@
             class="tw-flex tw-flex-col tw-gap-2"
             data-testid="info-modifications"
         >
-            <h2 class="tw-m-0 tw-text-sm tw-font-bold">改造の経歴</h2>
+            <h2 class="tw-m-0 tw-text-lg tw-font-bold">改造の経歴</h2>
             <ul
                 class="tw-m-0 tw-flex tw-list-none tw-flex-col tw-gap-1.5 tw-p-0"
             >
