@@ -1,3 +1,6 @@
+/// <reference types="node" />
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { PLATFORM_ID } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
@@ -495,5 +498,19 @@ describe('RecordsFormationComponent', () => {
         });
         expect(formationApi.findManyByFormationNumber).not.toHaveBeenCalled();
         expect(calendarApi.findMany).not.toHaveBeenCalled();
+    });
+});
+
+describe('RecordsFormationComponent のテンプレート', () => {
+    // @default の先頭に `@let number = formationNumber();` を置いていたら、本番の SSR から開いたときに
+    // ハイドレーションが NG0509（HYDRATION_MISSING_NODE_ON_PATH）で止まり、画面が更新されなくなった（v2.31.0）。
+    // jsdom ではハイドレーションを試せないので、置き方を決まりとして見張る
+    it('ページの本体に @let を置かない（編成番号は @if の as で受ける）', () => {
+        const html = readFileSync(
+            join(__dirname, 'records-formation.component.html'),
+            'utf8',
+        );
+        expect(html).not.toMatch(/@let\s/);
+        expect(html).toContain('@if (formationNumber(); as number)');
     });
 });

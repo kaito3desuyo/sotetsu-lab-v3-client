@@ -45,8 +45,7 @@
             ></app-empty-state>
         }
         @default {
-            @let number = formationNumber();
-            @if (number) {
+            @if (formationNumber(); as number) {
                 @if (summaryError()) {
                     <section
                         class="tw-rounded-card tw-bg-white tw-p-4"
