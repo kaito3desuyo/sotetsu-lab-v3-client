@@ -34,6 +34,9 @@
 		<loc>https://v3.sotetsu-lab.com/train-location</loc>
 	</url>
 	<url>
+		<loc>https://v3.sotetsu-lab.com/records/formation</loc>
+	</url>
+	<url>
 		<loc>https://v3.sotetsu-lab.com/library/vehicle</loc>
 	</url>
 	<url>

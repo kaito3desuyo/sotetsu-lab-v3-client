@@ -1,0 +1,143 @@
+<div
+    class="tw-flex tw-items-center tw-justify-between tw-gap-2 tw-border-0 tw-border-b tw-border-solid tw-border-rule tw-px-2 tw-py-1"
+    data-testid="calendar-nav"
+>
+    <button
+        mat-button
+        type="button"
+        aria-label="前の月"
+        data-testid="calendar-prev"
+        (click)="shift.emit(-1)"
+    >
+        ‹ {{ monthLabels().prev }}
+    </button>
+    <span class="tw-font-medium tw-tabular-nums" data-testid="calendar-month">{{
+        monthLabels().current
+    }}</span>
+    <button
+        mat-button
+        type="button"
+        aria-label="次の月"
+        data-testid="calendar-next"
+        [disabled]="!canGoNext()"
+        (click)="shift.emit(1)"
+    >
+        {{ monthLabels().next }} ›
+    </button>
+</div>
+<div
+    class="tw-grid tw-grid-cols-7"
+    role="table"
+    aria-label="運番のカレンダー"
+    data-testid="records-calendar"
+>
+    <div class="tw-contents" role="row">
+        @for (weekday of weekdays; track weekday.label) {
+            <div
+                class="tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-py-1 tw-text-center tw-text-xs last:tw-border-r-0"
+                [class]="
+                    weekday.isRed
+                        ? 'tw-font-bold tw-text-accent-deep'
+                        : 'tw-text-muted'
+                "
+                role="columnheader"
+            >
+                {{ weekday.label }}
+            </div>
+        }
+    </div>
+    @for (week of weeks(); track $index; let lastWeek = $last) {
+        <div class="tw-contents" role="row">
+            @for (cell of week; track $index) {
+                <div
+                    class="tw-flex tw-min-w-0 tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule last:tw-border-r-0"
+                    [class.tw-border-b-0]="lastWeek"
+                    role="cell"
+                >
+                    @if (cell; as cell) {
+                        @if (cell.link) {
+                            <a
+                                class="tw-flex tw-min-h-[4.5rem] tw-w-full tw-min-w-0 tw-flex-col tw-gap-1 tw-p-1 tw-no-underline [color:inherit]"
+                                data-testid="day-link"
+                                [routerLink]="cell.link"
+                                [attr.data-date]="cell.date"
+                                [class]="cell.isToday ? 'tw-bg-paper-2' : ''"
+                            >
+                                <ng-container
+                                    *ngTemplateOutlet="
+                                        body;
+                                        context: { $implicit: cell }
+                                    "
+                                ></ng-container>
+                            </a>
+                        } @else {
+                            <div
+                                class="tw-flex tw-min-h-[4.5rem] tw-w-full tw-min-w-0 tw-flex-col tw-gap-1 tw-p-1"
+                                data-testid="day-plain"
+                                [attr.data-date]="cell.date"
+                                [class]="cell.isToday ? 'tw-bg-paper-2' : ''"
+                            >
+                                <ng-container
+                                    *ngTemplateOutlet="
+                                        body;
+                                        context: { $implicit: cell }
+                                    "
+                                ></ng-container>
+                            </div>
+                        }
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<ng-template #body let-cell>
+    <span class="tw-flex tw-items-center tw-gap-1">
+        <span
+            class="tw-inline-flex tw-h-5 tw-min-w-5 tw-items-center tw-justify-center tw-rounded-full tw-text-xs tw-tabular-nums"
+            [class]="
+                cell.isToday
+                    ? 'tw-bg-structure tw-font-bold tw-text-white'
+                    : cell.isRed
+                      ? 'tw-font-bold tw-text-accent-deep'
+                      : 'tw-text-muted'
+            "
+            [attr.data-today]="cell.isToday ? 'true' : null"
+            [attr.data-red]="cell.isRed ? 'true' : null"
+            data-testid="day-number"
+            >{{ cell.day }}</span
+        >
+        @if (cell.holidayName) {
+            <span
+                class="tw-sr-only tw-truncate tw-text-[10px] tw-text-accent-deep md:tw-not-sr-only"
+                data-testid="holiday-name"
+                >{{ cell.holidayName }}</span
+            >
+        }
+    </span>
+    <!-- 受け持った順に並べ、2 個目から前に › を置く（過去の運用の 1 マスと同じ）。入らなければ折り返す -->
+    <span class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-y-1">
+        @for (entry of cell.entries; track entry.id; let first = $first) {
+            <span class="tw-inline-flex tw-h-6 tw-items-center">
+                @if (!first) {
+                    <span aria-hidden="true" class="tw-px-0.5 tw-text-muted"
+                        >›</span
+                    >
+                }
+                @if (entry.operationNumber; as operationNumber) {
+                    <app-operation-number-tag
+                        [operationNumber]="operationNumber"
+                        [inferred]="entry.inferred"
+                    ></app-operation-number-tag>
+                } @else {
+                    <span
+                        class="tw-text-sm tw-text-muted"
+                        data-testid="unknown-operation"
+                        >不明</span
+                    >
+                }
+            </span>
+        }
+    </span>
+</ng-template>

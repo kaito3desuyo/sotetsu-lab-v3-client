@@ -75,4 +75,38 @@ export class FormationQuery {
                 ),
             );
     }
+
+    /** 編成番号の期間の行すべて（始まりの日の古い順）。include は agency・vehicleFormations.vehicle.modifications */
+    findManyByFormationNumber(params: {
+        formationNumber: string;
+        include?: string;
+        forceReload?: boolean;
+    }): Observable<FormationDetailsDto[]> {
+        const { formationNumber, include, forceReload } = params;
+
+        return this.#cache
+            .get({
+                name: 'findManyByFormationNumber',
+                params: { formationNumber, include },
+                fetch: () =>
+                    this.#http.get<FormationModel[]>(
+                        `${this.#v3ApiUrl}/number/${encodeURIComponent(formationNumber)}`,
+                        {
+                            params:
+                                include === undefined
+                                    ? undefined
+                                    : new HttpParams({
+                                          fromObject: { include },
+                                      }),
+                            observe: 'response',
+                        },
+                    ),
+                forceReload,
+            })
+            .pipe(
+                map((res) =>
+                    FormationDtoBuilder.buildFromModels(requireBody(res)),
+                ),
+            );
+    }
 }

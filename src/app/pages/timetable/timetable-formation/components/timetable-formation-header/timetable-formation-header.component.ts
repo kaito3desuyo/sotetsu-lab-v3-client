@@ -15,6 +15,7 @@ import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-det
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
 import { TripPositionComponent } from 'src/app/shared/trip-position/trip-position.component';
+import { RouterLink } from '@angular/router';
 import { FormationDateKind } from '../../stores/timetable-formation.store';
 import { FormationOperationChainItem } from '../../utils/formation-day.util';
 import { routeDiagramLink } from '../../utils/formation-display.util';
@@ -33,7 +34,7 @@ export interface FormationHeaderSighting {
     selector: 'app-timetable-formation-header',
     templateUrl: './timetable-formation-header.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [OperationNumberTagComponent, TripPositionComponent],
+    imports: [OperationNumberTagComponent, RouterLink, TripPositionComponent],
     host: { class: 'tw-block' },
 })
 export class TimetableFormationHeaderComponent {
@@ -64,6 +65,22 @@ export class TimetableFormationHeaderComponent {
     readonly operationLinkAt = input<OperationTimetableLinkAt>('today');
     protected readonly operationTimetableLink = operationTimetableLink;
     readonly dateKind = input<FormationDateKind>('today');
+
+    /** その編成の記録（月ごとのカレンダー）へのリンク。見ている日があればその月で開く */
+    protected readonly recordsLink = computed(() => {
+        const number = this.formationNumber();
+        if (!number) return null;
+        const at = this.operationLinkAt();
+        const date = typeof at === 'object' && 'date' in at ? at.date : null;
+        const month = date?.slice(0, 7);
+        return [
+            '/records',
+            'formation',
+            month
+                ? { formation_number: number, month }
+                : { formation_number: number },
+        ];
+    });
 
     protected readonly operationHeading = computed(() =>
         this.dateKind() === 'today'

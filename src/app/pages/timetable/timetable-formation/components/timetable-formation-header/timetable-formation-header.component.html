@@ -2,11 +2,21 @@
     class="tw-flex tw-flex-col tw-gap-3 tw-rounded-card tw-bg-white tw-p-4"
     data-testid="formation-header"
 >
-    <p class="tw-m-0 tw-flex tw-flex-row tw-items-baseline tw-gap-3">
+    <p
+        class="tw-m-0 tw-flex tw-flex-row tw-flex-wrap tw-items-baseline tw-gap-3"
+    >
         <span class="tw-text-xl tw-font-bold tw-tabular-nums">{{
             formationNumber()
         }}</span>
         <span class="tw-text-sm tw-text-muted">{{ annotation() }}</span>
+        @if (recordsLink(); as link) {
+            <a
+                class="tw-ml-auto tw-text-sm tw-text-accent-ink tw-underline"
+                data-testid="records-link"
+                [routerLink]="link"
+                >この編成の記録</a
+            >
+        }
     </p>
     @if (formation()?.formationDescription; as description) {
         <p class="tw-m-0 tw-text-xs tw-text-muted">{{ description }}</p>

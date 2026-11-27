@@ -1,0 +1,57 @@
+<div class="tw-flex tw-flex-col tw-gap-4" data-testid="records-controls">
+    <mat-form-field subscriptSizing="dynamic">
+        <mat-label>編成番号</mat-label>
+        <input
+            matInput
+            type="text"
+            autocomplete="off"
+            data-testid="formation-number-input"
+            [value]="formationNumber() ?? ''"
+            [matAutocomplete]="formationAuto"
+            #trigger="matAutocompleteTrigger"
+            #numberInput
+            (input)="onQuery($event)"
+            (focus)="onFocus(numberInput)"
+            (blur)="onBlur(numberInput)"
+            (keydown.enter)="onEnter($event, trigger)"
+        />
+        <mat-icon matSuffix class="tw-text-muted">arrow_drop_down</mat-icon>
+        <mat-autocomplete
+            #formationAuto="matAutocomplete"
+            (optionSelected)="formationNumberSubmit.emit($event.option.value)"
+        >
+            @for (group of groups(); track group.label) {
+                <mat-optgroup [label]="group.label">
+                    @for (number of group.formationNumbers; track number) {
+                        <mat-option [value]="number">{{ number }}</mat-option>
+                    }
+                </mat-optgroup>
+            }
+        </mat-autocomplete>
+    </mat-form-field>
+
+    <div class="tw-flex tw-items-center tw-justify-between tw-gap-2">
+        <button
+            mat-icon-button
+            type="button"
+            aria-label="前の月"
+            data-testid="prev-month"
+            (click)="shift.emit(-1)"
+        >
+            <mat-icon>chevron_left</mat-icon>
+        </button>
+        <span class="tw-tabular-nums" data-testid="month-label">{{
+            monthLabel()
+        }}</span>
+        <button
+            mat-icon-button
+            type="button"
+            aria-label="次の月"
+            data-testid="next-month"
+            [disabled]="!canGoNext()"
+            (click)="shift.emit(1)"
+        >
+            <mat-icon>chevron_right</mat-icon>
+        </button>
+    </div>
+</div>

@@ -21,4 +21,12 @@ export class FormationService {
     }): Observable<FormationDetailsDto[]> {
         return this.#formationQuery.findManyBySpecificPeriod(params);
     }
+
+    findManyByFormationNumber(params: {
+        formationNumber: string;
+        include?: string;
+        forceReload?: boolean;
+    }): Observable<FormationDetailsDto[]> {
+        return this.#formationQuery.findManyByFormationNumber(params);
+    }
 }

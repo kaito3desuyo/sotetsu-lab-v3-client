@@ -56,6 +56,7 @@ describe('SidenavComponent', () => {
                     '時刻表',
                     '列車',
                     '運用情報',
+                    '記録',
                     'ライブラリ',
                     'このサイトについて',
                 ]),
@@ -72,6 +73,14 @@ describe('SidenavComponent', () => {
                 'メインナビゲーション',
             );
         });
+    });
+
+    it('ナビに「編成の記録」があり /records/formation へ飛ぶ', () => {
+        fixture.detectChanges();
+        const link = (fixture.nativeElement as HTMLElement).querySelector(
+            'a[href="/records/formation"]',
+        );
+        expect(link?.textContent).toContain('編成の記録');
     });
 
     describe('投稿管理のリンク', () => {

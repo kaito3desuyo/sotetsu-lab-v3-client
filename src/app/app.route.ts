@@ -111,6 +111,18 @@ export const APP_ROUTES: Routes = [
             ),
     },
     {
+        path: 'records',
+        loadChildren: () =>
+            import('./pages/records/records.route').then(
+                (mod) => mod.RECORDS_ROUTES,
+            ),
+        canActivate: [maintenanceGuard],
+        resolve: {
+            from: initialDataResolver,
+        },
+        runGuardsAndResolvers: 'always',
+    },
+    {
         path: 'privacy-policy',
         loadChildren: () =>
             import('./pages/privacy-policy/privacy-policy.route').then(

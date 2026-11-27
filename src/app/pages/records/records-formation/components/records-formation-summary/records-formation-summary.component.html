@@ -1,0 +1,59 @@
+<section
+    class="tw-flex tw-flex-col tw-gap-3 tw-rounded-card tw-bg-white tw-p-4"
+    data-testid="records-summary"
+>
+    <p
+        class="tw-m-0 tw-flex tw-flex-row tw-flex-wrap tw-items-baseline tw-gap-3"
+    >
+        <span class="tw-text-xl tw-font-bold tw-tabular-nums">{{
+            formationNumber()
+        }}</span>
+        @if (annotation()) {
+            <span class="tw-text-sm tw-text-muted" data-testid="annotation">{{
+                annotation()
+            }}</span>
+        }
+        <a
+            class="tw-ml-auto tw-text-sm tw-text-accent-ink tw-underline"
+            data-testid="summary-link"
+            [routerLink]="timetableLink()"
+            >編成別時刻表</a
+        >
+    </p>
+    @if (latest(); as latest) {
+        <p
+            class="tw-m-0 tw-flex tw-flex-wrap tw-items-center tw-gap-x-2 tw-gap-y-1 tw-text-sm"
+        >
+            <span
+                class="tw-text-xs tw-text-muted"
+                data-testid="summary-label"
+                >{{ latest.heading }}</span
+            >
+            <span class="tw-tabular-nums" data-testid="summary-when">{{
+                latest.when
+            }}</span>
+            @if (latest.operationNumber; as operationNumber) {
+                <app-operation-number-tag
+                    [operationNumber]="operationNumber"
+                    [inferred]="latest.inferred"
+                ></app-operation-number-tag>
+                <span>で目撃</span>
+            } @else {
+                <span>運用は不明です</span>
+            }
+            @if (latest.showMonthLink) {
+                <a
+                    class="app-hit-area tw-text-accent-ink tw-underline tw-underline-offset-2"
+                    data-testid="month-link"
+                    [routerLink]="latest.monthLink"
+                    >この月の記録</a
+                >
+            }
+        </p>
+    } @else {
+        <app-empty-state
+            icon="info"
+            message="目撃の記録はありません"
+        ></app-empty-state>
+    }
+</section>

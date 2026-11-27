@@ -1,5 +1,20 @@
 import { AgencyDetailsDto } from 'src/app/libs/agency/usecase/dtos/agency-details.dto';
 
+export interface VehicleModificationDto {
+    modifiedOn: string | null;
+    kind: string;
+    value: string | null;
+    description: string | null;
+}
+
+export interface VehicleFormationDto {
+    carNumber: number;
+    vehicle?: {
+        vehicleNumber: string;
+        modifications?: VehicleModificationDto[];
+    };
+}
+
 export interface FormationDetailsDto {
     formationId: string;
 
@@ -20,4 +35,6 @@ export interface FormationDetailsDto {
     updatedAt: string;
 
     agency?: AgencyDetailsDto;
+
+    vehicleFormations?: VehicleFormationDto[];
 }

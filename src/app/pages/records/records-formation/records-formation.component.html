@@ -1,0 +1,101 @@
+@if (isLoading()) {
+    <div
+        class="tw-fixed tw-left-0 tw-top-[48px] tw-z-[60] tw-w-full md:tw-top-[64px]"
+    >
+        <mat-progress-bar
+            aria-label="読み込み中"
+            color="accent"
+            mode="indeterminate"
+        ></mat-progress-bar>
+    </div>
+}
+
+<main
+    class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
+>
+    <app-control-band [summary]="bandSummary()">
+        <app-records-formation-controls
+            [formationNumber]="formationNumber()"
+            [formations]="formationOptions()"
+            [agencies]="agencies()"
+            [month]="month()"
+            [canGoNext]="canGoNext()"
+            (formationNumberSubmit)="onFormationSubmit($event)"
+            (shift)="onShift($event)"
+        ></app-records-formation-controls>
+    </app-control-band>
+
+    @switch (view()) {
+        @case ('noNumber') {
+            <app-empty-state
+                icon="train"
+                message="編成番号を入力してください"
+                actionLabel="編成番号を入力する"
+                (actionClick)="band().open.set(true)"
+            ></app-empty-state>
+        }
+        @case ('error') {
+            <app-empty-state
+                icon="error_outline"
+                headingLevel="h2"
+                message="読み込めませんでした"
+                subtitle="通信の状態を確かめて、もう一度お試しください。"
+                actionLabel="再読み込み"
+                (actionClick)="reload()"
+            ></app-empty-state>
+        }
+        @default {
+            @let number = formationNumber();
+            @if (number) {
+                @if (summaryError()) {
+                    <section
+                        class="tw-rounded-card tw-bg-white tw-p-4"
+                        data-testid="summary-error-card"
+                    >
+                        <p
+                            class="tw-m-0 tw-text-sm tw-text-muted"
+                            data-testid="summary-error"
+                        >
+                            最新の目撃を読み込めませんでした
+                        </p>
+                    </section>
+                }
+                @if (summaryReady()) {
+                    <app-records-formation-summary
+                        [formationNumber]="number"
+                        [summary]="summary()"
+                        [today]="today()"
+                        [month]="month()"
+                        [latestPeriod]="periods()[0] ?? null"
+                    ></app-records-formation-summary>
+                }
+                @if (periods().length > 0) {
+                    <app-records-formation-info
+                        [periods]="periods()"
+                        [modifications]="modifications()"
+                        [referenceDate]="referenceDate()"
+                    ></app-records-formation-info>
+                }
+                <article class="tw-overflow-clip tw-rounded-card tw-bg-white">
+                    <app-records-formation-calendar
+                        [formationNumber]="number"
+                        [month]="month()"
+                        [sightingsByDate]="sightingsByDate()"
+                        [today]="today()"
+                        [holidays]="holidays()"
+                        [canGoNext]="canGoNext()"
+                        (shift)="onShift($event)"
+                    ></app-records-formation-calendar>
+                    @if (isMonthEmpty()) {
+                        <p
+                            class="tw-m-0 tw-p-4 tw-text-sm tw-text-muted"
+                            data-testid="month-empty"
+                        >
+                            この月の目撃はありません
+                        </p>
+                    }
+                </article>
+            }
+        }
+    }
+</main>

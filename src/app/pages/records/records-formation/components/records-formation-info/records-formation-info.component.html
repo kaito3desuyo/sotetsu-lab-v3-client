@@ -1,0 +1,73 @@
+<section
+    class="tw-flex tw-flex-col tw-gap-4 tw-rounded-card tw-bg-white tw-p-4"
+    data-testid="records-info"
+>
+    @if (current(); as current) {
+        <div
+            class="tw-flex tw-flex-col tw-gap-2"
+            data-testid="info-composition"
+        >
+            <div class="tw-flex tw-flex-wrap tw-items-baseline tw-gap-x-3">
+                <h2 class="tw-m-0 tw-text-lg tw-font-bold">組成</h2>
+                <span class="tw-text-xs tw-text-muted"
+                    >{{ current.cars.length }}両・下の数字は号車</span
+                >
+            </div>
+            <app-formation-train [cars]="current.cars"></app-formation-train>
+        </div>
+    }
+
+    @if (history().length > 0) {
+        <div class="tw-flex tw-flex-col tw-gap-3" data-testid="info-history">
+            <h2 class="tw-m-0 tw-text-lg tw-font-bold">組み換えの履歴</h2>
+            @for (item of history(); track $index) {
+                <div
+                    class="tw-flex tw-flex-col tw-gap-1"
+                    data-testid="history-period"
+                >
+                    <p class="tw-m-0 tw-text-xs tw-text-muted">
+                        <span class="tw-tabular-nums">{{ item.range }}</span
+                        >　{{ item.carCount }}両
+                    </p>
+                    <app-formation-train
+                        size="small"
+                        [cars]="item.cars"
+                        [highlight]="item.changed"
+                        [showCarNumber]="false"
+                    ></app-formation-train>
+                </div>
+            }
+            <p class="tw-m-0 tw-text-xs tw-text-muted">
+                赤い番号は前の組成から入れ替わった車両です。
+            </p>
+        </div>
+    }
+
+    @if (modificationRows().length > 0) {
+        <div
+            class="tw-flex tw-flex-col tw-gap-2"
+            data-testid="info-modifications"
+        >
+            <h2 class="tw-m-0 tw-text-lg tw-font-bold">改造の経歴</h2>
+            <ul
+                class="tw-m-0 tw-flex tw-list-none tw-flex-col tw-gap-1.5 tw-p-0"
+            >
+                @for (row of modificationRows(); track $index) {
+                    <li
+                        class="tw-flex tw-flex-wrap tw-items-baseline tw-gap-x-3 tw-gap-y-0.5 tw-text-sm"
+                        data-testid="modification-row"
+                    >
+                        <span class="tw-tabular-nums">{{ row.date }}</span>
+                        <span class="tw-font-medium">{{ row.kind }}</span>
+                        @if (row.content) {
+                            <span>{{ row.content }}</span>
+                        }
+                        <span class="tw-text-xs tw-text-muted">{{
+                            row.target
+                        }}</span>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+</section>

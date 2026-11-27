@@ -22,6 +22,17 @@ describe('toHelpPage（GA に送るパスの型）', () => {
         expect(PAGE_HELP_TABLE['/timetable/operation']).toBeDefined();
     });
 
+    it('編成の記録は説明のあるページとして扱う', () => {
+        expect(toHelpPage('/records/formation')).toBe('/records/formation');
+        expect(PAGE_HELP_TABLE['/records/formation']).toBeDefined();
+    });
+
+    it('編成の記録の「?」は同じ日の引き継ぎからの推定と説明する', () => {
+        const text = PAGE_HELP_TABLE['/records/formation'].lines.join('');
+        expect(text).toContain('同じ日の引き継ぎから推定した');
+        expect(text).toContain('目撃のある日のマス');
+    });
+
     it('投稿者ページは id を送らずに型に丸める', () => {
         expect(toHelpPage('/moderation/users/abc-123')).toBe(
             '/moderation/users/:userId',

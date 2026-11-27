@@ -123,6 +123,60 @@ describe('OperationSightingQuery', () => {
         reqs.forEach((r) => r.flush([]));
     });
 
+    it('formationNumber を渡すとクエリに付ける', () => {
+        const { query, controller } = setup();
+        query
+            .findManyBySpecificPeriod({
+                from: '2026-10-07',
+                to: '2026-10-07',
+                formationNumber: '10701',
+            })
+            .subscribe();
+
+        const [req] = controller.match(() => true);
+
+        expect(req.request.params.get('formationNumber')).toBe('10701');
+        req.flush([]);
+    });
+
+    it('formationNumber が違えば別のキャッシュになる', () => {
+        const { query, controller } = setup();
+        query
+            .findManyBySpecificPeriod({
+                from: '2026-10-07',
+                to: '2026-10-07',
+                formationNumber: '10701',
+            })
+            .subscribe();
+        query
+            .findManyBySpecificPeriod({
+                from: '2026-10-07',
+                to: '2026-10-07',
+                formationNumber: '10702',
+            })
+            .subscribe();
+
+        const reqs = controller.match(() => true);
+
+        expect(reqs).toHaveLength(2);
+        expect(
+            reqs.map((r) => r.request.params.get('formationNumber')),
+        ).toEqual(['10701', '10702']);
+        reqs.forEach((r) => r.flush([]));
+    });
+
+    it('formationNumber を省けばクエリに付かない', () => {
+        const { query, controller } = setup();
+        query
+            .findManyBySpecificPeriod({ from: '2026-10-07', to: '2026-10-07' })
+            .subscribe();
+
+        const [req] = controller.match(() => true);
+
+        expect(req.request.params.has('formationNumber')).toBe(false);
+        req.flush([]);
+    });
+
     it('運番まとめは運用・編成の項目を絞って取り、include は付けない', () => {
         const { query, controller } = setup();
         query
