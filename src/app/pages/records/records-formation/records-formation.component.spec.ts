@@ -1,5 +1,6 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+/// <reference types="node" />
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { PLATFORM_ID } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
